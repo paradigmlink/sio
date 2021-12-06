@@ -1,33 +1,12 @@
 [package]
-name = "sio-vm"
+name = "sio_vm"
 version = "0.1.0"
 edition = "2021"
 
-[target.'cfg(all(any(target_arch = "x86_64", target_arch = "aarch64"), target_os = "hermit"))'.dependencies.hermit-sys]
-path = "../../rusty-hermit/hermit-sys"
-default-features = false
-features = ["with_submodule", "smoltcp"]
-
-[target.'cfg(all(any(target_arch = "x86_64", target_arch = "aarch64"), target_os = "hermit"))'.dependencies.hermit-abi]
-path = "../../rusty-hermit/hermit-abi"
-default-features = false
+[[bin]]
+name = "sio_vm"
+path = "src/main.rs"
 
 [dependencies]
-getrandom = { path = "../../getrandom" }
 internment = "0.5.4"
 chumsky = { git = "https://github.com/zesterer/chumsky" }
-
-[profile.release]
-opt-level = 3
-debug = false
-rpath = false
-lto = false
-debug-assertions = false
-
-[profile.dev]
-opt-level = 1      # controls the `--opt-level` the compiler builds with
-debug = true       # controls whether the compiler passes `-C debuginfo`
-                   # a value of `true` is equivalent to `2`
-rpath = false      # controls whether the compiler passes `-C rpath`
-lto = false         # controls `-C lto` for binaries and staticlibs
-debug-assertions = true # controls whether debug assertions are enabled

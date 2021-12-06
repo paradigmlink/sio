@@ -584,13 +584,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "sio-vm"
+name = "sio_unikernel"
 version = "0.1.0"
 dependencies = [
- "chumsky",
  "getrandom 0.2.4",
  "hermit-abi",
  "hermit-sys",
+ "sio_vm",
+]
+
+[[package]]
+name = "sio_vm"
+version = "0.1.0"
+dependencies = [
+ "chumsky",
  "internment",
 ]
 

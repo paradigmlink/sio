@@ -96,13 +96,13 @@ pub fn parser() -> impl Parser<char, Expr, Error = Simple<char>> {
             });
 
         let r#fn = ident
-            .then_ignore(just("::").padded())
+            .then_ignore(just("::"))
             .then_ignore(just("(").padded())
             .then(ident.repeated())
-            .then_ignore(just(')').padded())
+            .then_ignore(just(')'))
             .then_ignore(just('{').padded())
             .then(expr.clone())
-            .then_ignore(just('}').padded())
+            .then_ignore(just('}'))
             .then_ignore(just(';'))
             .then(decl)
             .map(|(((name, args), body), then)| {

@@ -1,3 +1,7 @@
+#![allow(dead_code)]
+#![feature(bindings_after_at)]
+#[cfg(target_os = "hermit")]
+extern crate hermit_sys;
 use {
     sio_vm::{self, Parser},
 };
