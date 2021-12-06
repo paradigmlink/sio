@@ -8,15 +8,6 @@ path = "../../rusty-hermit/hermit-sys"
 default-features = false
 features = ["with_submodule", "smoltcp"]
 
-[target.'cfg(all(any(target_arch = "x86_64", target_arch = "aarch64"), target_os = "hermit"))'.dependencies.hermit-abi]
-path = "../../rusty-hermit/hermit-abi"
-default-features = false
-
-[dependencies]
-getrandom = { path = "../../getrandom" }
-internment = "0.5.4"
-chumsky = { git = "https://github.com/zesterer/chumsky" }
-
 [profile.release]
 opt-level = 3
 debug = false
@@ -31,3 +22,18 @@ debug = true       # controls whether the compiler passes `-C debuginfo`
 rpath = false      # controls whether the compiler passes `-C rpath`
 lto = false         # controls `-C lto` for binaries and staticlibs
 debug-assertions = true # controls whether debug assertions are enabled
+
+[dependencies]
+getrandom = { path = "../../getrandom" }
+copernica-broker = { path = "../../copernica/copernica-broker" }
+copernica-protocols = { path = "../../copernica/copernica-protocols" }
+copernica-links = { path = "../../copernica/copernica-links" }
+copernica-packets = { path = "../../copernica/copernica-packets" }
+copernica-common = { path = "../../copernica/copernica-common" }
+log = "0.4"
+rand = "0.8.3"
+anyhow = "1.0"
+scaffolding = { git = "https://github.com/primetype/scaffolding", features = ["with-quickcheck"] }
+crossbeam-channel = "0.5.1"
+fern = "0.5.9"
+chrono = "0.4.9"
