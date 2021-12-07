@@ -10,3 +10,4 @@ path = "src/main.rs"
 [dependencies]
 internment = "0.5.4"
 chumsky = { git = "https://github.com/zesterer/chumsky" }
+ariadne = { git = "https://github.com/zesterer/ariadne" }

@@ -27,6 +27,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "739f4a8db6605981345c5654f3a85b056ce52f37a39d34da03f25bf2151ea16e"
 
 [[package]]
+name = "ariadne"
+version = "0.1.3"
+source = "git+https://github.com/zesterer/ariadne#c2b5e3450348d56afc616e2e7eea412c44080a38"
+dependencies = [
+ "yansi",
+]
+
+[[package]]
 name = "async-task"
 version = "4.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -597,6 +605,7 @@ dependencies = [
 name = "sio_vm"
 version = "0.1.0"
 dependencies = [
+ "ariadne",
  "chumsky",
  "internment",
 ]
@@ -714,3 +723,9 @@ dependencies = [
  "bitflags",
  "raw-cpuid",
 ]
+
+[[package]]
+name = "yansi"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fc79f4a1e39857fc00c3f662cbf2651c771f00e9c15fe2abc341806bd46bd71"
