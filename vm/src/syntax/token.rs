@@ -22,6 +22,7 @@ pub enum Token {
     Let,
     In,
     Comma,
+    Separator,
 }
 
 impl fmt::Display for Token {
@@ -39,12 +40,14 @@ impl fmt::Display for Token {
             Token::Close(Delimiter::Paren) => write!(f, ")"),
             Token::TermIdent(identifier) => write!(f, "{}", identifier),
             Token::Comma => write!(f, ","),
+            Token::Separator=> write!(f, "::"),
         }
     }
 }
 
 pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
-    let ctrl = just(',').to(Token::Comma);
+    let ctrl = just(',').to(Token::Comma)
+        .or(just("::").to(Token::Separator));
 
     let delim = just('{').to(Token::Open(Delimiter::Brace))
         .or(just('}').to(Token::Close(Delimiter::Brace)))
@@ -108,7 +111,13 @@ mod tests {
     #[test]
     fn simple() {
         let code = "// comment
-        let x in { skip x (true) false }";
+        let x in {
+            skip
+            x
+            (true)
+            false
+            function ( y ) :: { s }
+        }";
         let len = code.chars().count();
 
         let span = |i| Span::new(SrcId::empty(), i..i + 1);
@@ -131,6 +140,14 @@ mod tests {
                 Token::Bool(true),
                 Token::Close(Delimiter::Paren),
                 Token::Bool(false),
+                Token::TermIdent(ast::Ident::new("function")),
+                Token::Open(Delimiter::Paren),
+                Token::TermIdent(ast::Ident::new("y")),
+                Token::Close(Delimiter::Paren),
+                Token::Separator,
+                Token::Open(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("s")),
+                Token::Close(Delimiter::Brace),
                 Token::Close(Delimiter::Brace),
             ]),
         );
