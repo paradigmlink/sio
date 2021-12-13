@@ -1,8 +1,6 @@
-mod parse;
-mod eval;
-pub use crate::{
-    parse::parser,
-    eval::eval,
+#![feature(option_zip, trait_alias)]
+pub mod syntax;
+pub use {
+    syntax::{Span, SrcId},
+    chumsky::{Parser}
 };
-pub use chumsky::{Parser};
-

@@ -3,10 +3,13 @@ name = "sio_unikernel"
 version = "0.1.0"
 edition = "2021"
 
-[target.'cfg(all(any(target_arch = "x86_64", target_arch = "aarch64"), target_os = "hermit"))'.dependencies.hermit-sys]
-path = "../../rusty-hermit/hermit-sys"
-default-features = false
-features = ["with_submodule", "smoltcp"]
+#[target.'cfg(all(any(target_arch = "x86_64", target_arch = "aarch64"), target_os = "hermit"))'.dependencies.hermit-sys]
+#path = "../../rusty-hermit/hermit-sys"
+#default-features = false
+#features = ["with_submodule", "smoltcp"]
+
+[target.'cfg(target_os = "hermit")'.dependencies]
+hermit-sys = { version = "0.1", features = ["smoltcp"] }
 
 [target.'cfg(all(any(target_arch = "x86_64", target_arch = "aarch64"), target_os = "hermit"))'.dependencies.hermit-abi]
 path = "../../rusty-hermit/hermit-abi"
@@ -14,7 +17,7 @@ default-features = false
 
 [dependencies]
 getrandom = { path = "../../getrandom" }
-sio_vm = { path = "../vm" }
+#sio_vm = { path = "../vm" }
 
 [profile.release]
 opt-level = 3

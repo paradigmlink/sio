@@ -3,7 +3,7 @@
 #[cfg(target_os = "hermit")]
 extern crate hermit_sys;
 use {
-    sio_vm::{self, Parser},
+//    sio_vm::{self, Parser},
 };
 
 fn main() {
@@ -19,7 +19,7 @@ fn main() {
         };
         divide(eleven, 11)
     ";
-
+/*
     match sio_vm::parser().parse(src) {
         Ok(ast) => match sio_vm::eval(&ast, &mut Vec::new(), &mut Vec::new()) {
             Ok(output) => println!("{}", output),
@@ -29,4 +29,5 @@ fn main() {
             .into_iter()
             .for_each(|e| println!("Parse error: {:?}", e)),
     }
+    */
 }

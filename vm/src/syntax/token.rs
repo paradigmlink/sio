@@ -1,0 +1,138 @@
+use {
+    super::*,
+    chumsky::prelude::*,
+    internment::Intern,
+};
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum Delimiter {
+    Paren,
+    Brace,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Hash, Eq)]
+pub enum Token {
+    Skip,
+    Char(char),
+    Bool(bool),
+    Str(Intern<String>),
+    Open(Delimiter),
+    Close(Delimiter),
+    TermIdent(ast::Ident),
+    Let,
+    In,
+    Comma,
+}
+
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Token::Skip => write!(f, "skip"),
+            Token::Let => write!(f, "let"),
+            Token::In => write!(f, "in"),
+            Token::Char(c) => write!(f, "{}", c),
+            Token::Bool(x) => write!(f, "{}", x),
+            Token::Str(s) => write!(f, "{}", s),
+            Token::Open(Delimiter::Brace) => write!(f, "{{"),
+            Token::Close(Delimiter::Brace) => write!(f, "}}"),
+            Token::Open(Delimiter::Paren) => write!(f, "("),
+            Token::Close(Delimiter::Paren) => write!(f, ")"),
+            Token::TermIdent(identifier) => write!(f, "{}", identifier),
+            Token::Comma => write!(f, ","),
+        }
+    }
+}
+
+pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
+    let ctrl = just(',').to(Token::Comma);
+
+    let delim = just('{').to(Token::Open(Delimiter::Brace))
+        .or(just('}').to(Token::Close(Delimiter::Brace)))
+        .or(just('(').to(Token::Open(Delimiter::Paren))
+        .or(just(')').to(Token::Close(Delimiter::Paren))));
+
+    let escape = just('\\')
+        .ignore_then(just('\\')
+        .or(just('/'))
+        .or(just('"'))
+        .or(just('b').to('\x08'))
+        .or(just('f').to('\x0C'))
+        .or(just('n').to('\n'))
+        .or(just('r').to('\r'))
+        .or(just('t').to('\t')));
+
+    let r#char = just('\'')
+        .ignore_then(filter(|c| *c != '\\' && *c != '\'').or(escape))
+        .then_ignore(just('\''))
+        .map(Token::Char)
+        .labelled("character");
+
+    let string = just('"')
+        .ignore_then(filter(|c| *c != '\\' && *c != '"').or(escape).repeated())
+        .then_ignore(just('"'))
+        .collect::<String>()
+        .map(Intern::new)
+        .map(Token::Str)
+        .labelled("string");
+
+    let word = text::ident().map(|s: String| match s.as_str() {
+        "skip" => Token::Skip,
+        "let" => Token::Let,
+        "in" => Token::In,
+        "true" => Token::Bool(true),
+        "false" => Token::Bool(false),
+        _ => Token::TermIdent(ast::Ident::new(s)),
+    });
+
+    let comment = just("//").then(take_until(just('\n'))).padded();
+
+    let token = ctrl
+        .or(word)
+        .or(delim)
+        .or(string)
+        .or(r#char)
+        .map_with_span(move |token, span| (token, span))
+        .padded()
+        .recover_with(skip_then_retry_until([]));
+
+    token
+        .padded_by(comment.repeated())
+        .repeated()
+        .padded()
+        .then_ignore(end())}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn simple() {
+        let code = "// comment
+        let x in { skip x (true) false }";
+        let len = code.chars().count();
+
+        let span = |i| Span::new(SrcId::empty(), i..i + 1);
+
+        assert_eq!(
+            lexer()
+                .parse(chumsky::Stream::from_iter(
+                    span(len),
+                    code.chars().enumerate().map(|(i, c)| (c, span(i))),
+                ))
+                .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
+            Ok(vec![
+                Token::Let,
+                Token::TermIdent(ast::Ident::new("x")),
+                Token::In,
+                Token::Open(Delimiter::Brace),
+                Token::Skip,
+                Token::TermIdent(ast::Ident::new("x")),
+                Token::Open(Delimiter::Paren),
+                Token::Bool(true),
+                Token::Close(Delimiter::Paren),
+                Token::Bool(false),
+                Token::Close(Delimiter::Brace),
+            ]),
+        );
+    }
+}
