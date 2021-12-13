@@ -56,7 +56,7 @@ Sio Kernel value expressions
 <v>                 ::= <number> | <record> | <procedure>
 <number>            ::= <int> | <float>
 <record>, <pattern> ::= <literal> | <literal> { <feature>1: <x>1 ... <feature>n: <x>n }
-<procedure>         ::= ( $ <x>1 ... <x>n ) { <s> }
+<procedure>         ::= ( <x>1 ... <x>n ) :: { <s> }
 <literal>           ::= <atom> | <bool>
 <feature>           ::= <atom> | <bool> | <int>
 <bool>              ::= true | false
