@@ -23,6 +23,7 @@ pub enum Token {
     In,
     Comma,
     Separator,
+    Colon,
 }
 
 impl fmt::Display for Token {
@@ -41,13 +42,15 @@ impl fmt::Display for Token {
             Token::TermIdent(identifier) => write!(f, "{}", identifier),
             Token::Comma => write!(f, ","),
             Token::Separator=> write!(f, "::"),
+            Token::Colon=> write!(f, ":"),
         }
     }
 }
 
 pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
     let ctrl = just(',').to(Token::Comma)
-        .or(just("::").to(Token::Separator));
+        .or(just("::").to(Token::Separator))
+        .or(just(":").to(Token::Colon));
 
     let delim = just('{').to(Token::Open(Delimiter::Brace))
         .or(just('}').to(Token::Close(Delimiter::Brace)))
@@ -110,13 +113,15 @@ mod tests {
 
     #[test]
     fn simple() {
-        let code = "// comment
+        let code = "
         let x in {
             skip
             x
             (true)
             false
-            function ( y ) :: { s }
+            record { atom1 : var1, atom2: var2 }
+            named_procedure ( y ) :: { s }
+            ( t ) :: { m } // anonymous procedure and a demonstrated comment not scanned
         }";
         let len = code.chars().count();
 
@@ -140,13 +145,30 @@ mod tests {
                 Token::Bool(true),
                 Token::Close(Delimiter::Paren),
                 Token::Bool(false),
-                Token::TermIdent(ast::Ident::new("function")),
+                Token::TermIdent(ast::Ident::new("record")),
+                Token::Open(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("atom1")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("var1")),
+                Token::Comma,
+                Token::TermIdent(ast::Ident::new("atom2")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("var2")),
+                Token::Close(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("named_procedure")),
                 Token::Open(Delimiter::Paren),
                 Token::TermIdent(ast::Ident::new("y")),
                 Token::Close(Delimiter::Paren),
                 Token::Separator,
                 Token::Open(Delimiter::Brace),
                 Token::TermIdent(ast::Ident::new("s")),
+                Token::Close(Delimiter::Brace),
+                Token::Open(Delimiter::Paren),
+                Token::TermIdent(ast::Ident::new("t")),
+                Token::Close(Delimiter::Paren),
+                Token::Separator,
+                Token::Open(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("m")),
                 Token::Close(Delimiter::Brace),
                 Token::Close(Delimiter::Brace),
             ]),
