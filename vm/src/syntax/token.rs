@@ -10,10 +10,24 @@ pub enum Delimiter {
     Brace,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum Op {
+    Eq,
+}
+
+impl fmt::Display for Op {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Op::Eq => write!(f, "="),
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Hash, Eq)]
 pub enum Token {
     Skip,
     Char(char),
+    Nat(u64),
     Bool(bool),
     Str(Intern<String>),
     Open(Delimiter),
@@ -24,11 +38,13 @@ pub enum Token {
     Comma,
     Separator,
     Colon,
+    Op(Op),
 }
 
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Token::Nat(x) => write!(f, "{}", x),
             Token::Skip => write!(f, "skip"),
             Token::Let => write!(f, "let"),
             Token::In => write!(f, "in"),
@@ -43,14 +59,21 @@ impl fmt::Display for Token {
             Token::Comma => write!(f, ","),
             Token::Separator=> write!(f, "::"),
             Token::Colon=> write!(f, ":"),
+            Token::Op(op) => write!(f, "{}", op),
         }
     }
 }
 
 pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
+    let nat = text::int(10)
+        .map(|s: String| Token::Nat(s.parse().unwrap()));
+
     let ctrl = just(',').to(Token::Comma)
         .or(just("::").to(Token::Separator))
         .or(just(":").to(Token::Colon));
+
+    let op = just("=").to(Op::Eq)
+        .map(Token::Op);
 
     let delim = just('{').to(Token::Open(Delimiter::Brace))
         .or(just('}').to(Token::Close(Delimiter::Brace)))
@@ -94,6 +117,8 @@ pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
 
     let token = ctrl
         .or(word)
+        .or(nat)
+        .or(op)
         .or(delim)
         .or(string)
         .or(r#char)
@@ -116,12 +141,12 @@ mod tests {
         let code = "
         let x in {
             skip
-            x
+            x = 42
             (true)
             false
             record { atom1 : var1, atom2: var2 }
-            named_procedure ( y ) :: { s }
-            ( t ) :: { m } // anonymous procedure and a demonstrated comment not scanned
+            named_procedure :: ( y ) { s }
+            ( t ) { m } // anonymous procedure and a demonstrated comment not scanned
         }";
         let len = code.chars().count();
 
@@ -141,6 +166,8 @@ mod tests {
                 Token::Open(Delimiter::Brace),
                 Token::Skip,
                 Token::TermIdent(ast::Ident::new("x")),
+                Token::Op(Op::Eq),
+                Token::Nat(42),
                 Token::Open(Delimiter::Paren),
                 Token::Bool(true),
                 Token::Close(Delimiter::Paren),
@@ -156,17 +183,16 @@ mod tests {
                 Token::TermIdent(ast::Ident::new("var2")),
                 Token::Close(Delimiter::Brace),
                 Token::TermIdent(ast::Ident::new("named_procedure")),
+                Token::Separator,
                 Token::Open(Delimiter::Paren),
                 Token::TermIdent(ast::Ident::new("y")),
                 Token::Close(Delimiter::Paren),
-                Token::Separator,
                 Token::Open(Delimiter::Brace),
                 Token::TermIdent(ast::Ident::new("s")),
                 Token::Close(Delimiter::Brace),
                 Token::Open(Delimiter::Paren),
                 Token::TermIdent(ast::Ident::new("t")),
                 Token::Close(Delimiter::Paren),
-                Token::Separator,
                 Token::Open(Delimiter::Brace),
                 Token::TermIdent(ast::Ident::new("m")),
                 Token::Close(Delimiter::Brace),
