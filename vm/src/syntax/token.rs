@@ -13,12 +13,14 @@ pub enum Delimiter {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Op {
     Eq,
+    RFlow,
 }
 
 impl fmt::Display for Op {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Op::Eq => write!(f, "="),
+            Op::RFlow => write!(f, "=>"),
         }
     }
 }
@@ -39,6 +41,7 @@ pub enum Token {
     Separator,
     Colon,
     Op(Op),
+    Wildcard,
 }
 
 impl fmt::Display for Token {
@@ -60,6 +63,7 @@ impl fmt::Display for Token {
             Token::Separator=> write!(f, "::"),
             Token::Colon=> write!(f, ":"),
             Token::Op(op) => write!(f, "{}", op),
+            Token::Wildcard => write!(f, "_"),
         }
     }
 }
@@ -72,7 +76,8 @@ pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
         .or(just("::").to(Token::Separator))
         .or(just(":").to(Token::Colon));
 
-    let op = just("=").to(Op::Eq)
+    let op = just("=>").to(Op::RFlow)
+        .or(just('=').to(Op::Eq))
         .map(Token::Op);
 
     let delim = just('{').to(Token::Open(Delimiter::Brace))
@@ -110,6 +115,7 @@ pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
         "in" => Token::In,
         "true" => Token::Bool(true),
         "false" => Token::Bool(false),
+        "_" => Token::Wildcard,
         _ => Token::TermIdent(ast::Ident::new(s)),
     });
 
@@ -139,15 +145,26 @@ mod tests {
     #[test]
     fn simple() {
         let code = "
-        let x in {
-            skip
-            x = 42
-            (true)
-            false
-            record { atom1 : var1, atom2: var2 }
-            named_procedure :: ( y ) { s }
-            ( t ) { m } // anonymous procedure and a demonstrated comment not scanned
-        }";
+let result is_detected in {
+    skip
+    ligo {
+        ngc4992 : false,
+        ngc4993 : true,
+        ngc4994 : true,
+        ngc4995 : false,
+    }                                                      // record of galaxies https://en.wikipedia.org/wiki/New_General_Catalogue
+    collision_detection := (l g o) {                       // anonymous procedure
+        ligo { g : is_detected } = l                       // destructuring
+        match is_detected {                                // pattern matching
+            true  => { o := \"detected\" },
+            false => { o := \"not detected\" },
+            _     => { o := \"not recognized\" },
+        }
+    }
+    collision_detected(ligo, ngc4993, result)
+    print(result)
+}
+        ";
         let len = code.chars().count();
 
         let span = |i| Span::new(SrcId::empty(), i..i + 1);
@@ -161,41 +178,91 @@ mod tests {
                 .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
             Ok(vec![
                 Token::Let,
-                Token::TermIdent(ast::Ident::new("x")),
+                Token::TermIdent(ast::Ident::new("result")),
+                Token::TermIdent(ast::Ident::new("is_detected")),
                 Token::In,
                 Token::Open(Delimiter::Brace),
                 Token::Skip,
-                Token::TermIdent(ast::Ident::new("x")),
-                Token::Op(Op::Eq),
-                Token::Nat(42),
-                Token::Open(Delimiter::Paren),
-                Token::Bool(true),
-                Token::Close(Delimiter::Paren),
+                Token::TermIdent(ast::Ident::new("ligo")),
+                Token::Open(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("ngc4992")),
+                Token::Colon,
                 Token::Bool(false),
-                Token::TermIdent(ast::Ident::new("record")),
-                Token::Open(Delimiter::Brace),
-                Token::TermIdent(ast::Ident::new("atom1")),
-                Token::Colon,
-                Token::TermIdent(ast::Ident::new("var1")),
                 Token::Comma,
-                Token::TermIdent(ast::Ident::new("atom2")),
+                Token::TermIdent(ast::Ident::new("ngc4993")),
                 Token::Colon,
-                Token::TermIdent(ast::Ident::new("var2")),
+                Token::Bool(true),
+                Token::Comma,
+                Token::TermIdent(ast::Ident::new("ngc4994")),
+                Token::Colon,
+                Token::Bool(true),
+                Token::Comma,
+                Token::TermIdent(ast::Ident::new("ngc4995")),
+                Token::Colon,
+                Token::Bool(false),
+                Token::Comma,
                 Token::Close(Delimiter::Brace),
-                Token::TermIdent(ast::Ident::new("named_procedure")),
-                Token::Separator,
+                Token::TermIdent(ast::Ident::new("collision_detection")),
+                Token::Colon,
+                Token::Op(Op::Eq),
                 Token::Open(Delimiter::Paren),
-                Token::TermIdent(ast::Ident::new("y")),
+                Token::TermIdent(ast::Ident::new("l")),
+                Token::TermIdent(ast::Ident::new("g")),
+                Token::TermIdent(ast::Ident::new("o")),
                 Token::Close(Delimiter::Paren),
                 Token::Open(Delimiter::Brace),
-                Token::TermIdent(ast::Ident::new("s")),
-                Token::Close(Delimiter::Brace),
-                Token::Open(Delimiter::Paren),
-                Token::TermIdent(ast::Ident::new("t")),
-                Token::Close(Delimiter::Paren),
+                Token::TermIdent(ast::Ident::new("ligo")),
                 Token::Open(Delimiter::Brace),
-                Token::TermIdent(ast::Ident::new("m")),
+                Token::TermIdent(ast::Ident::new("g")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("is_detected")),
                 Token::Close(Delimiter::Brace),
+                Token::Op(Op::Eq),
+                Token::TermIdent(ast::Ident::new("l")),
+                Token::TermIdent(ast::Ident::new("match")),
+                Token::TermIdent(ast::Ident::new("is_detected")),
+                Token::Open(Delimiter::Brace),
+                Token::Bool(true),
+                Token::Op(Op::RFlow),
+                Token::Open(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("o")),
+                Token::Colon,
+                Token::Op(Op::Eq),
+                Token::Str(Intern::from("detected")),
+                Token::Close(Delimiter::Brace),
+                Token::Comma,
+                Token::Bool(false),
+                Token::Op(Op::RFlow),
+                Token::Open(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("o")),
+                Token::Colon,
+                Token::Op(Op::Eq),
+                Token::Str(Intern::from("not detected")),
+                Token::Close(Delimiter::Brace),
+                Token::Comma,
+                Token::Wildcard,
+                Token::Op(Op::RFlow),
+                Token::Open(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("o")),
+                Token::Colon,
+                Token::Op(Op::Eq),
+                Token::Str(Intern::from("not recognized")),
+                Token::Close(Delimiter::Brace),
+                Token::Comma,
+                Token::Close(Delimiter::Brace),
+                Token::Close(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("collision_detected")),
+                Token::Open(Delimiter::Paren),
+                Token::TermIdent(ast::Ident::new("ligo")),
+                Token::Comma,
+                Token::TermIdent(ast::Ident::new("ngc4993")),
+                Token::Comma,
+                Token::TermIdent(ast::Ident::new("result")),
+                Token::Close(Delimiter::Paren),
+                Token::TermIdent(ast::Ident::new("print")),
+                Token::Open(Delimiter::Paren),
+                Token::TermIdent(ast::Ident::new("result")),
+                Token::Close(Delimiter::Paren),
                 Token::Close(Delimiter::Brace),
             ]),
         );
