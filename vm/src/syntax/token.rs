@@ -14,6 +14,8 @@ pub enum Delimiter {
 pub enum Op {
     Eq,
     RFlow,
+    Less,
+    More,
 }
 
 impl fmt::Display for Op {
@@ -21,6 +23,8 @@ impl fmt::Display for Op {
         match self {
             Op::Eq => write!(f, "="),
             Op::RFlow => write!(f, "=>"),
+            Op::Less => write!(f, "<"),
+            Op::More => write!(f, ">"),
         }
     }
 }
@@ -78,6 +82,8 @@ pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
 
     let op = just("=>").to(Op::RFlow)
         .or(just('=').to(Op::Eq))
+        .or(just('<').to(Op::Less))
+        .or(just('>').to(Op::More))
         .map(Token::Op);
 
     let delim = just('{').to(Token::Open(Delimiter::Brace))
@@ -145,20 +151,22 @@ mod tests {
     #[test]
     fn simple() {
         let code = "
-let result is_detected in {
+let
+    result: String,
+    is_detected: Bool,
+in {
     skip
-    ligo {
+    ligo: Data<Atom, Bool> {
         ngc4992 : false,
         ngc4993 : true,
         ngc4994 : true,
         ngc4995 : false,
-    }                                                      // record of galaxies https://en.wikipedia.org/wiki/New_General_Catalogue
-    collision_detection := (l g o) {                       // anonymous procedure
-        ligo { g : is_detected } = l                       // destructuring
-        match is_detected {                                // pattern matching
+    }                                                                   // record of galaxies https://en.wikipedia.org/wiki/New_General_Catalogue
+    collision_detection := (l: Data<Atom, Bool>, g: Atom, o: String) {  // anonymous procedure
+        ligo { g : is_detected } = l                                    // destructuring
+        match is_detected {                                             // pattern matching
             true  => { o := \"detected\" },
             false => { o := \"not detected\" },
-            _     => { o := \"not recognized\" },
         }
     }
     collision_detected(ligo, ngc4993, result)
@@ -179,11 +187,24 @@ let result is_detected in {
             Ok(vec![
                 Token::Let,
                 Token::TermIdent(ast::Ident::new("result")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("String")),
+                Token::Comma,
                 Token::TermIdent(ast::Ident::new("is_detected")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("Bool")),
+                Token::Comma,
                 Token::In,
                 Token::Open(Delimiter::Brace),
                 Token::Skip,
                 Token::TermIdent(ast::Ident::new("ligo")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("Data")),
+                Token::Op(Op::Less),
+                Token::TermIdent(ast::Ident::new("Atom")),
+                Token::Comma,
+                Token::TermIdent(ast::Ident::new("Bool")),
+                Token::Op(Op::More),
                 Token::Open(Delimiter::Brace),
                 Token::TermIdent(ast::Ident::new("ngc4992")),
                 Token::Colon,
@@ -207,8 +228,21 @@ let result is_detected in {
                 Token::Op(Op::Eq),
                 Token::Open(Delimiter::Paren),
                 Token::TermIdent(ast::Ident::new("l")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("Data")),
+                Token::Op(Op::Less),
+                Token::TermIdent(ast::Ident::new("Atom")),
+                Token::Comma,
+                Token::TermIdent(ast::Ident::new("Bool")),
+                Token::Op(Op::More),
+                Token::Comma,
                 Token::TermIdent(ast::Ident::new("g")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("Atom")),
+                Token::Comma,
                 Token::TermIdent(ast::Ident::new("o")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("String")),
                 Token::Close(Delimiter::Paren),
                 Token::Open(Delimiter::Brace),
                 Token::TermIdent(ast::Ident::new("ligo")),
@@ -238,15 +272,6 @@ let result is_detected in {
                 Token::Colon,
                 Token::Op(Op::Eq),
                 Token::Str(Intern::from("not detected")),
-                Token::Close(Delimiter::Brace),
-                Token::Comma,
-                Token::Wildcard,
-                Token::Op(Op::RFlow),
-                Token::Open(Delimiter::Brace),
-                Token::TermIdent(ast::Ident::new("o")),
-                Token::Colon,
-                Token::Op(Op::Eq),
-                Token::Str(Intern::from("not recognized")),
                 Token::Close(Delimiter::Brace),
                 Token::Comma,
                 Token::Close(Delimiter::Brace),
