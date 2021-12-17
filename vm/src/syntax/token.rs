@@ -152,6 +152,15 @@ mod tests {
     fn simple() {
         let code = "
 let
+    import {
+        neo {
+            public_key: d70feb30dc592db38012120f83d80f5c644535d422df2e859fb40ffba8206769,
+            org: matrix_ltd,
+            library_name: neo_library,
+            version: 0.1,
+            signature: 0196cb45bbb0e0e7a6a39f6c53e2deb1d3a5696ee001ce14f1ba90a894ff50378ab0350401fb0e75c617dfa54b3db4db96c00be6faca725aabfbfe397a58030d,
+        },
+    },
     result: String,
     is_detected: Bool,
 in {
