@@ -160,7 +160,27 @@ pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn skip() {
+        let code = "
+skip
+        ";
+        let len = code.chars().count();
 
+        let span = |i| Span::new(SrcId::empty(), i..i + 1);
+
+        assert_eq!(
+            lexer()
+                .parse(chumsky::Stream::from_iter(
+                    span(len),
+                    code.chars().enumerate().map(|(i, c)| (c, span(i))),
+                ))
+                .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
+            Ok(vec![
+                Token::Skip,
+            ]),
+        );
+    }
     #[test]
     fn let_in() {
         let code = "
@@ -274,6 +294,44 @@ str := \"stringy\"
             ]),
         );
     }
+    #[test]
+    fn records() {
+        let code = "
+rec: Data<Atom, String>
+rec {
+    an_atom : \"a_string\"
+}
+        ";
+        let len = code.chars().count();
+
+        let span = |i| Span::new(SrcId::empty(), i..i + 1);
+
+        assert_eq!(
+            lexer()
+                .parse(chumsky::Stream::from_iter(
+                    span(len),
+                    code.chars().enumerate().map(|(i, c)| (c, span(i))),
+                ))
+                .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
+            Ok(vec![
+                Token::TermIdent(ast::Ident::new("rec")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("Data")),
+                Token::Op(Op::Less),
+                Token::TermIdent(ast::Ident::new("Atom")),
+                Token::Comma,
+                Token::TermIdent(ast::Ident::new("String")),
+                Token::Op(Op::More),
+                Token::TermIdent(ast::Ident::new("rec")),
+                Token::Open(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("an_atom")),
+                Token::Colon,
+                Token::Str(Intern::from("a_string")),
+                Token::Close(Delimiter::Brace),
+            ]),
+        );
+    }
+
     #[test]
     fn simple() {
         let code = "
