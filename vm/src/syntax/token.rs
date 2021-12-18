@@ -190,6 +190,31 @@ skip
             ]),
         );
     }
+
+    #[test]
+    fn assignment() {
+        let code = "
+x = y
+        ";
+        let len = code.chars().count();
+
+        let span = |i| Span::new(SrcId::empty(), i..i + 1);
+
+        assert_eq!(
+            lexer()
+                .parse(chumsky::Stream::from_iter(
+                    span(len),
+                    code.chars().enumerate().map(|(i, c)| (c, span(i))),
+                ))
+                .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
+            Ok(vec![
+                Token::TermIdent(ast::Ident::new("x")),
+                Token::Op(Op::Eq),
+                Token::TermIdent(ast::Ident::new("y")),
+            ]),
+        );
+    }
+
     #[test]
     fn let_in() {
         let code = "
@@ -312,7 +337,7 @@ match x {
     fn natural_number() {
         let code = "
 nat: Nat
-nat := 1
+nat = 1
         ";
         let len = code.chars().count();
 
@@ -330,7 +355,6 @@ nat := 1
                 Token::Colon,
                 Token::TermIdent(ast::Ident::new("Nat")),
                 Token::TermIdent(ast::Ident::new("nat")),
-                Token::Colon,
                 Token::Op(Op::Eq),
                 Token::Nat(1),
             ]),
@@ -341,7 +365,7 @@ nat := 1
     fn number() {
         let code = "
 num: Num
-num := 122.2222
+num = 122.2222
         ";
         let len = code.chars().count();
 
@@ -359,7 +383,6 @@ num := 122.2222
                 Token::Colon,
                 Token::TermIdent(ast::Ident::new("Num")),
                 Token::TermIdent(ast::Ident::new("num")),
-                Token::Colon,
                 Token::Op(Op::Eq),
                 Token::Num(Intern::from("1222222")),
             ]),
@@ -370,7 +393,7 @@ num := 122.2222
     fn string() {
         let code = "
 str: String
-str := \"stringy\"
+str = \"stringy\"
         ";
         let len = code.chars().count();
 
@@ -388,7 +411,6 @@ str := \"stringy\"
                 Token::Colon,
                 Token::TermIdent(ast::Ident::new("String")),
                 Token::TermIdent(ast::Ident::new("str")),
-                Token::Colon,
                 Token::Op(Op::Eq),
                 Token::Str(Intern::from("stringy")),
             ]),
@@ -435,7 +457,7 @@ rec {
     #[test]
     fn anonymous_procedure_and_application() {
         let code = "
-        y := (x: Num) { x }
+        y = (x: Num) { x }
         y(1)
         ";
         let len = code.chars().count();
@@ -451,7 +473,6 @@ rec {
                 .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
             Ok(vec![
                 Token::TermIdent(ast::Ident::new("y")),
-                Token::Colon,
                 Token::Op(Op::Eq),
                 Token::Open(Delimiter::Paren),
                 Token::TermIdent(ast::Ident::new("x")),
@@ -524,11 +545,11 @@ in {
         ngc4994 : true,
         ngc4995 : false,
     }                                                                   // record of galaxies https://en.wikipedia.org/wiki/New_General_Catalogue
-    collision_detection := (l: Data<Atom, Bool>, g: Atom, o: String) {  // anonymous procedure
+    collision_detection = (l: Data<Atom, Bool>, g: Atom, o: String) {  // anonymous procedure
         ligo { g : is_detected } = l                                    // destructuring
         match is_detected {                                             // pattern matching
-            true  => { o := \"detected\" },
-            false => { o := \"not detected\" },
+            true  => { o = \"detected\" },
+            false => { o = \"not detected\" },
         }
     }
     collision_detected(ligo, ngc4993, result)
@@ -586,7 +607,6 @@ in {
                 Token::Comma,
                 Token::Close(Delimiter::Brace),
                 Token::TermIdent(ast::Ident::new("collision_detection")),
-                Token::Colon,
                 Token::Op(Op::Eq),
                 Token::Open(Delimiter::Paren),
                 Token::TermIdent(ast::Ident::new("l")),
@@ -622,7 +642,6 @@ in {
                 Token::Op(Op::RFlow),
                 Token::Open(Delimiter::Brace),
                 Token::TermIdent(ast::Ident::new("o")),
-                Token::Colon,
                 Token::Op(Op::Eq),
                 Token::Str(Intern::from("detected")),
                 Token::Close(Delimiter::Brace),
@@ -631,7 +650,6 @@ in {
                 Token::Op(Op::RFlow),
                 Token::Open(Delimiter::Brace),
                 Token::TermIdent(ast::Ident::new("o")),
-                Token::Colon,
                 Token::Op(Op::Eq),
                 Token::Str(Intern::from("not detected")),
                 Token::Close(Delimiter::Brace),
