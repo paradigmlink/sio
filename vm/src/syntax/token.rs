@@ -46,6 +46,7 @@ pub enum Token {
     In,
     If,
     Else,
+    Match,
     Comma,
     Separator,
     Colon,
@@ -76,6 +77,7 @@ impl fmt::Display for Token {
             Token::Wildcard => write!(f, "_"),
             Token::If => write!(f, "if"),
             Token::Else => write!(f, "else"),
+            Token::Match=> write!(f, "match"),
         }
     }
 }
@@ -139,6 +141,7 @@ pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
         "false" => Token::Bool(false),
         "if" => Token::If,
         "else" => Token::Else,
+        "match" => Token::Match,
         "_" => Token::Wildcard,
         _ => Token::TermIdent(ast::Ident::new(s)),
     });
@@ -238,7 +241,6 @@ false
         );
     }
 
-
     #[test]
     fn conditional() {
         let code = "
@@ -269,6 +271,43 @@ if true { true } else { false }
         );
     }
 
+    #[test]
+    fn pattern_matching() {
+        let code = "
+match x {
+    true => { true }
+    false => { false }
+}
+        ";
+        let len = code.chars().count();
+
+        let span = |i| Span::new(SrcId::empty(), i..i + 1);
+
+        assert_eq!(
+            lexer()
+                .parse(chumsky::Stream::from_iter(
+                    span(len),
+                    code.chars().enumerate().map(|(i, c)| (c, span(i))),
+                ))
+                .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
+            Ok(vec![
+                Token::Match,
+                Token::TermIdent(ast::Ident::new("x")),
+                Token::Open(Delimiter::Brace),
+                Token::Bool(true),
+                Token::Op(Op::RFlow),
+                Token::Open(Delimiter::Brace),
+                Token::Bool(true),
+                Token::Close(Delimiter::Brace),
+                Token::Bool(false),
+                Token::Op(Op::RFlow),
+                Token::Open(Delimiter::Brace),
+                Token::Bool(false),
+                Token::Close(Delimiter::Brace),
+                Token::Close(Delimiter::Brace),
+            ]),
+        );
+    }
     #[test]
     fn natural_number() {
         let code = "
@@ -576,7 +615,7 @@ in {
                 Token::Close(Delimiter::Brace),
                 Token::Op(Op::Eq),
                 Token::TermIdent(ast::Ident::new("l")),
-                Token::TermIdent(ast::Ident::new("match")),
+                Token::Match,
                 Token::TermIdent(ast::Ident::new("is_detected")),
                 Token::Open(Delimiter::Brace),
                 Token::Bool(true),
