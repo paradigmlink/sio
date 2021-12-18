@@ -209,6 +209,30 @@ in {
     }
 
     #[test]
+    fn boolean() {
+        let code = "
+true
+false
+        ";
+        let len = code.chars().count();
+
+        let span = |i| Span::new(SrcId::empty(), i..i + 1);
+
+        assert_eq!(
+            lexer()
+                .parse(chumsky::Stream::from_iter(
+                    span(len),
+                    code.chars().enumerate().map(|(i, c)| (c, span(i))),
+                ))
+                .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
+            Ok(vec![
+                Token::Bool(true),
+                Token::Bool(false),
+            ]),
+        );
+    }
+
+    #[test]
     fn natural_number() {
         let code = "
 nat: Nat
