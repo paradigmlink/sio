@@ -16,6 +16,7 @@ pub enum Op {
     RFlow,
     Less,
     More,
+    Dot,
 }
 
 impl fmt::Display for Op {
@@ -25,6 +26,7 @@ impl fmt::Display for Op {
             Op::RFlow => write!(f, "=>"),
             Op::Less => write!(f, "<"),
             Op::More => write!(f, ">"),
+            Op::Dot => write!(f, "."),
         }
     }
 }
@@ -34,6 +36,7 @@ pub enum Token {
     Skip,
     Char(char),
     Nat(u64),
+    Num(Intern<String>),
     Bool(bool),
     Str(Intern<String>),
     Open(Delimiter),
@@ -52,6 +55,7 @@ impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Token::Nat(x) => write!(f, "{}", x),
+            Token::Num(x) => write!(f, "{}", x),
             Token::Skip => write!(f, "skip"),
             Token::Let => write!(f, "let"),
             Token::In => write!(f, "in"),
@@ -76,6 +80,13 @@ pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
     let nat = text::int(10)
         .map(|s: String| Token::Nat(s.parse().unwrap()));
 
+    let num = text::int(10)
+        .then_ignore(just('.'))
+        .chain::<char, _, _>(text::digits(10))
+        .collect::<String>()
+        .map(Intern::new)
+        .map(Token::Num);
+
     let ctrl = just(',').to(Token::Comma)
         .or(just("::").to(Token::Separator))
         .or(just(":").to(Token::Colon));
@@ -84,6 +95,7 @@ pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
         .or(just('=').to(Op::Eq))
         .or(just('<').to(Op::Less))
         .or(just('>').to(Op::More))
+        .or(just('.').to(Op::Dot))
         .map(Token::Op);
 
     let delim = just('{').to(Token::Open(Delimiter::Brace))
@@ -129,6 +141,7 @@ pub fn lexer() -> impl Parser<char, Vec<(Token, Span)>, Error = Error> {
 
     let token = ctrl
         .or(word)
+        .or(num)
         .or(nat)
         .or(op)
         .or(delim)
@@ -149,18 +162,122 @@ mod tests {
     use super::*;
 
     #[test]
+    fn let_in() {
+        let code = "
+let
+in {
+}
+        ";
+        let len = code.chars().count();
+
+        let span = |i| Span::new(SrcId::empty(), i..i + 1);
+
+        assert_eq!(
+            lexer()
+                .parse(chumsky::Stream::from_iter(
+                    span(len),
+                    code.chars().enumerate().map(|(i, c)| (c, span(i))),
+                ))
+                .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
+            Ok(vec![
+                Token::Let,
+                Token::In,
+                Token::Open(Delimiter::Brace),
+                Token::Close(Delimiter::Brace),
+            ]),
+        );
+    }
+
+    #[test]
+    fn natural_number() {
+        let code = "
+nat: Nat
+nat := 1
+        ";
+        let len = code.chars().count();
+
+        let span = |i| Span::new(SrcId::empty(), i..i + 1);
+
+        assert_eq!(
+            lexer()
+                .parse(chumsky::Stream::from_iter(
+                    span(len),
+                    code.chars().enumerate().map(|(i, c)| (c, span(i))),
+                ))
+                .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
+            Ok(vec![
+                Token::TermIdent(ast::Ident::new("nat")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("Nat")),
+                Token::TermIdent(ast::Ident::new("nat")),
+                Token::Colon,
+                Token::Op(Op::Eq),
+                Token::Nat(1),
+            ]),
+        );
+    }
+
+    #[test]
+    fn number() {
+        let code = "
+num: Num
+num := 122.2222
+        ";
+        let len = code.chars().count();
+
+        let span = |i| Span::new(SrcId::empty(), i..i + 1);
+
+        assert_eq!(
+            lexer()
+                .parse(chumsky::Stream::from_iter(
+                    span(len),
+                    code.chars().enumerate().map(|(i, c)| (c, span(i))),
+                ))
+                .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
+            Ok(vec![
+                Token::TermIdent(ast::Ident::new("num")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("Num")),
+                Token::TermIdent(ast::Ident::new("num")),
+                Token::Colon,
+                Token::Op(Op::Eq),
+                Token::Num(Intern::from("1222222")),
+            ]),
+        );
+    }
+
+    #[test]
+    fn string() {
+        let code = "
+str: String
+str := \"stringy\"
+        ";
+        let len = code.chars().count();
+
+        let span = |i| Span::new(SrcId::empty(), i..i + 1);
+
+        assert_eq!(
+            lexer()
+                .parse(chumsky::Stream::from_iter(
+                    span(len),
+                    code.chars().enumerate().map(|(i, c)| (c, span(i))),
+                ))
+                .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
+            Ok(vec![
+                Token::TermIdent(ast::Ident::new("str")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("String")),
+                Token::TermIdent(ast::Ident::new("str")),
+                Token::Colon,
+                Token::Op(Op::Eq),
+                Token::Str(Intern::from("stringy")),
+            ]),
+        );
+    }
+    #[test]
     fn simple() {
         let code = "
 let
-    import {
-        neo {
-            public_key: d70feb30dc592db38012120f83d80f5c644535d422df2e859fb40ffba8206769,
-            org: matrix_ltd,
-            library_name: neo_library,
-            version: 0.1,
-            signature: 0196cb45bbb0e0e7a6a39f6c53e2deb1d3a5696ee001ce14f1ba90a894ff50378ab0350401fb0e75c617dfa54b3db4db96c00be6faca725aabfbfe397a58030d,
-        },
-    },
     result: String,
     is_detected: Bool,
 in {

@@ -28,6 +28,8 @@ impl Deref for Ident {
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Literal {
+    Nat(u64),
+    Num(f64),
     Bool(bool),
     Char(char),
     Str(Intern<String>),
@@ -36,6 +38,8 @@ pub enum Literal {
 impl fmt::Debug for Literal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Self::Nat(x) => write!(f, "`{}`", x),
+            Self::Num(x) => write!(f, "`{}`", x),
             Self::Bool(x) => write!(f, "`{}`", x),
             Self::Char(c) => write!(f, "`{}`", c),
             Self::Str(s) => write!(f, "`\"{}\"`", s),
