@@ -333,6 +333,84 @@ rec {
     }
 
     #[test]
+    fn anonymous_procedure_and_application() {
+        let code = "
+        y := (x: Num) { x }
+        y(1)
+        ";
+        let len = code.chars().count();
+
+        let span = |i| Span::new(SrcId::empty(), i..i + 1);
+
+        assert_eq!(
+            lexer()
+                .parse(chumsky::Stream::from_iter(
+                    span(len),
+                    code.chars().enumerate().map(|(i, c)| (c, span(i))),
+                ))
+                .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
+            Ok(vec![
+                Token::TermIdent(ast::Ident::new("y")),
+                Token::Colon,
+                Token::Op(Op::Eq),
+                Token::Open(Delimiter::Paren),
+                Token::TermIdent(ast::Ident::new("x")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("Num")),
+                Token::Close(Delimiter::Paren),
+                Token::Open(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("x")),
+                Token::Close(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("y")),
+                Token::Open(Delimiter::Paren),
+                Token::Nat(1),
+                Token::Close(Delimiter::Paren),
+            ]),
+        );
+    }
+
+    #[test]
+    fn named_procedure_and_application() {
+        let code = "
+        x :: (y: Num, z: Nat) { y z }
+        x(1)
+        ";
+        let len = code.chars().count();
+
+        let span = |i| Span::new(SrcId::empty(), i..i + 1);
+
+        assert_eq!(
+            lexer()
+                .parse(chumsky::Stream::from_iter(
+                    span(len),
+                    code.chars().enumerate().map(|(i, c)| (c, span(i))),
+                ))
+                .map(|tokens| tokens.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>()),
+            Ok(vec![
+                Token::TermIdent(ast::Ident::new("x")),
+                Token::Separator,
+                Token::Open(Delimiter::Paren),
+                Token::TermIdent(ast::Ident::new("y")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("Num")),
+                Token::Comma,
+                Token::TermIdent(ast::Ident::new("z")),
+                Token::Colon,
+                Token::TermIdent(ast::Ident::new("Nat")),
+                Token::Close(Delimiter::Paren),
+                Token::Open(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("y")),
+                Token::TermIdent(ast::Ident::new("z")),
+                Token::Close(Delimiter::Brace),
+                Token::TermIdent(ast::Ident::new("x")),
+                Token::Open(Delimiter::Paren),
+                Token::Nat(1),
+                Token::Close(Delimiter::Paren),
+            ]),
+        );
+    }
+
+    #[test]
     fn simple() {
         let code = "
 let
