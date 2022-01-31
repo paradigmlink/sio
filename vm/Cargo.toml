@@ -8,6 +8,4 @@ name = "sio_vm"
 path = "src/main.rs"
 
 [dependencies]
-internment = "0.5.4"
-chumsky = { git = "https://github.com/zesterer/chumsky" }
-ariadne = { git = "https://github.com/zesterer/ariadne" }
+sio_syntax = { version = "0.1.0", path = "../syntax" }

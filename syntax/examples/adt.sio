@@ -1,0 +1,69 @@
+data Name = String
+data Date = Date { y: Int, m: Int, d: Int}
+data Anniversary =
+    | Birthday { name: Name, date: Date }
+    | Wedding  { groom: Name, bride: Name, date: Date }
+data AnniversaryBook = [Anniversary]
+let
+    johnSmith: Anniversary,
+    smithWedding: Anniversary,
+    anniversariesOfJohnSmith: AnniversaryBook,
+    weddingDay: Int,
+in {
+    // deterministic dataflow concurrency
+    thread {
+        johnSmith = Anniversary::Birthday {
+            name: "John Smith",
+            date : Date { y: 1968, m: 7, d: 3 },
+        }
+    }
+
+    // deterministic dataflow concurrency
+    thread {
+        wait(5.0)
+        smithWedding = Anniversary::Wedding {
+            groom: "John Smith",
+            bride: "Jane Smith",
+            date: Date { y: 1987, m: 3 d: 4 },
+        }
+        weddingDay = smithWedding.date.d
+    }
+
+    anniversariesOfJohnSmith: AnniversaryBook = [johnSmith, smithWedding]
+
+    // show date function
+    show_date :: (date: Date) -> String {
+        format("{}-{}-{}", date.y, date.m, date.d)
+    }
+
+    // matches on Anniversary data printing accordingly
+    show_anniversary :: (date: Anniversary) -> String {
+        match date {
+            Anniversary::Birthday(birthday) => {
+                format("{} born {}", birthday.name, birthday.date)
+            },
+            Anniversary::Wedding(wedding) => {
+                // waits on "weddingDay" to be bound in the second thread
+                if weddingDay == 4 {
+                    format("{} married {} on {}", wedding.groom, wedding.bride, wedding.date)
+                } else {
+                    format("{} did not marry {} on this date", wedding.groom, wedding.bride)
+                }
+            },
+        }
+    }
+
+    // using recursion we're able to print out the data.
+    show_anniversaries :: (dates: AnniversaryBook) {
+        match dates {
+            [] => {}
+            h|t => {
+                thread { show_anniversary(h) }
+                show_anniversaries(t)
+            }
+        }
+    }
+
+    // execute the program
+    show_anniversaries(anniversariesOfJohnSmith)
+}

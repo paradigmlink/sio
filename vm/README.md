@@ -50,8 +50,7 @@ Oz Kernel value expressions
 <feature>           ::= <atom> | <bool> | <int>
 <bool>              ::= true | false
 ```
-
-Sio Kernel value expressions
+ Sio Kernel value expressions
 ```
 <v>                 ::= <number> | <record> | <procedure>
 <number>            ::= <int> | <float>
@@ -70,3 +69,46 @@ Sio Kernel value expressions
 - [ ] feature
 - [ ] bool
 
+
+<program> ::= <statement>
+
+<statement> ::= <assignment_statement>
+ | <let_statement>
+ | <if_statement>
+ | "print( " <exp> " )"
+ | <statement> " " <statement>
+
+<assignment_statement> ::= <var_identifier> ": " <type_identifier> " = " <exp>
+<let_statement> ::= "let { " <statement>+ " } in { " <statement>+ " }"
+<if_statement> ::= "if ( " <boolean_expression> " ) { " <statement> " } else { " <statement> " }"
+<data_statement> ::= "data " <type_identifier> " = " <type_identifier>
+
+<exp> ::= <boolean_expression> | <mathematical_expression>
+
+<mathematical_expression> ::= <num>
+ | "( " <mathematical_expression> " )"
+ | <mathematical_expression> <mathematical_operator> <mathematical_expression>
+ | <var_identifier>
+
+<num> ::= [0-9]+
+<mathematical_operator> ::= " + " | " - " | " * " | " / "
+<type_identifier> ::= <uppercase> <lower> | <uppercase> <digit>
+<var_identifier> ::= <lower> | <lower> <digit>
+
+<boolean_expression> ::= <boolean>
+ | "( " <boolean_expression> " )"
+ | "!" <boolean_expression>
+ | <boolean_expression> <boolean_operator> <boolean_expression>
+ | <var_identifier>
+ | <mathematical_expression> <equality_operator> <mathematical_expression>
+ | <boolean_expression> <equality_operator> <boolean_expression>
+ | <mathematical_expression> <comparison_operator> <mathematical_expression>
+
+<boolean_operator> ::= " && " | " || "
+<boolean> ::= " true " | " false "
+<equality_operator> ::= " == " | " != "
+<comparison_operator> ::= " > " | " >= " | " < " | " <= "
+
+<digit> ::= [0-9]+
+<uppercase> ::= [A-Z]+
+<lower> ::= [a-z]+

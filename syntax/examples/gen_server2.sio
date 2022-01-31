@@ -1,0 +1,110 @@
+let {
+    data Name = String
+    data Place = String
+    data Data = Data([{name: Name, place: Place}])
+    data Request =
+        | Add(Name, Place)
+        | Lookup(Name)
+        | AllNames
+        | Delete(Name)
+    data CodeSwap = CodeSwap(Fn)
+    data Response =
+        | Ok({new_state: Data})
+        | Place({place: Place, new_state: Data})
+        | SwappedCode
+    find :: (lookup_name: Name, state: Data) -> Place {
+        match state {
+            [] => {}
+            (name, place)|t => {
+                if lookup_name == name {
+                    place
+                } else {
+                    find(t)
+                }
+            }
+        }
+    }
+    name_server: Pid
+} in {
+    mod server {
+        pub start :: (module: Fn) {
+            register(
+                name_server,
+                spawn {
+                    () { loop(module, module.init()) }
+                }
+            )
+        }
+        pub swap_code :: (name_server: Pid, new_callback_module: Fn) -> Response {
+            match rpc(name_server, CodeSwap(new_callback_module)) {
+                Response::SwappedCode => { print("swapped code") }
+            }
+        }
+        pub rpc :: (name_server: Pid, request: Request) -> Response {
+            name_server ! {self, request}
+            receive name_server {
+                {name_server: Pid, response: Response } => { response }
+            }
+        }
+        loop :: (module: Fn, old_state: Data) {
+            receive all {
+                {from: Pid, code: CodeSwap} => {
+                    match code {
+                        Code(new_callback_module) => {
+                            from ! {name_server, Response::SwappedCode}
+                            loop(new_callback_module, old_state)
+                        }
+                    }
+                }
+                {from: Pid, request: Request} => {
+                    let {
+                        response: Response
+                    } in {
+                        response = module.handle(request, old_state)
+                        from ! {name_server, response}
+                        loop(module, response.new_state)
+                    }
+                }
+            }
+        }
+    }
+    mod name_server {
+        // interface
+        pub add :: (name: Name, place: Place) {
+            match server.rpc(name_server, Request::Add(name, place)) {
+                Response::Ok(_) => { print("added") }
+            }
+        }
+        pub whereis :: (name: Name) -> Place {
+            match server.rpc(name_server, Request::Lookup(name)) {
+                Response::Place(place, state) => {
+                    print("{}", place)
+                }
+            }
+        }
+
+        // call back methods
+        pub init :: () -> Data {
+            Data([{}])
+        }
+        pub handle :: (req: Request, state: Data) -> Response {
+            match req {
+                Request::Add(name, place) => {
+                    Response::Ok {
+                        state: state.append((name, place))
+                    }
+                }
+                Request::Lookup(name) => {
+                    Response::Place{
+                        place: find(name)
+                        state: state
+                    }
+                }
+            }
+        }
+    }
+    name_server_pid = Pid.new()
+    server.start(name_server_pid)
+    name_server.add("joe", "at_home")
+    name_server.whereis("joe")
+}

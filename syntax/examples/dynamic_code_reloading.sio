@@ -1,0 +1,57 @@
+let {} in {
+    mod b {
+        pub x :: () -> Int {
+            1
+        }
+    }
+    mod a {
+        pub start :: (tag: String) {
+            spawn(() -> { loop(tag) })
+        }
+        pub loop :: (tag: String) {
+            sleep()
+            let { val: String } in {
+                val = b.x()
+                println("version ({}) b.x() = {}", tag, val)
+                loop(tag)
+            }
+        }
+        pub sleep :: () {
+            receive all {
+                after 3000 -> true
+            }
+        }
+    }
+}
+
+/*
+// <mock shell session>
+// run the above code in the shell
+// compile modules a and b
+c(b)
+c(a)
+a:start(one)
+"version (one) b:x() = 1"
+a:start(two)
+"version (one) b:x() = 1"
+"version (two) b:x() = 1"
+"version (one) b:x() = 1"
+"version (two) b:x() = 1"
+
+//edit module b
+*/
+let {} in {
+    mod b {
+        pub x :: () -> Int {
+            2
+        }
+    }
+}
+
+/*
+c(b)
+"version (one) b:x() = 2"
+"version (two) b:x() = 2"
+"version (one) b:x() = 2"
+"version (two) b:x() = 2"
+*/

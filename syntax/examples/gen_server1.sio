@@ -1,0 +1,92 @@
+let {
+    data Name = String
+    data Place = String
+    data Data = Data {[(Name, Place)]}
+    data Request =
+        | Add { name: Name, place: Place}
+        | Lookup { name: Name}
+    data Response =
+        | Ok { state: Data }
+        | Place { place: Place, state: Data }
+    name_server: Pid
+} in {
+    server :: () {
+        start :: (module: Fn()) {
+            register(
+                name_server,
+                spawn {
+                    () { loop(module, module.init()) }
+                }
+            )
+        }
+        rpc :: (name_server: Pid, request: Request) -> Response {
+            name_server ! {self, request}
+            receive name_server {
+                {name_server: Pid, response: Response } => { response }
+            }
+        }
+        loop :: (module: Fn(), state: Data) {
+            receive all {
+                {from: Pid, request: Request} => {
+                    let response: Response in {
+                        response = module.handle(request, state)
+                        from ! {name_server, response}
+                        loop(module, response.state1)
+                    }
+                }
+            }
+        }
+    } in {
+        { start, rpc }
+    }
+    name_server :: () {
+        add :: (name: Name, place: Place) {
+            match server.rpc(name_server, Request::Add(name, place)) {
+                Response::Ok(_) => { print("added") }
+            }
+        }
+        whereis :: (name: Name) -> Place {
+            match server.rpc(name_server, Request::Lookup(name)) {
+                Response::Place(place, state) => {
+                    print("{}", place)
+                }
+            }
+        }
+        init :: () -> Data {
+            Data {[()]}
+        }
+        find :: (lookup_name: Name, state: Data) -> Place {
+            match state {
+                [] => {}
+                (name, place)|t => {
+                    if lookup_name == name {
+                        place
+                    } else {
+                        find(t)
+                    }
+                }
+            }
+        }
+        handle :: (req: Request, state: Data) -> Response {
+            match req {
+                Request::Add(name, place) => {
+                    Response::Ok {
+                        state: state.append((name, place))
+                    }
+                }
+                Request::Lookup(name) => {
+                    Response::Place{
+                        place: find(name)
+                        state: state
+                    }
+                }
+            }
+        }
+    } in {
+        { init, add, whereis, handle }
+    }
+    name_server = Pid.new()
+    server.start(name_server)
+    name_server.add("joe", "at_home")
+    name_server.whereis("joe")
+}

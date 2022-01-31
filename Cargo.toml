@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "vm",
+    "syntax",
     "unikernel",
 ]
 exclude = ["target"]

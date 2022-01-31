@@ -1,0 +1,162 @@
+main = _{ SOI ~ statement+ ~ EOI }
+statement = {
+    skip
+    | variable_creation
+    | var_to_var_binding
+    | value_creation
+    | conditional
+    | pattern_match
+    | procedure_appl
+    | module_def
+}
+    skip = { "skip" }
+    variable_creation = {
+        "let" ~ "{"
+            ~ declaration*
+        ~ "}" ~ "in" ~ "{"
+            ~ statement*
+        ~ "}"
+    }
+        declaration = { typed_identifier | data_variant }
+            typed_identifier = {
+                ident   ~ ":" ~ type_ident ~ "<" ~ (user_defined_type ~ ( "," ~ user_defined_type)* ) ~ ">"
+                | ident ~ ":" ~ type_ident
+            }
+            data_variant = {
+                "data"
+                    ~ user_defined_type
+                    ~ "<" ~ (user_defined_type ~ ( "," ~ user_defined_type)* ) ~ ">"
+                    ~ "="
+                    ~ (
+                        user_defined_type ~ "(" ~ ( type_ident ~ ( "," ~ type_ident)* ) ~ ")"
+                        | (
+                            "|" ~ user_defined_type ~ "(" ~ ( type_ident ~ ( "," ~ type_ident)* ) ~ ")"
+                            | "|" ~ user_defined_type
+                          ) {2,}
+                      )+
+                | "data"
+                    ~ user_defined_type
+                    ~ "="
+                    ~ user_defined_type
+                    ~ "(" ~ ( type_ident ~ ( "," ~ type_ident)* ) ~ ")"
+                | "data"
+                    ~ user_defined_type
+                    ~ "="
+                    ~ ("|" ~ user_defined_type ~ "(" ~ ( type_ident ~ ( "," ~ type_ident)* ) ~ ")"){2,}
+                | "data"
+                    ~ user_defined_type
+                    ~ "="
+                    ~ ("|" ~ user_defined_type ){2,}
+                | "data"
+                    ~ user_defined_type
+                    ~ "="
+                    ~ type_ident
+            }
+    var_to_var_binding = {
+        ident   ~ "=" ~ type_ident ~ "(" ~ ( value ~ ( "," ~ value)* ) ~ ")"
+        | ident ~ "=" ~ type_ident
+        | ident ~ "=" ~ ident
+    }
+    value_creation = { ident ~ "=" ~ value }
+        value = { number | string | procedure_def | record | array | tuple }
+            number = { integer | decimal }
+            record = { "{" ~ ( record_pair ~ ( "," ~ record_pair)* )? ~ "}" }
+                record_pair    = { record_feature ~ ":" ~ value }
+                record_feature = { atom | bool | integer | string | char }
+            array  = { "[|" ~ ( value ~ ( "," ~ value)* )? ~ "|]" }
+            tuple  = { "(" ~ ( value ~ ( "," ~ value)* )? ~ ")" }
+            set    = { "<" ~ ( value ~ ( "," ~ value)* )? ~ ">" }
+    conditional = {
+        "if" ~ ident ~ "{"
+            ~ statement+
+        ~ "}"
+        ~ ( "else" ~ "{" ~ statement+ ~ "}" )?
+    }
+    pattern_match = {
+        "match" ~ ident
+        ~ "{"
+        | list_match
+            ~ (type_ident ~ "=>" ~ "{" ~ statement+ ~ "}")+
+        ~ "}"
+    }
+        list_match = {
+            "|"   ~ "[" ~ ident ~ "," ~ ident ~ "," ~ ident ~ "]" ~ "=>" ~ statement* ~ "}"
+            | "|" ~ "[" ~ ident ~ "," ~ ident ~ "]" ~ "=>" ~ "{" ~ statement* ~ "}"
+            | "|" ~ "[" ~ "]" ~ "=>" ~ "{" ~ statement* ~ "}"
+        }
+        array_match = {
+            "|"   ~ "[|" ~ ident ~ "," ~ ident ~ "|]" ~ "=>" ~ "{" ~ statement* ~ "}"
+            | "|" ~ "[|" ~ ident ~ "|]" ~ "=>" ~ "{" ~ statement* ~ "}"
+            | "|" ~ "[|" ~ "|]" ~ "=>" ~ "{" ~ statement* ~ "}"
+        }
+    procedure_appl = {
+        ident ~ "("
+            ~ ident ~ ("," ~ ident)*
+        ~ ")"
+    }
+    module_def = {
+        "mod" ~ module_name ~ "{"
+            ~ named_procedure_def+
+        ~ "}"
+    }
+        module_name = @{ ident }
+
+named_procedure_def = { stability? ~ procedure_name ~ "::" ~ procedure_def }
+    stability = @{ raw | draft | stable | deprecated | legacy }
+        raw        = { "raw" }
+        draft      = { "draft" }
+        stable     = { "stable" }
+        deprecated = { "deprecated" }
+        legacy     = { "legacy" }
+    procedure_name = @{ ident }
+    procedure_def = {
+        "(" ~ (procedure_parameter ~ ("," ~ procedure_parameter)*)? ~ ")"
+        ~ ( "->" ~ return_type )?
+        ~ "{" ~ procedure_body ~ "}"
+    }
+        procedure_parameter = { typed_identifier }
+        return_type = { type_ident }
+        procedure_body = { statement+ }
+literal = { atom | bool | char | string }
+    char = { ASCII_ALPHA }
+feature_type  = {
+    i64_type
+    | bool_type
+    | string_type
+    | char_type
+    | atom_type
+}
+    atom_type   = { "Atom" }
+    bool_type   = { "Bool" }
+    i64_type    = { "I64" }
+    f64_type    = { "F64" }
+    string_type = { "String" }
+    char_type   = { "Char" }
+    unit_type   = { "Unit" }
+type_ident = {
+    user_defined_type
+    | record_type
+    | list_type
+    | array_type
+    | tuple_type
+    | set_type
+}
+    user_defined_type = @{
+        ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)*
+    }
+    record_type = { "{" ~ (feature_pair_type ~ ("," ~ feature_pair_type)*) ~ "}" }
+        feature_pair_type = { feature_type ~ ":" ~ type_ident}
+    list_type = { "[" ~ type_ident ~ "]" }
+    array_type = { "[|" ~ array_length ~ ";" ~ type_ident ~ "|]" }
+        array_length = { integer }
+    tuple_type = { "(" ~ (type_ident ~ ("," ~ type_ident)*)? ~ ")" }
+    set_type = { "<" ~ type_ident ~ ">" }
+bool = { "true" | "false" }
+atom = { ident }
+string = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
+integer = @{ "_"? ~ ASCII_DIGIT+ }
+decimal = @{ "_"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* }
+ident = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
+
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/"}
