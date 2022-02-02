@@ -133,15 +133,26 @@ mod tests {
             e_array = MyArray([|1,2,3|])
             e_list = MyList([1,2,3])
             e_tuple = MyTuple((1,2))
-            /*
-            e_record = MyRecord({an_atom:[|1,2|], true:[1], 2:<1>, "hi":1, 'A':[1]})
+
+            e_record = MyRecord({
+                an_atom:[|1,2|],
+                true:[1],
+                2:<1>,
+                "hi":1,
+                '
+                A
+                '
+                :
+                [
+                1
+                ]
+            })
             e_set = MySet(<2,3>)
             f = J(3)
             k_1 = N(3)
             k_2 = O(true)
             p_1 = R
             p_2 = S(3)
-            */
         }
         "#;
 

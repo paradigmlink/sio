@@ -28,11 +28,19 @@ statement = {
         | ident ~ "=" ~ ident
     }
     value_creation = { ident ~ "=" ~ value }
-        value = { number | string | procedure_def | record | array | tuple | list}
+        value = { number
+            | boolean
+            | string
+            | procedure_def
+            | record
+            | array
+            | tuple
+            | list
+            | set}
             number = { integer | decimal }
             record = { "{" ~ ( record_pair ~ ( "," ~ record_pair)* )? ~ "}" }
-                record_pair    = { record_feature ~ ":" ~ value }
-                record_feature = { atom | bool | integer | string | char }
+                record_pair    = { record_key~ ":" ~ value }
+                record_key= { integer | atom | boolean | string | char }
             array  = { "[|" ~ ( value ~ ( "," ~ value )* )? ~ "|]" }
             list   = { "["  ~ ( value ~ ( "," ~ value )* )? ~ "]"  }
             tuple  = { "("  ~ ( value ~ ( "," ~ value )* )? ~ ")"  }
@@ -88,8 +96,8 @@ named_procedure_def = { stability? ~ procedure_name ~ "::" ~ procedure_def }
         procedure_parameter = { typed_identifier }
         return_type = { type_ident }
         procedure_body = { statement+ }
-literal = { atom | bool | char | string }
-    char = { ASCII_ALPHA }
+literal = { atom | boolean | char | string }
+    char = { "'" ~ ASCII_ALPHA ~ "'" }
 type_ident = {
     user_defined_type
     | record_type_decl
@@ -104,7 +112,9 @@ type_ident = {
         |ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)* ~ "(" ~ (user_defined_type ~ ( "," ~ user_defined_type)* ) ~ ")"
         | ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)*
     }
-bool = { "true" | "false" }
+boolean = { true_lit | false_lit }
+true_lit = { "true" }
+false_lit = { "false" }
 atom = { ident }
 string = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
 integer = @{ "_"? ~ ASCII_DIGIT+ }
