@@ -41,22 +41,22 @@ mod tests {
         let input =
         r#"
         mod list {
-          name2 :: () -> {I64: Hi} {
+          name0 :: () -> Simple {
             hi = {1:2}
           }
-          raw name2 :: () -> {I64: Hi} {
+          raw name1 :: () -> Generic<Simple> {
             hi = {1:2}
           }
-          draft name2 :: () -> {I64: Hi} {
+          draft name2 :: () -> {I64: Simple} {
             hi = {1:2}
           }
-          stable name2 :: () -> {I64: Hi} {
+          stable name3 :: () -> [Generic<Simple>] {
             hi = {1:2}
           }
-          deprecated name2 :: () -> {I64: Hi} {
+          deprecated name4 :: () -> [|3; Hi|] {
             hi = {1:2}
           }
-          legacy name2 :: () -> {I64: Hi} {
+          legacy name5 :: () -> <Hi> {
             hi = {1:2}
           }
         }
@@ -86,22 +86,62 @@ mod tests {
         let input =
         r#"
         let {
-            data MyVariant = MyVariant
-            data MyArray  = [| 3; ArrayElement |]
-            data MyList   = [ ListElement ]
-            data MyTuple  = ( TupleElement1, TupleElement2)
-            data MySet    = < SetElement >
-            data MyRecord = {
-                Atom: [| 4; RecordElement1 |],
-                Bool: [ RecordElement2 ],
-                I64:  < RecordElement3 >,
-                String: RecordElement4 ,
-                Char: [ RecordElement5 ]
-            }
-            my_record: MyRecord
+            data DataType = Constructor
+            data DataType<A,B,C> = Constructor(Option<T>, Result<String, I64>)
+            data A =
+                | C
+                | D
+            data E<I> = F(I)
+            data Tree<T> =
+                | None
+                | Leaf(T)
+                | Node(Tree<T>, Tree<T>)
+            data Result<M, N> =
+                | Ok(M)
+                | Err(N)
+            data Option<T> =
+                | None
+                | Some(T)
+            data E =
+                | MyArray([|3; Option<Result<I64, String>>|], I64)
+                | MyList([Option<Result<I64, String>>], I64)
+                | MyTuple((Option<Result<I64, String>>, I64))
+                | MySet(<Option<Result<I64, String>>>, I64)
+                | MyRecord({
+                    Atom: [|2; I64|],
+                    Bool: [I64],
+                    I64:  (I64),
+                    String:<I64>,
+                    Char: {I64:Option<Result<I64, String>>}
+                  })
+            a: A
+            b: B
+            e_array: E
+            e_list: E
+            e_tuple: E
+            e_set: E
+            e_record: E
+            f: F<I64>
+            k_1: K<I64, Bool>
+            k_2: K<I64, Bool>
+            p_1: P<I64>
+            p_2: P<Option<I65>>
         } in {
             skip
-            hi1 = hi2
+            a = A
+            b = C
+            e_array = MyArray([|1,2,3|])
+            e_list = MyList([1,2,3])
+            e_tuple = MyTuple((1,2))
+            /*
+            e_record = MyRecord({an_atom:[|1,2|], true:[1], 2:<1>, "hi":1, 'A':[1]})
+            e_set = MySet(<2,3>)
+            f = J(3)
+            k_1 = N(3)
+            k_2 = O(true)
+            p_1 = R
+            p_2 = S(3)
+            */
         }
         "#;
 
@@ -138,25 +178,26 @@ mod tests {
                 Bool: [ RecordElement2 ],
                 I64:  < RecordElement3 >,
                 String: RecordElement4 ,
-                Char: [ RecordElement5 ]
+                Char: [ RecordElement5 ],
+                Char: ( RecordElement6 )
             }
             data T = A
             data T = B(Bool)
             data T = C(I64, String)
-            data T =
+            data A =
                 | A
                 | B
                 | C
                 | D
-            data T =
+            data B =
                 | A({I64: String, String: I64}, I64)
                 | B([String], I64)
                 | C(<String>, String)
                 | D([|3; String|])
                 | E((Tuple, Tuple2), (Tuple3, Tuple4))
             data Option<T> =
-                | Some(T)
                 | None
+                | Some(T)
             data Result<T, E> =
                 | Ok(T)
                 | Err(E)

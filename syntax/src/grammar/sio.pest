@@ -17,55 +17,26 @@ statement = {
             ~ statement*
         ~ "}"
     }
-        declaration = { typed_identifier | data_variant }
-            typed_identifier = {
-                ident   ~ ":" ~ type_ident ~ "<" ~ (user_defined_type ~ ( "," ~ user_defined_type)* ) ~ ">"
-                | ident ~ ":" ~ type_ident
-            }
-            data_variant = {
-                "data"
-                    ~ user_defined_type
-                    ~ "<" ~ (user_defined_type ~ ( "," ~ user_defined_type)* ) ~ ">"
-                    ~ "="
-                    ~ (
-                        user_defined_type ~ "(" ~ ( type_ident ~ ( "," ~ type_ident)* ) ~ ")"
-                        | (
-                            "|" ~ user_defined_type ~ "(" ~ ( type_ident ~ ( "," ~ type_ident)* ) ~ ")"
-                            | "|" ~ user_defined_type
-                          ) {2,}
-                      )+
-                | "data"
-                    ~ user_defined_type
-                    ~ "="
-                    ~ user_defined_type
-                    ~ "(" ~ ( type_ident ~ ( "," ~ type_ident)* ) ~ ")"
-                | "data"
-                    ~ user_defined_type
-                    ~ "="
-                    ~ ("|" ~ user_defined_type ~ "(" ~ ( type_ident ~ ( "," ~ type_ident)* ) ~ ")"){2,}
-                | "data"
-                    ~ user_defined_type
-                    ~ "="
-                    ~ ("|" ~ user_defined_type ){2,}
-                | "data"
-                    ~ user_defined_type
-                    ~ "="
-                    ~ type_ident
-            }
+        declaration = {
+            typed_identifier
+            | data_type_decl
+        }
+            typed_identifier = { ident   ~ ":" ~ type_decl }
     var_to_var_binding = {
         ident   ~ "=" ~ type_ident ~ "(" ~ ( value ~ ( "," ~ value)* ) ~ ")"
         | ident ~ "=" ~ type_ident
         | ident ~ "=" ~ ident
     }
     value_creation = { ident ~ "=" ~ value }
-        value = { number | string | procedure_def | record | array | tuple }
+        value = { number | string | procedure_def | record | array | tuple | list}
             number = { integer | decimal }
             record = { "{" ~ ( record_pair ~ ( "," ~ record_pair)* )? ~ "}" }
                 record_pair    = { record_feature ~ ":" ~ value }
                 record_feature = { atom | bool | integer | string | char }
-            array  = { "[|" ~ ( value ~ ( "," ~ value)* )? ~ "|]" }
-            tuple  = { "(" ~ ( value ~ ( "," ~ value)* )? ~ ")" }
-            set    = { "<" ~ ( value ~ ( "," ~ value)* )? ~ ">" }
+            array  = { "[|" ~ ( value ~ ( "," ~ value )* )? ~ "|]" }
+            list   = { "["  ~ ( value ~ ( "," ~ value )* )? ~ "]"  }
+            tuple  = { "("  ~ ( value ~ ( "," ~ value )* )? ~ ")"  }
+            set    = { "<"  ~ ( value ~ ( "," ~ value )* )? ~ ">"  }
     conditional = {
         "if" ~ ident ~ "{"
             ~ statement+
@@ -119,38 +90,20 @@ named_procedure_def = { stability? ~ procedure_name ~ "::" ~ procedure_def }
         procedure_body = { statement+ }
 literal = { atom | bool | char | string }
     char = { ASCII_ALPHA }
-feature_type  = {
-    i64_type
-    | bool_type
-    | string_type
-    | char_type
-    | atom_type
-}
-    atom_type   = { "Atom" }
-    bool_type   = { "Bool" }
-    i64_type    = { "I64" }
-    f64_type    = { "F64" }
-    string_type = { "String" }
-    char_type   = { "Char" }
-    unit_type   = { "Unit" }
 type_ident = {
     user_defined_type
-    | record_type
-    | list_type
-    | array_type
-    | tuple_type
-    | set_type
+    | record_type_decl
+    | list_type_decl
+    | array_type_decl
+    | tuple_type_decl
+    | set_type_decl
 }
     user_defined_type = @{
-        ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)*
+        ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)* ~ "<" ~ (user_defined_type ~ ( "," ~ user_defined_type)* ) ~ ">"
+
+        |ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)* ~ "(" ~ (user_defined_type ~ ( "," ~ user_defined_type)* ) ~ ")"
+        | ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)*
     }
-    record_type = { "{" ~ (feature_pair_type ~ ("," ~ feature_pair_type)*) ~ "}" }
-        feature_pair_type = { feature_type ~ ":" ~ type_ident}
-    list_type = { "[" ~ type_ident ~ "]" }
-    array_type = { "[|" ~ array_length ~ ";" ~ type_ident ~ "|]" }
-        array_length = { integer }
-    tuple_type = { "(" ~ (type_ident ~ ("," ~ type_ident)*)? ~ ")" }
-    set_type = { "<" ~ type_ident ~ ">" }
 bool = { "true" | "false" }
 atom = { ident }
 string = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
@@ -160,3 +113,78 @@ ident = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
 
 WHITESPACE = _{ " " | "\t" | NEWLINE }
 COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/"}
+
+/* Type Declaration */
+data_type_decl = {
+    "data"
+    ~ type_decl
+    ~ "="
+    | ("|" ~ variant_constructor) {2,}
+    | variant_constructor
+}
+type_decl = {
+    generic_data_type_decl
+    | no_generic_data_type_decl
+    | collection_decl
+}
+generic_data_type_decl = {
+    data_type_name
+    ~ "<"
+    ~ type_decl ~ ("," ~ type_decl)*
+    ~ ">"
+}
+no_generic_data_type_decl = {
+    data_type_name
+}
+variant_constructor = {
+    product_variant_constructor
+    | empty_variant_constructor
+}
+data_type_name = @{
+    ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)*
+}
+generic_type_label = { generic_type_name }
+generic_type_name = @{
+    ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)*
+}
+product_variant_constructor = {
+    variant_constructor_name
+    ~ "("
+    ~ type_decl ~ ("," ~ type_decl)*
+    ~ ")"
+}
+empty_variant_constructor = {
+    variant_constructor_name
+}
+variant_constructor_name = @{
+    ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)*
+}
+collection_decl = {
+    record_type_decl
+    | list_type_decl
+    | array_type_decl
+    | tuple_type_decl
+    | set_type_decl
+}
+record_type_decl = { "{" ~ (record_pair_decl ~ ("," ~ record_pair_decl)*) ~ "}" }
+    record_pair_decl = { key_type_decl ~ ":" ~ type_decl}
+        key_type_decl  = {
+            i64_type
+            | bool_type
+            | string_type
+            | char_type
+            | atom_type
+        }
+list_type_decl   = { "[" ~ type_decl ~ "]" }
+array_type_decl  = { "[|" ~ array_length ~ ";" ~ type_decl ~ "|]" }
+    array_length = { integer }
+tuple_type_decl  = { "(" ~ (type_decl ~ ("," ~ type_decl)*)? ~ ")" }
+set_type_decl    = { "<" ~ type_decl ~ ">" }
+
+atom_type   = { "Atom" }
+bool_type   = { "Bool" }
+i64_type    = { "I64" }
+f64_type    = { "F64" }
+string_type = { "String" }
+char_type   = { "Char" }
+unit_type   = { "Unit" }
