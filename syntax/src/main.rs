@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn pattern_match_test() {
+    fn data_variant_test() {
         let input =
         r#"
         let {
@@ -103,7 +103,7 @@ mod tests {
                 | None
                 | Some(T)
             data E =
-                | MyArray([|3; Option<Result<I64, String>>|], I64)
+                | MyArray ([|3; Option<Result<I64, String>>|], I64)
                 | MyList([Option<Result<I64, String>>], I64)
                 | MyTuple((Option<Result<I64, String>>, I64))
                 | MySet(<Option<Result<I64, String>>>, I64)
@@ -133,19 +133,12 @@ mod tests {
             e_array = MyArray([|1,2,3|])
             e_list = MyList([1,2,3])
             e_tuple = MyTuple((1,2))
-
             e_record = MyRecord({
                 an_atom:[|1,2|],
                 true:[1],
                 2:<1>,
                 "hi":1,
-                '
-                A
-                '
-                :
-                [
-                1
-                ]
+                'A':[1]
             })
             e_set = MySet(<2,3>)
             f = J(3)
@@ -176,54 +169,80 @@ mod tests {
     }
 
     #[test]
-    fn data_variant_test() {
+    fn pattern_match_test() {
         let input =
         r#"
         let {
-            data MyArray  = [| 3; ArrayElement |]
-            data MyList   = [ ListElement ]
-            data MyTuple  = ( TupleElement1, TupleElement2)
-            data MySet    = < SetElement >
-            data MyRecord = {
-                Atom: [| 4; RecordElement1 |],
-                Bool: [ RecordElement2 ],
-                I64:  < RecordElement3 >,
-                String: RecordElement4 ,
-                Char: [ RecordElement5 ],
-                Char: ( RecordElement6 )
-            }
-            data T = A
-            data T = B(Bool)
-            data T = C(I64, String)
-            data A =
-                | A
-                | B
-                | C
-                | D
-            data B =
-                | A({I64: String, String: I64}, I64)
-                | B([String], I64)
-                | C(<String>, String)
-                | D([|3; String|])
-                | E((Tuple, Tuple2), (Tuple3, Tuple4))
-            data Option<T> =
-                | None
-                | Some(T)
-            data Result<T, E> =
-                | Ok(T)
-                | Err(E)
-            data Test<T> = Test(T)
-            hi: T
-            option1: Option<I64>
-            option2: Option<I64>
-            result1: Result<I64, String>
-            result2: Result<I64, String>
         } in {
-            skip
-            option1 = None
-            option2 = Some(3)
-            result1 = Ok(3)
-            result2 = Err("darn")
+            match 3.2+3.4 {
+            }
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::variable_creation => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
+
+    #[test]
+    fn var_to_var_binding_test() {
+        let input =
+        r#"
+        let {} in {
+            a = Type
+            b = Type(2)
+            c = Type(true)
+            d1 = "43"
+            d2 = "43.43"
+            e = true
+            f = <3>
+            g = ["hi"]
+            h = [|3|]
+            i = (Type("hi"),Type(3))
+            j = false
+            i = () { skip }
+            k = () -> Hi { skip }
+            k = (hi: Hi) -> Hi { skip }
+            k = (hi: Hi, hi: Hi) -> Hi { skip }
+            k = (hi: Hi, hi: Hi<I64>) -> Result<Option<I64>, String> { skip }
+            k = (hi: [|3; Hi|], hi: [Hi]) -> <Hi> {
+                    skip
+                    hi=[|3,2,1|]
+                    hi=[3,2,1]
+                    hi=<3,2,1>
+                    hi=(3,2,1)
+                    hi="hi"
+                    hi=3
+                    hi=3.3
+                    hi=true
+                    hi=false
+                    hi='h'
+                    hi=(3+3)
+                    hi=(3*3)
+                    hi=(3/3)
+                    hi=(3-3)
+                    hi=(3==3)
+                    hi=(3<3)
+                    hi=(3>3)
+                    hi=(true||false)
+                    hi=(true&&false)
+                    hi=(3<=3)
+                    hi=((((((((3>=3)+3)/3)*3)-3)<=3)&&3)||3)
+                }
         }
         "#;
 

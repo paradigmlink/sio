@@ -1,86 +1,160 @@
 main = _{ SOI ~ statement+ ~ EOI }
 statement = {
     skip
+    | value_creation
     | variable_creation
     | var_to_var_binding
-    | value_creation
     | conditional
     | pattern_match
-    | procedure_appl
     | module_def
+    | procedure_call
 }
     skip = { "skip" }
     variable_creation = {
-        "let" ~ "{"
+        "let" ~ brace_open
             ~ declaration*
-        ~ "}" ~ "in" ~ "{"
+        ~ brace_close ~ "in" ~ brace_open
             ~ statement*
-        ~ "}"
+        ~ brace_close
     }
         declaration = {
-            typed_identifier
+            ident_and_type
             | data_type_decl
         }
-            typed_identifier = { ident   ~ ":" ~ type_decl }
+            ident_and_type = { ident ~ ":" ~ type_decl }
     var_to_var_binding = {
-        ident   ~ "=" ~ type_ident ~ "(" ~ ( value ~ ( "," ~ value)* ) ~ ")"
-        | ident ~ "=" ~ type_ident
+        ident   ~ "=" ~ type_decl ~ paren_open ~ ( value ~ ( comma ~ value)* ) ~ paren_close
+        | ident ~ "=" ~ type_decl
         | ident ~ "=" ~ ident
     }
     value_creation = { ident ~ "=" ~ value }
-        value = { number
-            | boolean
-            | string
+        value = {
+            number_inst
+            | boolean_inst
+            | char_inst
+            | string_inst
             | procedure_def
-            | record
-            | array
-            | tuple
-            | list
-            | set}
-            number = { integer | decimal }
-            record = { "{" ~ ( record_pair ~ ( "," ~ record_pair)* )? ~ "}" }
+            | record_inst
+            | array_inst
+            | list_inst
+            | tuple_inst
+            | set_inst
+            | type_inst
+            | paren_open ~ expr ~ paren_close
+        }
+            number_inst = { decimal_inst | integer_inst }
+                integer_inst = @{ "_"? ~ ASCII_DIGIT+ }
+                decimal_inst = @{ "_"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* }
+            boolean_inst = { true_lit | false_lit }
+                true_lit = { "true" }
+                false_lit = { "false" }
+            string_inst = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
+            char_inst = { "'" ~ ASCII_ALPHA ~ "'" }
+            record_inst = { brace_open ~ ( record_pair ~ ( comma ~ record_pair)* )? ~ brace_close }
                 record_pair    = { record_key~ ":" ~ value }
-                record_key= { integer | atom | boolean | string | char }
-            array  = { "[|" ~ ( value ~ ( "," ~ value )* )? ~ "|]" }
-            list   = { "["  ~ ( value ~ ( "," ~ value )* )? ~ "]"  }
-            tuple  = { "("  ~ ( value ~ ( "," ~ value )* )? ~ ")"  }
-            set    = { "<"  ~ ( value ~ ( "," ~ value )* )? ~ ">"  }
+                record_key= {
+                    integer_inst
+                    | atom_inst
+                    | boolean_inst
+                    | string_inst
+                    | char_inst
+                }
+                    atom_inst = { ident }
+            array_inst  = { array_open ~ ( value ~ ( comma ~ value )* )? ~ array_close }
+            list_inst   = { bracket_open  ~ ( value ~ ( comma ~ value )* )? ~ bracket_close  }
+            tuple_inst  = { paren_open  ~ ( value ~ ( comma ~ value )* )? ~ paren_close  }
+            set_inst    = { angle_open  ~ ( value ~ ( comma ~ value )* )? ~ angle_close  }
+            type_inst = {
+                data_type_name ~ paren_open ~ value ~ paren_close
+                | data_type_name
+            }
+
     conditional = {
-        "if" ~ ident ~ "{"
+        "if" ~ ident ~ brace_open
             ~ statement+
-        ~ "}"
-        ~ ( "else" ~ "{" ~ statement+ ~ "}" )?
+        ~ brace_close
+        ~ ( "else" ~ brace_open ~ statement+ ~ brace_close )?
     }
+    procedure_call = { ident ~ paren_open ~ args? ~ paren_close }
+        op_unary_minus =  { "-" }
+        op_unary_not   =  { "!" }
+        op_unary       = _{
+            op_unary_minus |
+            op_unary_not
+        }
+        op_plus          =  { "+" }
+        op_minus         =  { "-" }
+        op_times         =  { "*" }
+        op_divide        =  { "/" }
+        op_and           =  { "&&" }
+        op_or            =  { "||" }
+        op_greater       =  { ">" }
+        op_greater_equal =  { ">=" }
+        op_lower         =  { "<" }
+        op_lower_equal   =  { "<=" }
+        op_equal         =  { "==" }
+        op_infix         = _{
+            op_plus |
+            op_minus |
+            op_times |
+            op_divide |
+            op_and |
+            op_or |
+            op_greater_equal |
+            op_greater |
+            op_lower_equal |
+            op_lower |
+            op_equal
+        }
+        paren_open  = { "(" }
+        paren_close = { ")" }
+        brace_open = { "{" }
+        brace_close = { "}" }
+        bracket_open = { "[" }
+        bracket_close = { "]" }
+        angle_open = { "<" }
+        angle_close = { ">" }
+        array_open = { "[|" }
+        array_close = { "|]" }
+        dot   =  { "." }
+        comma =  { "," }
+        args  = _{ expr ~ (comma ~ expr)* }
+        term = { op_unary* ~ value ~ (dot ~ procedure_call)* }
+        expr = { term ~ (op_infix ~ term)* }
     pattern_match = {
-        "match" ~ ident
-        ~ "{"
-        | list_match
-            ~ (type_ident ~ "=>" ~ "{" ~ statement+ ~ "}")+
-        ~ "}"
+        "match" ~ expr
+        ~ brace_open
+        ~ brace_close
     }
+    /*
         list_match = {
-            "|"   ~ "[" ~ ident ~ "," ~ ident ~ "," ~ ident ~ "]" ~ "=>" ~ statement* ~ "}"
-            | "|" ~ "[" ~ ident ~ "," ~ ident ~ "]" ~ "=>" ~ "{" ~ statement* ~ "}"
-            | "|" ~ "[" ~ "]" ~ "=>" ~ "{" ~ statement* ~ "}"
+            "|" ~ bracket_open ~ ident ~ comma ~ ident ~ comma ~ ident ~ bracket_close ~ "=>" ~ statement* ~ brace_close
+            | "|" ~ bracket_open ~ ident ~ comma ~ ident ~ bracket_close ~ "=>" ~ brace_open ~ statement* ~ brace_close
+            | "|" ~ bracket_open ~ bracket_close ~ "=>" ~ brace_open ~ statement* ~ brace_close
         }
         array_match = {
-            "|"   ~ "[|" ~ ident ~ "," ~ ident ~ "|]" ~ "=>" ~ "{" ~ statement* ~ "}"
-            | "|" ~ "[|" ~ ident ~ "|]" ~ "=>" ~ "{" ~ statement* ~ "}"
-            | "|" ~ "[|" ~ "|]" ~ "=>" ~ "{" ~ statement* ~ "}"
+            "|" ~ array_open ~ ident ~ comma ~ ident ~ array_close ~ "=>" ~ brace_open ~ statement* ~ brace_close
+            | "|" ~ array_open ~ ident ~ array_close ~ "=>" ~ brace_open ~ statement* ~ brace_close
+            | "|" ~ array_open ~ array_close ~ "=>" ~ brace_open ~ statement* ~ brace_close
         }
-    procedure_appl = {
-        ident ~ "("
-            ~ ident ~ ("," ~ ident)*
-        ~ ")"
-    }
+        boolean_match = {
+            "|" ~ true_lit ~ "=>" ~ brace_open ~ statement* ~ brace_close
+            | "|" ~ false_lit ~ "=>" ~ brace_open ~ statement* ~ brace_close
+        }
+    */
     module_def = {
-        "mod" ~ module_name ~ "{"
+        "mod" ~ module_name ~ brace_open
             ~ named_procedure_def+
-        ~ "}"
+        ~ brace_close
     }
         module_name = @{ ident }
 
-named_procedure_def = { stability? ~ procedure_name ~ "::" ~ procedure_def }
+named_procedure_def = { name_precedure_header ~ procedure_def }
+    name_precedure_header = {
+        stability?
+        ~ procedure_name
+        ~ "::"
+    }
     stability = @{ raw | draft | stable | deprecated | legacy }
         raw        = { "raw" }
         draft      = { "draft" }
@@ -88,37 +162,23 @@ named_procedure_def = { stability? ~ procedure_name ~ "::" ~ procedure_def }
         deprecated = { "deprecated" }
         legacy     = { "legacy" }
     procedure_name = @{ ident }
+    procedure_header = {
+        paren_open
+        ~ procedure_parameters?
+        ~ paren_close
+        ~ procedure_return_type?
+    }
+        procedure_parameters = { procedure_parameter ~ (comma ~ procedure_parameter)* }
+            procedure_parameter = { ident_and_type }
+        procedure_return_type = { "->" ~ type_decl }
     procedure_def = {
-        "(" ~ (procedure_parameter ~ ("," ~ procedure_parameter)*)? ~ ")"
-        ~ ( "->" ~ return_type )?
-        ~ "{" ~ procedure_body ~ "}"
+        procedure_header
+        ~ brace_open
+        ~ procedure_body
+        ~ brace_close
     }
-        procedure_parameter = { typed_identifier }
-        return_type = { type_ident }
         procedure_body = { statement+ }
-literal = { atom | boolean | char | string }
-    char = { "'" ~ ASCII_ALPHA ~ "'" }
-type_ident = {
-    user_defined_type
-    | record_type_decl
-    | list_type_decl
-    | array_type_decl
-    | tuple_type_decl
-    | set_type_decl
-}
-    user_defined_type = @{
-        ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)* ~ "<" ~ (user_defined_type ~ ( "," ~ user_defined_type)* ) ~ ">"
 
-        |ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)* ~ "(" ~ (user_defined_type ~ ( "," ~ user_defined_type)* ) ~ ")"
-        | ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)*
-    }
-boolean = { true_lit | false_lit }
-true_lit = { "true" }
-false_lit = { "false" }
-atom = { ident }
-string = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
-integer = @{ "_"? ~ ASCII_DIGIT+ }
-decimal = @{ "_"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* }
 ident = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
 
 WHITESPACE = _{ " " | "\t" | NEWLINE }
@@ -139,9 +199,9 @@ type_decl = {
 }
 generic_data_type_decl = {
     data_type_name
-    ~ "<"
-    ~ type_decl ~ ("," ~ type_decl)*
-    ~ ">"
+    ~ angle_open
+    ~ type_decl ~ (comma ~ type_decl)*
+    ~ angle_close
 }
 no_generic_data_type_decl = {
     data_type_name
@@ -159,9 +219,9 @@ generic_type_name = @{
 }
 product_variant_constructor = {
     variant_constructor_name
-    ~ "("
-    ~ type_decl ~ ("," ~ type_decl)*
-    ~ ")"
+    ~ paren_open
+    ~ type_decl ~ (comma ~ type_decl)*
+    ~ paren_close
 }
 empty_variant_constructor = {
     variant_constructor_name
@@ -176,7 +236,7 @@ collection_decl = {
     | tuple_type_decl
     | set_type_decl
 }
-record_type_decl = { "{" ~ (record_pair_decl ~ ("," ~ record_pair_decl)*) ~ "}" }
+record_type_decl = { brace_open ~ (record_pair_decl ~ (comma ~ record_pair_decl)*) ~ brace_close }
     record_pair_decl = { key_type_decl ~ ":" ~ type_decl}
         key_type_decl  = {
             i64_type
@@ -185,11 +245,11 @@ record_type_decl = { "{" ~ (record_pair_decl ~ ("," ~ record_pair_decl)*) ~ "}" 
             | char_type
             | atom_type
         }
-list_type_decl   = { "[" ~ type_decl ~ "]" }
-array_type_decl  = { "[|" ~ array_length ~ ";" ~ type_decl ~ "|]" }
-    array_length = { integer }
-tuple_type_decl  = { "(" ~ (type_decl ~ ("," ~ type_decl)*)? ~ ")" }
-set_type_decl    = { "<" ~ type_decl ~ ">" }
+list_type_decl   = { bracket_open ~ type_decl ~ bracket_close }
+array_type_decl  = { array_open ~ array_length ~ ";" ~ type_decl ~ array_close }
+    array_length = { integer_inst }
+tuple_type_decl  = { paren_open ~ (type_decl ~ (comma ~ type_decl)*)? ~ paren_close }
+set_type_decl    = { angle_open ~ type_decl ~ angle_close }
 
 atom_type   = { "Atom" }
 bool_type   = { "Bool" }
@@ -198,3 +258,4 @@ f64_type    = { "F64" }
 string_type = { "String" }
 char_type   = { "Char" }
 unit_type   = { "Unit" }
+
