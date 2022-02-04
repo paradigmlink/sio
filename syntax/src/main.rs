@@ -41,22 +41,29 @@ mod tests {
         let input =
         r#"
         mod list {
+          data DataType = Constructor
+          summon data DataType = Constructor
+          sketch data DataType = Constructor
+          stable data DataType = Constructor
+          sunset data DataType = Constructor
+          seeyou data DataType = Constructor
+        } in {
           name0 :: () -> Simple {
             hi = {1:2}
           }
-          raw name1 :: () -> Generic<Simple> {
+          summon name1 :: () -> Generic<Simple> {
             hi = {1:2}
           }
-          draft name2 :: () -> {I64: Simple} {
+          sketch name2 :: () -> {I64: Simple} {
             hi = {1:2}
           }
           stable name3 :: () -> [Generic<Simple>] {
             hi = {1:2}
           }
-          deprecated name4 :: () -> [|3; Hi|] {
+          sunset name4 :: () -> [|3; Hi|] {
             hi = {1:2}
           }
-          legacy name5 :: () -> <Hi> {
+          seeyou name5 :: () -> <Hi> {
             hi = {1:2}
           }
         }
@@ -174,7 +181,14 @@ mod tests {
         r#"
         let {
         } in {
-            match 3.2+3.4 {
+            match [|3|] {
+            | [||] => { skip }
+            | [] => { skip }
+            | true => { skip }
+            | false => { skip }
+            | 'h' => { skip }
+            | _ => { skip }
+            | "hello" => { skip }
             }
         }
         "#;

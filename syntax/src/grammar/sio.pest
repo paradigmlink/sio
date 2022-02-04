@@ -60,12 +60,31 @@ statement = {
                     | char_inst
                 }
                     atom_inst = { ident }
-            array_inst  = { array_open ~ ( value ~ ( comma ~ value )* )? ~ array_close }
-            list_inst   = { bracket_open  ~ ( value ~ ( comma ~ value )* )? ~ bracket_close  }
-            tuple_inst  = { paren_open  ~ ( value ~ ( comma ~ value )* )? ~ paren_close  }
-            set_inst    = { angle_open  ~ ( value ~ ( comma ~ value )* )? ~ angle_close  }
+            array_inst  = {
+                array_open
+                ~ ( value ~ ( comma ~ value )* )?
+                ~ array_close
+            }
+            list_inst   = {
+                bracket_open
+                ~ ( value ~ ( comma ~ value )* )?
+                ~ bracket_close
+            }
+            tuple_inst  = {
+                paren_open
+                ~ ( value ~ ( comma ~ value )* )?
+                ~ paren_close
+            }
+            set_inst = {
+                angle_open
+                ~ ( value ~ ( comma ~ value )* )?
+                ~ angle_close
+            }
             type_inst = {
-                data_type_name ~ paren_open ~ value ~ paren_close
+                data_type_name
+                ~ paren_open
+                ~ value
+                ~ paren_close
                 | data_type_name
             }
 
@@ -122,28 +141,101 @@ statement = {
         term = { op_unary* ~ value ~ (dot ~ procedure_call)* }
         expr = { term ~ (op_infix ~ term)* }
     pattern_match = {
-        "match" ~ expr
+        "match" ~ value
         ~ brace_open
+        ~ match_body+
         ~ brace_close
     }
-    /*
-        list_match = {
-            "|" ~ bracket_open ~ ident ~ comma ~ ident ~ comma ~ ident ~ bracket_close ~ "=>" ~ statement* ~ brace_close
-            | "|" ~ bracket_open ~ ident ~ comma ~ ident ~ bracket_close ~ "=>" ~ brace_open ~ statement* ~ brace_close
-            | "|" ~ bracket_open ~ bracket_close ~ "=>" ~ brace_open ~ statement* ~ brace_close
+        match_body = {
+            list_match | array_match | boolean_match | char_match | string_match
         }
-        array_match = {
-            "|" ~ array_open ~ ident ~ comma ~ ident ~ array_close ~ "=>" ~ brace_open ~ statement* ~ brace_close
-            | "|" ~ array_open ~ ident ~ array_close ~ "=>" ~ brace_open ~ statement* ~ brace_close
-            | "|" ~ array_open ~ array_close ~ "=>" ~ brace_open ~ statement* ~ brace_close
-        }
-        boolean_match = {
-            "|" ~ true_lit ~ "=>" ~ brace_open ~ statement* ~ brace_close
-            | "|" ~ false_lit ~ "=>" ~ brace_open ~ statement* ~ brace_close
-        }
-    */
+            list_match = {
+                "|"
+                ~ bracket_open
+                  ~ ident
+                  ~ comma
+                  ~ ident
+                  ~ comma
+                  ~ ident
+                ~ bracket_close ~ "=>"
+                ~ brace_open
+                  ~ statement*
+                ~ brace_close
+                | "|"
+                ~ bracket_open
+                  ~ ident
+                  ~ comma
+                  ~ ident
+                ~ bracket_close  ~ "=>"
+                ~ brace_open
+                  ~ statement*
+                ~ brace_close
+                | "|"
+                ~ bracket_open
+                ~ bracket_close ~ "=>"
+                ~ brace_open
+                  ~ statement*
+                ~ brace_close
+            }
+            array_match = {
+                "|"
+                ~ array_open
+                  ~ ident
+                  ~ comma
+                  ~ ident
+                ~ array_close ~ "=>"
+                ~ brace_open
+                  ~ statement*
+                ~ brace_close
+                | "|"
+                ~ array_open
+                ~ ident
+                ~ array_close ~ "=>"
+                ~ brace_open
+                  ~ statement*
+                ~ brace_close
+                | "|"
+                ~ array_open
+                ~ array_close ~ "=>"
+                ~ brace_open
+                  ~ statement*
+                ~ brace_close
+            }
+            boolean_match = {
+                "|"
+                ~ true_lit ~ "=>"
+                ~ brace_open
+                  ~ statement*
+                ~ brace_close
+                | "|"
+                ~ false_lit ~ "=>"
+                ~ brace_open
+                  ~ statement*
+                ~ brace_close
+            }
+            char_match = {
+                "|"
+                ~ char_inst ~ "=>"
+                ~ brace_open
+                  ~ statement*
+                ~ brace_close
+                | "|"
+                ~ "_" ~ "=>"
+                ~ brace_open
+                  ~ statement*
+                ~ brace_close
+            }
+            string_match = {
+                "|"
+                ~ string_inst ~ "=>"
+                ~ brace_open
+                  ~ statement*
+                ~ brace_close
+            }
     module_def = {
         "mod" ~ module_name ~ brace_open
+            ~ (stability? ~data_type_decl)*
+        ~ brace_close ~ "in" ~ brace_open
             ~ named_procedure_def+
         ~ brace_close
     }
@@ -155,12 +247,12 @@ named_procedure_def = { name_precedure_header ~ procedure_def }
         ~ procedure_name
         ~ "::"
     }
-    stability = @{ raw | draft | stable | deprecated | legacy }
-        raw        = { "raw" }
-        draft      = { "draft" }
-        stable     = { "stable" }
-        deprecated = { "deprecated" }
-        legacy     = { "legacy" }
+    stability = @{ summon | sketch | stable | sunset | seeyou }
+        summon = { "summon" }
+        sketch = { "sketch" }
+        stable = { "stable" }
+        sunset = { "sunset" }
+        seeyou = { "seeyou" }
     procedure_name = @{ ident }
     procedure_header = {
         paren_open
