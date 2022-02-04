@@ -23,7 +23,7 @@ statement = {
         }
             ident_and_type = { ident ~ ":" ~ type_decl }
     var_to_var_binding = {
-        ident   ~ "=" ~ type_decl ~ paren_open ~ ( value ~ ( comma ~ value)* ) ~ paren_close
+        ident   ~ "=" ~ type_decl ~ paren_open ~ ( value ~ ( comma ~ value )* ) ~ paren_close
         | ident ~ "=" ~ type_decl
         | ident ~ "=" ~ ident
     }
@@ -50,7 +50,7 @@ statement = {
                 false_lit = { "false" }
             string_inst = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
             char_inst = { "'" ~ ASCII_ALPHA ~ "'" }
-            record_inst = { brace_open ~ ( record_pair ~ ( comma ~ record_pair)* )? ~ brace_close }
+            record_inst = { brace_open ~ ( record_pair ~ ( comma ~ record_pair )* )? ~ brace_close }
                 record_pair    = { record_key~ ":" ~ value }
                 record_key= {
                     integer_inst
@@ -157,8 +157,7 @@ statement = {
                   ~ ident
                   ~ comma
                   ~ ident
-                ~ bracket_close ~ "=>"
-                ~ brace_open
+                ~ bracket_close ~ "=>" ~ brace_open
                   ~ statement*
                 ~ brace_close
                 | "|"
@@ -166,14 +165,12 @@ statement = {
                   ~ ident
                   ~ comma
                   ~ ident
-                ~ bracket_close  ~ "=>"
-                ~ brace_open
+                ~ bracket_close  ~ "=>" ~ brace_open
                   ~ statement*
                 ~ brace_close
                 | "|"
                 ~ bracket_open
-                ~ bracket_close ~ "=>"
-                ~ brace_open
+                ~ bracket_close ~ "=>" ~ brace_open
                   ~ statement*
                 ~ brace_close
             }
@@ -183,63 +180,70 @@ statement = {
                   ~ ident
                   ~ comma
                   ~ ident
-                ~ array_close ~ "=>"
-                ~ brace_open
+                ~ array_close ~ "=>" ~ brace_open
                   ~ statement*
                 ~ brace_close
                 | "|"
                 ~ array_open
-                ~ ident
-                ~ array_close ~ "=>"
-                ~ brace_open
+                  ~ ident
+                ~ array_close ~ "=>" ~ brace_open
                   ~ statement*
                 ~ brace_close
                 | "|"
                 ~ array_open
-                ~ array_close ~ "=>"
-                ~ brace_open
+                ~ array_close ~ "=>" ~ brace_open
                   ~ statement*
                 ~ brace_close
             }
             boolean_match = {
                 "|"
-                ~ true_lit ~ "=>"
-                ~ brace_open
+                ~ true_lit ~ "=>" ~ brace_open
                   ~ statement*
                 ~ brace_close
                 | "|"
-                ~ false_lit ~ "=>"
-                ~ brace_open
+                ~ false_lit ~ "=>" ~ brace_open
                   ~ statement*
                 ~ brace_close
             }
             char_match = {
                 "|"
-                ~ char_inst ~ "=>"
-                ~ brace_open
+                ~ char_inst ~ "=>" ~ brace_open
                   ~ statement*
                 ~ brace_close
                 | "|"
-                ~ "_" ~ "=>"
-                ~ brace_open
+                ~ "_" ~ "=>" ~ brace_open
                   ~ statement*
                 ~ brace_close
             }
             string_match = {
                 "|"
-                ~ string_inst ~ "=>"
-                ~ brace_open
+                ~ string_inst ~ "=>" ~ brace_open
                   ~ statement*
                 ~ brace_close
             }
     module_def = {
         "mod" ~ module_name ~ brace_open
-            ~ (stability? ~data_type_decl)*
+            ~ module_declaration*
         ~ brace_close ~ "in" ~ brace_open
             ~ named_procedure_def+
         ~ brace_close
     }
         module_name = @{ ident }
+        module_declaration = { module_import | module_data_type_export }
+            module_import = {
+                "use"
+                ~ module_name
+                ~ "::"
+                ~ brace_open
+                  ~ (
+                    (module_import_function_name | module_import_type_name)
+                    ~ (comma ~ (module_import_function_name | module_import_type_name))*
+                  )+
+                ~ brace_close
+            }
+            module_import_function_name = @{ident}
+            module_import_type_name = @{type_decl}
+            module_data_type_export = { (stability? ~ data_type_decl) }
 
 named_procedure_def = { name_precedure_header ~ procedure_def }
     name_precedure_header = {

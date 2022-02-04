@@ -41,6 +41,8 @@ mod tests {
         let input =
         r#"
         mod list {
+          use module_name1::{hi1, Type1, hi1, Type1}
+          use module_name2::{hi2, Type2, hi2, Type2}
           data DataType = Constructor
           summon data DataType = Constructor
           sketch data DataType = Constructor
