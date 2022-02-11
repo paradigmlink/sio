@@ -1,6 +1,7 @@
 main = _{ SOI ~ statement+ ~ EOI }
 statement = {
     skip
+    | print
     | value_creation
     | variable_creation
     | var_to_var_binding
@@ -9,6 +10,24 @@ statement = {
     | module_def
     | procedure_call
 }
+    return_value = {
+        value
+        | self_lit ~ dot ~ return_value
+        | self_lit
+        | ident
+    }
+    print = {
+        (println_lit | print_lit)
+        ~ paren_open ~ string_inst ~ comma ~ print_arg ~ (comma ~ print_arg)* ~ paren_close
+        | paren_open ~ string_inst ~ paren_close
+    }
+        println_lit = { "println" }
+        print_lit = { "print" }
+        print_arg = {
+            procedure_call
+            | self_lit ~ dot ~ print_arg
+            | ident
+        }
     skip = { "skip" }
     variable_creation = {
         "let" ~ brace_open
@@ -18,14 +37,20 @@ statement = {
         ~ brace_close
     }
         declaration = {
-            ident_and_type
-            | data_type_decl
+            data_type_decl
+            | trait_decl
+            | impl_for_decl
+            | impl_decl
+            | ident_and_type
         }
             ident_and_type = { ident ~ ":" ~ type_decl }
     var_to_var_binding = {
+        ident ~ "=" ~ value
+        /*
         ident   ~ "=" ~ type_decl ~ paren_open ~ ( value ~ ( comma ~ value )* ) ~ paren_close
         | ident ~ "=" ~ type_decl
         | ident ~ "=" ~ ident
+        */
     }
     value_creation = { ident ~ "=" ~ value }
         value = {
@@ -39,9 +64,21 @@ statement = {
             | list_inst
             | tuple_inst
             | set_inst
+            | type_constructor
+            | dot_member
             | type_inst
             | paren_open ~ expr ~ paren_close
         }
+            dot_member = {
+                procedure_call
+                | self_lit ~ dot ~ dot_member
+                | ident ~ dot ~ dot_member
+                | ident
+            }
+            type_constructor = {
+                procedure_call
+                | type_decl ~ "::" ~ type_constructor
+            }
             number_inst = { decimal_inst | integer_inst }
                 integer_inst = @{ "_"? ~ ASCII_DIGIT+ }
                 decimal_inst = @{ "_"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* }
@@ -83,18 +120,23 @@ statement = {
             type_inst = {
                 data_type_name
                 ~ paren_open
-                ~ value
+                ~ ( value ~ ( comma ~ value )* )
                 ~ paren_close
                 | data_type_name
             }
 
     conditional = {
-        "if" ~ ident ~ brace_open
-            ~ statement+
+        "if" ~ procedure_call ~ brace_open
+            ~ statement* ~ return_value?
+        ~ brace_close ~ "else" ~ brace_open
+            ~ statement* ~ return_value?
         ~ brace_close
-        ~ ( "else" ~ brace_open ~ statement+ ~ brace_close )?
     }
-    procedure_call = { ident ~ paren_open ~ args? ~ paren_close }
+    procedure_call = {
+        self_lit ~ dot ~ procedure_call
+        | ident ~ dot ~ procedure_call
+        | ident ~ paren_open ~ args? ~ paren_close
+    }
         op_unary_minus =  { "-" }
         op_unary_not   =  { "!" }
         op_unary       = _{
@@ -113,30 +155,30 @@ statement = {
         op_lower_equal   =  { "<=" }
         op_equal         =  { "==" }
         op_infix         = _{
-            op_plus |
-            op_minus |
-            op_times |
-            op_divide |
-            op_and |
-            op_or |
-            op_greater_equal |
-            op_greater |
-            op_lower_equal |
-            op_lower |
-            op_equal
+            op_plus
+            | op_minus
+            | op_times
+            | op_divide
+            | op_and
+            | op_or
+            | op_greater_equal
+            | op_greater
+            | op_lower_equal
+            | op_lower
+            | op_equal
         }
-        paren_open  = { "(" }
-        paren_close = { ")" }
-        brace_open = { "{" }
-        brace_close = { "}" }
-        bracket_open = { "[" }
-        bracket_close = { "]" }
-        angle_open = { "<" }
-        angle_close = { ">" }
-        array_open = { "[|" }
-        array_close = { "|]" }
-        dot   =  { "." }
-        comma =  { "," }
+        paren_open       = { "(" }
+        paren_close      = { ")" }
+        brace_open       = { "{" }
+        brace_close      = { "}" }
+        bracket_open     = { "[" }
+        bracket_close    = { "]" }
+        angle_open       = { "<" }
+        angle_close      = { ">" }
+        array_open       = { "[|" }
+        array_close      = { "|]" }
+        dot              = { "." }
+        comma            = { "," }
         args  = _{ expr ~ (comma ~ expr)* }
         term = { op_unary* ~ value ~ (dot ~ procedure_call)* }
         expr = { term ~ (op_infix ~ term)* }
@@ -147,7 +189,11 @@ statement = {
         ~ brace_close
     }
         match_body = {
-            list_match | array_match | boolean_match | char_match | string_match
+            list_match
+            | array_match
+            | boolean_match
+            | char_match
+            | string_match
         }
             list_match = {
                 "|"
@@ -245,8 +291,8 @@ statement = {
             module_import_type_name = @{type_decl}
             module_data_type_export = { (stability? ~ data_type_decl) }
 
-named_procedure_def = { name_precedure_header ~ procedure_def }
-    name_precedure_header = {
+named_procedure_def = { named_procedure_header ~ procedure_def }
+    named_procedure_header = {
         stability?
         ~ procedure_name
         ~ "::"
@@ -260,12 +306,23 @@ named_procedure_def = { name_precedure_header ~ procedure_def }
     procedure_name = @{ ident }
     procedure_header = {
         paren_open
-        ~ procedure_parameters?
+        ~ (trait_impl_procedure_parameters | procedure_parameters)?
         ~ paren_close
         ~ procedure_return_type?
     }
-        procedure_parameters = { procedure_parameter ~ (comma ~ procedure_parameter)* }
+        procedure_parameters = {
+            procedure_parameter
+            ~ (comma ~ procedure_parameter)*
+        }
             procedure_parameter = { ident_and_type }
+        trait_impl_procedure_parameters = {
+            self_lit
+            ~ comma
+            ~ procedure_parameter
+            ~ (comma ~ procedure_parameter)*
+            | self_lit
+        }
+            self_lit = { "self" ~ comma? }
         procedure_return_type = { "->" ~ type_decl }
     procedure_def = {
         procedure_header
@@ -273,7 +330,9 @@ named_procedure_def = { name_precedure_header ~ procedure_def }
         ~ procedure_body
         ~ brace_close
     }
-        procedure_body = { statement+ }
+        procedure_body = {
+            statement* ~ return_value?
+        }
 
 ident = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
 
@@ -307,11 +366,17 @@ variant_constructor = {
     | empty_variant_constructor
 }
 data_type_name = @{
-    ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)*
+    ASCII_ALPHA_UPPER
+    ~ (ASCII_ALPHA_LOWER
+      | ASCII_DIGIT
+      | ASCII_ALPHA_UPPER)*
 }
 generic_type_label = { generic_type_name }
 generic_type_name = @{
-    ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)*
+    ASCII_ALPHA_UPPER
+    ~ (ASCII_ALPHA_LOWER
+      | ASCII_DIGIT
+      | ASCII_ALPHA_UPPER)*
 }
 product_variant_constructor = {
     variant_constructor_name
@@ -323,7 +388,10 @@ empty_variant_constructor = {
     variant_constructor_name
 }
 variant_constructor_name = @{
-    ASCII_ALPHA_UPPER ~ (ASCII_ALPHA_LOWER | ASCII_DIGIT | ASCII_ALPHA_UPPER)*
+    ASCII_ALPHA_UPPER
+    ~ (ASCII_ALPHA_LOWER
+      | ASCII_DIGIT
+      | ASCII_ALPHA_UPPER)*
 }
 collection_decl = {
     record_type_decl
@@ -332,22 +400,43 @@ collection_decl = {
     | tuple_type_decl
     | set_type_decl
 }
-record_type_decl = { brace_open ~ (record_pair_decl ~ (comma ~ record_pair_decl)*) ~ brace_close }
+record_type_decl = {
+    brace_open
+    ~ (record_pair_decl ~ (comma ~ record_pair_decl)*)
+    ~ brace_close
+}
     record_pair_decl = { key_type_decl ~ ":" ~ type_decl}
         key_type_decl  = {
-            i64_type
+            atom_inst
+            | i64_type
             | bool_type
             | string_type
             | char_type
-            | atom_type
         }
-list_type_decl   = { bracket_open ~ type_decl ~ bracket_close }
-array_type_decl  = { array_open ~ array_length ~ ";" ~ type_decl ~ array_close }
+list_type_decl   = {
+    bracket_open
+    ~ type_decl
+    ~ bracket_close
+}
+array_type_decl  = {
+    array_open
+    ~ array_length ~ ";"
+    ~ type_decl
+    ~ array_close
+}
     array_length = { integer_inst }
-tuple_type_decl  = { paren_open ~ (type_decl ~ (comma ~ type_decl)*)? ~ paren_close }
-set_type_decl    = { angle_open ~ type_decl ~ angle_close }
+tuple_type_decl  = {
+    paren_open
+    ~ (type_decl
+        ~ (comma ~ type_decl)*)?
+    ~ paren_close
+}
+set_type_decl = {
+    angle_open
+    ~ type_decl
+    ~ angle_close
+}
 
-atom_type   = { "Atom" }
 bool_type   = { "Bool" }
 i64_type    = { "I64" }
 f64_type    = { "F64" }
@@ -355,3 +444,30 @@ string_type = { "String" }
 char_type   = { "Char" }
 unit_type   = { "Unit" }
 
+trait_decl = {
+    "trait"
+    ~ type_decl
+    ~ brace_open
+    ~ (default_trait_procedure | trait_procedure)+
+    ~ brace_close
+}
+    default_trait_procedure = { named_procedure_def }
+    trait_procedure = { named_procedure_header ~ procedure_header }
+
+impl_decl = {
+    "impl"
+    ~ type_decl
+    ~ brace_open
+    ~ named_procedure_def+
+    ~ brace_close
+}
+
+impl_for_decl = {
+    "impl"
+    ~ type_decl
+    ~ "for"
+    ~ type_decl
+    ~ brace_open
+    ~ named_procedure_def+
+    ~ brace_close
+}

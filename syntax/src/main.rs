@@ -96,6 +96,8 @@ mod tests {
         r#"
         let {
             data DataType = Constructor
+            data DataType = Constractor([Int], [Int])
+            data DataType = Sheep({name: Bool, naked: Bool})
             data DataType<A,B,C> = Constructor(Option<T>, Result<String, I64>)
             data A =
                 | C
@@ -117,7 +119,14 @@ mod tests {
                 | MyTuple((Option<Result<I64, String>>, I64))
                 | MySet(<Option<Result<I64, String>>>, I64)
                 | MyRecord({
-                    Atom: [|2; I64|],
+                    an_atom: [|2; I64|],
+                    Bool: [I64],
+                    I64:  (I64),
+                    String:<I64>,
+                    Char: {I64:Option<Result<I64, String>>}
+                  })
+            data F = MyRecord({
+                    an_atom: [|2; I64|],
                     Bool: [I64],
                     I64:  (I64),
                     String:<I64>,
@@ -150,6 +159,7 @@ mod tests {
                 'A':[1]
             })
             e_set = MySet(<2,3>)
+            e_sheep = Sheep({name: self.name, naked: true})
             f = J(3)
             k_1 = N(3)
             k_2 = O(true)
@@ -259,6 +269,7 @@ mod tests {
                     hi=(3<=3)
                     hi=((((((((3>=3)+3)/3)*3)-3)<=3)&&3)||3)
                 }
+            l = Sheep({name: self.name, naked: true})
         }
         "#;
 
@@ -268,6 +279,170 @@ mod tests {
                 for statement in res.next().unwrap().into_inner() {
                     match statement.as_rule() {
                         Rule::variable_creation => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
+
+    #[test]
+    fn trait_test() {
+        let input =
+        r#"
+        let {
+            data Sheep = Sheep({naked: Bool, name: String})
+            trait Animal {
+                summon new :: (name: String) -> Self
+                sketch name :: (self) -> String
+                stable noise :: (self) -> String
+                sunset talk :: (self) {
+                    print("{} says {}", self.name(), self.noise())
+                }
+            }
+            impl Sheep {
+                is_naked :: (self) -> Bool {
+                    self.naked
+                }
+                shear :: (self) -> Self {
+                    if self.is_naked() {
+                        print("{} is already naked...", self.name())
+                        self
+                    } else {
+                        print("{} gets a haircut!", self.name)
+                        Sheep({name: self.name, naked: true})
+                    }
+                }
+            }
+            impl Animal for Sheep {
+                new :: (name: String) -> Self {
+                    Sheep({name: self.name, naked: false})
+                }
+                name :: (self) -> String {
+                    self.name
+                }
+                noise :: (self) -> String {
+                    if self.is_naked() {
+                        "baaaaah?"
+                    } else {
+                        "baaaaah!"
+                    }
+                }
+                talk :: (self) {
+                    print("{} pauses briedly... {}", self.name, self.noise())
+                }
+            }
+            hairy_dolly: Sheep
+            naked_dolly: Sheep
+        } in {
+            hairy_dolly = Animal::new("Dolly")
+            hairy_dolly.talk()
+            naked_dolly = hairy_dolly.shear()
+            naked_dolly.talk()
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::variable_creation => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
+
+    #[test]
+    fn print_test() {
+        let input =
+        r#"
+        let {} in {
+            print("...")
+            print("{} ...", self.name())
+            print("{} ... {}", self.name, self.noise())
+            print("{} ...", self.name())
+            print("{} ...", name)
+            print("{} ...", name())
+            print("{} ...", 3)
+            print("{} ...", "text")
+            print("{} ...", true)
+            println("{} ...", "text")
+            println("...")
+            println("{} ... {}", self.name, self.noise())
+            println("{} ...", self.name())
+            println("{} ...", name)
+            println("{} ...", name())
+            println("...")
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::variable_creation => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
+
+    #[test]
+    fn return_value_test() {
+        let input =
+        r#"
+        mod module { } in {
+            summon name :: (str: String) -> String { skip x="string" }
+            summon name :: () -> String { "string" }
+            summon name :: () -> String { 32 }
+            summon name :: () -> String { 32.42 }
+            summon name :: () -> String { true }
+            summon name :: () -> String { false }
+            summon name :: () -> String { 'c' }
+            summon name :: () -> String { (32,42) }
+            summon name :: () -> String { <32,42> }
+            summon name :: () -> String { {thirty_two: 32, fourty_two: 42} }
+            summon name :: () -> String { [32, 42] }
+            summon name :: () -> String { [|32, 42|] }
+            summon name :: (self) -> String { self }
+            summon name :: (self) -> String { self.thirty_two }
+            summon name :: (self) -> String { self.fourty_two() }
+            summon name :: (self) -> String { fourty_two() }
+            summon name :: () -> String { Constructor }
+            summon name :: () -> String { Constructor([32]) }
+            summon name :: () -> String { Constructor([32], [32]) }
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::module_def => {
                             println!("{:#?}", statement);
                         }
                         _ => (),
