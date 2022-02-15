@@ -240,93 +240,6 @@ mod tests {
     }
 
     #[test]
-    fn simple_trait_test() {
-        let input =
-        r#"
-        let {
-            data E =
-                | sketch MyArray ([|3; Option<Result<I64, String>>|], I64)
-                | stable MyList([Option<Result<I64, String>>], I64)
-                | summon MyTuple((Option<Result<I64, String>>, I64))
-                | sunset MySet(<Option<Result<I64, String>>>, I64)
-                | seeyou MyRecord({
-                    an_atom: [|2; I64|],
-                    Bool: [I64],
-                    I64:  (I64),
-                    String:<I64>,
-                    Char: {I64:Option<Result<I64, String>>}
-                  })
-            data Sheep = Sheep({naked: Bool, name: String})
-            trait Animal {
-                summon new :: (name: String) -> Self
-                sketch name :: (self) -> String
-                stable noise :: (self) -> String
-                sunset talk :: (self) {
-                    print("{} says {}", self.name(), self.noise())
-                }
-            }
-            impl Sheep {
-                is_naked :: (self) -> Bool {
-                    self.naked
-                }
-                shear :: (self) -> Self {
-                    if self.is_naked() {
-                        print("{} is already naked...", self.name())
-                        self
-                    } else {
-                        print("{} gets a haircut!", self.name)
-                        Sheep({name: self.name, naked: true})
-                    }
-                }
-            }
-            impl Animal for Sheep {
-                new :: (name: String) -> Self {
-                    Sheep({name: self.name, naked: false})
-                }
-                name :: (self) -> String {
-                    self.name
-                }
-                noise :: (self) -> String {
-                    if self.is_naked() {
-                        "baaaaah?"
-                    } else {
-                        "baaaaah!"
-                    }
-                }
-                talk :: (self) {
-                    print("{} pauses briedly... {}", self.name, self.noise())
-                }
-            }
-            hairy_dolly: Sheep
-            naked_dolly: Sheep
-        } in {
-            hairy_dolly = Animal::new("Dolly")
-            hairy_dolly.talk()
-            naked_dolly = hairy_dolly.shear()
-            naked_dolly.talk()
-        }
-        "#;
-
-        let parsed = SioParser::parse(Rule::main, &input);
-        match parsed {
-            Ok(mut res) => {
-                for statement in res.next().unwrap().into_inner() {
-                    match statement.as_rule() {
-                        Rule::variable_creation => {
-                            println!("{:#?}", statement);
-                        }
-                        _ => (),
-                    }
-                }
-            },
-            Err(e) => {
-                println!("{:#?}", e);
-                panic!()
-            }
-        }
-    }
-
-    #[test]
     fn print_test() {
         let input =
         r#"
@@ -386,10 +299,6 @@ mod tests {
             summon name :: () -> String { {thirty_two: 32, fourty_two: 42} }
             summon name :: () -> String { [32, 42] }
             summon name :: () -> String { [|32, 42|] }
-            summon name :: (self) -> String { self }
-            summon name :: (self) -> String { self.thirty_two }
-            summon name :: (self) -> String { self.fourty_two() }
-            summon name :: (self) -> String { fourty_two() }
             summon name :: () -> String { Constructor }
             summon name :: () -> String { Constructor([32]) }
             summon name :: () -> String { Constructor([32], [32]) }
@@ -425,17 +334,6 @@ mod tests {
             data Sheep =
                 | Version1 ({name: String, naked: Bool})
                 | Version2 ({name: String, naked: Bool, breed: Breed})
-            trait Animal {
-                summon new :: (name: String) -> Self
-            }
-            sketch trait Animal {
-                summon new :: (name: String) -> Self
-                sketch name :: (self) -> String
-                stable noise :: (self) -> String
-                sunset talk :: (self) {
-                    print("{} says {}", self.name(), self.noise())
-                }
-            }
             sketch data Sheep =
                 | sketch Version1 ({name: String, naked: Bool})
                 | summon Version2 ({name: String, naked: Bool, breed: Breed})
@@ -444,18 +342,6 @@ mod tests {
             stable data DataType = stable Constructor
             sunset data DataType = sunset Constructor
             seeyou data DataType = seeyou Constructor
-            summon trait Animal {
-                summon new :: (name: String) -> Self
-            }
-            sketch trait Animal {
-                sketch new :: (name: String) -> Self
-            }
-            stable trait Animal {
-                stable new :: (name: String) -> Self
-            }
-            sunset trait Animal {
-                sunset new :: (name: String) -> Self
-            }
         } in {
             name0 :: () -> Simple {
               hi = {1:2}

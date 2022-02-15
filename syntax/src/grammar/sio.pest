@@ -38,9 +38,6 @@ statement = {
     }
         declaration = {
             data_type_decl
-            | trait_decl
-            | impl_for_decl
-            | impl_decl
             | ident_and_type
         }
             ident_and_type = { ident ~ ":" ~ type_decl }
@@ -275,7 +272,7 @@ statement = {
         ~ brace_close
     }
         module_name = @{ ident }
-        module_declaration = { module_import | module_data_type_export | module_trait_export }
+        module_declaration = { module_import | module_data_type_export }
             module_import = {
                 "use"
                 ~ module_name
@@ -290,7 +287,6 @@ statement = {
             module_import_function_name = @{ident}
             module_import_type_name = @{type_decl}
             module_data_type_export = { (stability? ~ data_type_decl) }
-            module_trait_export = { (stability? ~ trait_decl) }
 
 named_procedure_def = { named_procedure_header ~ procedure_def }
     named_procedure_header = {
@@ -307,7 +303,7 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
     procedure_name = @{ ident }
     procedure_header = {
         paren_open
-        ~ (trait_impl_procedure_parameters | procedure_parameters)?
+        ~ procedure_parameters?
         ~ paren_close
         ~ procedure_return_type?
     }
@@ -316,13 +312,6 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
             ~ (comma ~ procedure_parameter)*
         }
             procedure_parameter = { ident_and_type }
-        trait_impl_procedure_parameters = {
-            self_lit
-            ~ comma
-            ~ procedure_parameter
-            ~ (comma ~ procedure_parameter)*
-            | self_lit
-        }
             self_lit = { "self" ~ comma? }
         procedure_return_type = { "->" ~ type_decl }
     procedure_def = {
@@ -445,32 +434,4 @@ f64_type    = { "F64" }
 string_type = { "String" }
 char_type   = { "Char" }
 unit_type   = { "Unit" }
-
-trait_decl = {
-    "trait"
-    ~ type_decl
-    ~ brace_open
-    ~ (default_trait_procedure | trait_procedure)+
-    ~ brace_close
-}
-    default_trait_procedure = { named_procedure_def }
-    trait_procedure = { named_procedure_header ~ procedure_header }
-
-impl_decl = {
-    "impl"
-    ~ type_decl
-    ~ brace_open
-    ~ named_procedure_def+
-    ~ brace_close
-}
-
-impl_for_decl = {
-    "impl"
-    ~ type_decl
-    ~ "for"
-    ~ type_decl
-    ~ brace_open
-    ~ named_procedure_def+
-    ~ brace_close
-}
 
