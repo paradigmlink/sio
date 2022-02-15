@@ -275,7 +275,7 @@ statement = {
         ~ brace_close
     }
         module_name = @{ ident }
-        module_declaration = { module_import | module_data_type_export }
+        module_declaration = { module_import | module_data_type_export | module_trait_export }
             module_import = {
                 "use"
                 ~ module_name
@@ -290,6 +290,7 @@ statement = {
             module_import_function_name = @{ident}
             module_import_type_name = @{type_decl}
             module_data_type_export = { (stability? ~ data_type_decl) }
+            module_trait_export = { (stability? ~ trait_decl) }
 
 named_procedure_def = { named_procedure_header ~ procedure_def }
     named_procedure_header = {
@@ -362,7 +363,8 @@ no_generic_data_type_decl = {
     data_type_name
 }
 variant_constructor = {
-    product_variant_constructor
+    stability?
+    ~ product_variant_constructor
     | empty_variant_constructor
 }
 data_type_name = @{
@@ -471,3 +473,4 @@ impl_for_decl = {
     ~ named_procedure_def+
     ~ brace_close
 }
+

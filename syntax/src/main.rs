@@ -36,59 +36,6 @@ mod list {
 mod tests {
     use super::*;
 
-    #[test]
-    fn module_def_test() {
-        let input =
-        r#"
-        mod list {
-          use module_name1::{hi1, Type1, hi1, Type1}
-          use module_name2::{hi2, Type2, hi2, Type2}
-          data DataType = Constructor
-          summon data DataType = Constructor
-          sketch data DataType = Constructor
-          stable data DataType = Constructor
-          sunset data DataType = Constructor
-          seeyou data DataType = Constructor
-        } in {
-          name0 :: () -> Simple {
-            hi = {1:2}
-          }
-          summon name1 :: () -> Generic<Simple> {
-            hi = {1:2}
-          }
-          sketch name2 :: () -> {I64: Simple} {
-            hi = {1:2}
-          }
-          stable name3 :: () -> [Generic<Simple>] {
-            hi = {1:2}
-          }
-          sunset name4 :: () -> [|3; Hi|] {
-            hi = {1:2}
-          }
-          seeyou name5 :: () -> <Hi> {
-            hi = {1:2}
-          }
-        }
-        "#;
-
-        let parsed = SioParser::parse(Rule::main, &input);
-        match parsed {
-            Ok(mut res) => {
-                for statement in res.next().unwrap().into_inner() {
-                    match statement.as_rule() {
-                        Rule::variable_creation => {
-                            println!("{:#?}", statement);
-                        }
-                        _ => (),
-                    }
-                }
-            },
-            Err(e) => {
-                println!("{:#?}", e);
-                panic!()
-            }
-        }
-    }
 
     #[test]
     fn data_variant_test() {
@@ -114,11 +61,11 @@ mod tests {
                 | None
                 | Some(T)
             data E =
-                | MyArray ([|3; Option<Result<I64, String>>|], I64)
-                | MyList([Option<Result<I64, String>>], I64)
-                | MyTuple((Option<Result<I64, String>>, I64))
-                | MySet(<Option<Result<I64, String>>>, I64)
-                | MyRecord({
+                | sketch MyArray ([|3; Option<Result<I64, String>>|], I64)
+                | stable MyList([Option<Result<I64, String>>], I64)
+                | summon MyTuple((Option<Result<I64, String>>, I64))
+                | sunset MySet(<Option<Result<I64, String>>>, I64)
+                | seeyou MyRecord({
                     an_atom: [|2; I64|],
                     Bool: [I64],
                     I64:  (I64),
@@ -126,12 +73,12 @@ mod tests {
                     Char: {I64:Option<Result<I64, String>>}
                   })
             data F = MyRecord({
-                    an_atom: [|2; I64|],
-                    Bool: [I64],
-                    I64:  (I64),
-                    String:<I64>,
-                    Char: {I64:Option<Result<I64, String>>}
-                  })
+                an_atom: [|2; I64|],
+                Bool: [I64],
+                I64:  (I64),
+                String:<I64>,
+                Char: {I64:Option<Result<I64, String>>}
+            })
             a: A
             b: B
             e_array: E
@@ -293,10 +240,22 @@ mod tests {
     }
 
     #[test]
-    fn trait_test() {
+    fn simple_trait_test() {
         let input =
         r#"
         let {
+            data E =
+                | sketch MyArray ([|3; Option<Result<I64, String>>|], I64)
+                | stable MyList([Option<Result<I64, String>>], I64)
+                | summon MyTuple((Option<Result<I64, String>>, I64))
+                | sunset MySet(<Option<Result<I64, String>>>, I64)
+                | seeyou MyRecord({
+                    an_atom: [|2; I64|],
+                    Bool: [I64],
+                    I64:  (I64),
+                    String:<I64>,
+                    Char: {I64:Option<Result<I64, String>>}
+                  })
             data Sheep = Sheep({naked: Bool, name: String})
             trait Animal {
                 summon new :: (name: String) -> Self
@@ -443,6 +402,88 @@ mod tests {
                 for statement in res.next().unwrap().into_inner() {
                     match statement.as_rule() {
                         Rule::module_def => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
+
+    #[test]
+    fn module_def_test() {
+        let input =
+        r#"
+        mod farm {
+            use module_name1::{hi1, Type1, hi1, Type1}
+            use module_name2::{hi2, Type2, hi2, Type2}
+            data Sheep =
+                | Version1 ({name: String, naked: Bool})
+                | Version2 ({name: String, naked: Bool, breed: Breed})
+            trait Animal {
+                summon new :: (name: String) -> Self
+            }
+            sketch trait Animal {
+                summon new :: (name: String) -> Self
+                sketch name :: (self) -> String
+                stable noise :: (self) -> String
+                sunset talk :: (self) {
+                    print("{} says {}", self.name(), self.noise())
+                }
+            }
+            sketch data Sheep =
+                | sketch Version1 ({name: String, naked: Bool})
+                | summon Version2 ({name: String, naked: Bool, breed: Breed})
+            summon data DataType = sketch Constructor
+            sketch data DataType = sketch Constructor
+            stable data DataType = stable Constructor
+            sunset data DataType = sunset Constructor
+            seeyou data DataType = seeyou Constructor
+            summon trait Animal {
+                summon new :: (name: String) -> Self
+            }
+            sketch trait Animal {
+                sketch new :: (name: String) -> Self
+            }
+            stable trait Animal {
+                stable new :: (name: String) -> Self
+            }
+            sunset trait Animal {
+                sunset new :: (name: String) -> Self
+            }
+        } in {
+            name0 :: () -> Simple {
+              hi = {1:2}
+            }
+            summon name1 :: () -> Generic<Simple> {
+              hi = {1:2}
+            }
+            sketch name2 :: () -> {I64: Simple} {
+              hi = {1:2}
+            }
+            stable name3 :: () -> [Generic<Simple>] {
+              hi = {1:2}
+            }
+            sunset name4 :: () -> [|3; Hi|] {
+              hi = {1:2}
+            }
+            seeyou name5 :: () -> <Hi> {
+              hi = {1:2}
+            }
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::variable_creation => {
                             println!("{:#?}", statement);
                         }
                         _ => (),
