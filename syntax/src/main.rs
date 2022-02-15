@@ -41,7 +41,7 @@ mod tests {
     fn data_variant_test() {
         let input =
         r#"
-        let {
+        mod list {
             data DataType = Constructor
             data DataType = Constractor([Int], [Int])
             data DataType = Sheep({name: Bool, naked: Bool})
@@ -92,26 +92,28 @@ mod tests {
             p_1: P<I64>
             p_2: P<Option<I65>>
         } in {
-            skip
-            a = A
-            b = C
-            e_array = MyArray([|1,2,3|])
-            e_list = MyList([1,2,3])
-            e_tuple = MyTuple((1,2))
-            e_record = MyRecord({
-                an_atom:[|1,2|],
-                true:[1],
-                2:<1>,
-                "hi":1,
-                'A':[1]
-            })
-            e_set = MySet(<2,3>)
-            e_sheep = Sheep({name: self.name, naked: true})
-            f = J(3)
-            k_1 = N(3)
-            k_2 = O(true)
-            p_1 = R
-            p_2 = S(3)
+            name0 :: () -> Simple {
+                skip
+                a = A
+                b = C
+                e_array = MyArray([|1,2,3|])
+                e_list = MyList([1,2,3])
+                e_tuple = MyTuple((1,2))
+                e_record = MyRecord({
+                    an_atom:[|1,2|],
+                    true:[1],
+                    2:<1>,
+                    "hi":1,
+                    'A':[1]
+                })
+                e_set = MySet(<2,3>)
+                e_sheep = Sheep({name: self.name, naked: true})
+                f = J(3)
+                k_1 = N(3)
+                k_2 = O(true)
+                p_1 = R
+                p_2 = S(3)
+            }
         }
         "#;
 
@@ -138,16 +140,18 @@ mod tests {
     fn pattern_match_test() {
         let input =
         r#"
-        let {
+        mod list {
         } in {
-            match [|3|] {
-            | [||] => { skip }
-            | [] => { skip }
-            | true => { skip }
-            | false => { skip }
-            | 'h' => { skip }
-            | _ => { skip }
-            | "hello" => { skip }
+            name0 :: () -> Simple {
+                match [|3|] {
+                | [||] => { skip }
+                | [] => { skip }
+                | true => { skip }
+                | false => { skip }
+                | 'h' => { skip }
+                | _ => { skip }
+                | "hello" => { skip }
+                }
             }
         }
         "#;
@@ -175,48 +179,51 @@ mod tests {
     fn var_to_var_binding_test() {
         let input =
         r#"
-        let {} in {
-            a = Type
-            b = Type(2)
-            c = Type(true)
-            d1 = "43"
-            d2 = "43.43"
-            e = true
-            f = <3>
-            g = ["hi"]
-            h = [|3|]
-            i = (Type("hi"),Type(3))
-            j = false
-            i = () { skip }
-            k = () -> Hi { skip }
-            k = (hi: Hi) -> Hi { skip }
-            k = (hi: Hi, hi: Hi) -> Hi { skip }
-            k = (hi: Hi, hi: Hi<I64>) -> Result<Option<I64>, String> { skip }
-            k = (hi: [|3; Hi|], hi: [Hi]) -> <Hi> {
-                    skip
-                    hi=[|3,2,1|]
-                    hi=[3,2,1]
-                    hi=<3,2,1>
-                    hi=(3,2,1)
-                    hi="hi"
-                    hi=3
-                    hi=3.3
-                    hi=true
-                    hi=false
-                    hi='h'
-                    hi=(3+3)
-                    hi=(3*3)
-                    hi=(3/3)
-                    hi=(3-3)
-                    hi=(3==3)
-                    hi=(3<3)
-                    hi=(3>3)
-                    hi=(true||false)
-                    hi=(true&&false)
-                    hi=(3<=3)
-                    hi=((((((((3>=3)+3)/3)*3)-3)<=3)&&3)||3)
-                }
-            l = Sheep({name: self.name, naked: true})
+        mod list {
+        } in {
+            name0 :: () -> Simple {
+                a = Type
+                b = Type(2)
+                c = Type(true)
+                d1 = "43"
+                d2 = "43.43"
+                e = true
+                f = <3>
+                g = ["hi"]
+                h = [|3|]
+                i = (Type("hi"),Type(3))
+                j = false
+                i = () { skip }
+                k = () -> Hi { skip }
+                k = (hi: Hi) -> Hi { skip }
+                k = (hi: Hi, hi: Hi) -> Hi { skip }
+                k = (hi: Hi, hi: Hi<I64>) -> Result<Option<I64>, String> { skip }
+                k = (hi: [|3; Hi|], hi: [Hi]) -> <Hi> {
+                        skip
+                        hi=[|3,2,1|]
+                        hi=[3,2,1]
+                        hi=<3,2,1>
+                        hi=(3,2,1)
+                        hi="hi"
+                        hi=3
+                        hi=3.3
+                        hi=true
+                        hi=false
+                        hi='h'
+                        hi=(3+3)
+                        hi=(3*3)
+                        hi=(3/3)
+                        hi=(3-3)
+                        hi=(3==3)
+                        hi=(3<3)
+                        hi=(3>3)
+                        hi=(true||false)
+                        hi=(true&&false)
+                        hi=(3<=3)
+                        hi=((((((((3>=3)+3)/3)*3)-3)<=3)&&3)||3)
+                    }
+                l = Sheep({name: self.name, naked: true})
+            }
         }
         "#;
 
@@ -243,23 +250,27 @@ mod tests {
     fn print_test() {
         let input =
         r#"
-        let {} in {
-            print("...")
-            print("{} ...", self.name())
-            print("{} ... {}", self.name, self.noise())
-            print("{} ...", self.name())
-            print("{} ...", name)
-            print("{} ...", name())
-            print("{} ...", 3)
-            print("{} ...", "text")
-            print("{} ...", true)
-            println("{} ...", "text")
-            println("...")
-            println("{} ... {}", self.name, self.noise())
-            println("{} ...", self.name())
-            println("{} ...", name)
-            println("{} ...", name())
-            println("...")
+        mod list {
+        } in {
+            name0 :: () -> Simple {
+                hi = {1:2}
+                print("...")
+                print("{} ...", self.name())
+                print("{} ... {}", self.name, self.noise())
+                print("{} ...", self.name())
+                print("{} ...", name)
+                print("{} ...", name())
+                print("{} ...", 3)
+                print("{} ...", "text")
+                print("{} ...", true)
+                println("{} ...", "text")
+                println("...")
+                println("{} ... {}", self.name, self.noise())
+                println("{} ...", self.name())
+                println("{} ...", name)
+                println("{} ...", name())
+                println("...")
+            }
         }
         "#;
 
@@ -286,7 +297,8 @@ mod tests {
     fn return_value_test() {
         let input =
         r#"
-        mod module { } in {
+        mod module {
+        } in {
             summon name :: (str: String) -> String { skip x="string" }
             summon name :: () -> String { "string" }
             summon name :: () -> String { 32 }
@@ -344,22 +356,22 @@ mod tests {
             seeyou data DataType = seeyou Constructor
         } in {
             name0 :: () -> Simple {
-              hi = {1:2}
+                hi = {1:2}
             }
             summon name1 :: () -> Generic<Simple> {
-              hi = {1:2}
+                hi = {1:2}
             }
             sketch name2 :: () -> {I64: Simple} {
-              hi = {1:2}
+                hi = {1:2}
             }
             stable name3 :: () -> [Generic<Simple>] {
-              hi = {1:2}
+                hi = {1:2}
             }
             sunset name4 :: () -> [|3; Hi|] {
-              hi = {1:2}
+                hi = {1:2}
             }
             seeyou name5 :: () -> <Hi> {
-              hi = {1:2}
+                hi = {1:2}
             }
         }
         "#;

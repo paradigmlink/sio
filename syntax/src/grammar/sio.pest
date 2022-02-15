@@ -1,4 +1,7 @@
-main = _{ SOI ~ statement+ ~ EOI }
+main = _{ SOI ~ sio_main+ ~ EOI }
+sio_main = {
+    module_def+
+}
 statement = {
     skip
     | print
@@ -7,7 +10,6 @@ statement = {
     | var_to_var_binding
     | conditional
     | pattern_match
-    | module_def
     | procedure_call
 }
     return_value = {
@@ -272,7 +274,11 @@ statement = {
         ~ brace_close
     }
         module_name = @{ ident }
-        module_declaration = { module_import | module_data_type_export }
+        module_declaration = {
+            module_import
+            | module_data_type_export
+            | ident_and_type
+        }
             module_import = {
                 "use"
                 ~ module_name
