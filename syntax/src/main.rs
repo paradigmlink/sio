@@ -449,4 +449,37 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn generic_function_test() {
+        let input =
+        r#"
+        mod app/mod _ {
+        } in {
+            summon name :: () { skip }
+            summon name :: (a: A) { skip }
+            summon name<A> :: (a: A) -> A { skip }
+            summon name<A,B> :: (a: A, b: B) -> (A, B) { skip }
+            summon name<A,B,C> :: (a: A, b: B, c: C) -> (A, B, C) { skip }
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::module_def => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
 }

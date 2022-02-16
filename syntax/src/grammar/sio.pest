@@ -320,7 +320,16 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
         stable = { "stable" }
         sunset = { "sunset" }
         seeyou = { "seeyou" }
-    procedure_name = @{ ident }
+    procedure_name = { generic_procedure | concrete_procedure }
+    generic_procedure = {
+        ident
+        ~ angle_open
+        ~ generic_type_label ~ (comma ~ generic_type_label)*
+        ~ angle_close
+    }
+    concrete_procedure = {
+        ident
+    }
     procedure_header = {
         paren_open
         ~ procedure_parameters?
