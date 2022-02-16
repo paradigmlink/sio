@@ -43,14 +43,7 @@ statement = {
             | ident_and_type
         }
             ident_and_type = { ident ~ ":" ~ type_decl }
-    var_to_var_binding = {
-        ident ~ "=" ~ value
-        /*
-        ident   ~ "=" ~ type_decl ~ paren_open ~ ( value ~ ( comma ~ value )* ) ~ paren_close
-        | ident ~ "=" ~ type_decl
-        | ident ~ "=" ~ ident
-        */
-    }
+    var_to_var_binding = { ident ~ "=" ~ ident }
     value_creation = { ident ~ "=" ~ value }
         value = {
             number_inst
