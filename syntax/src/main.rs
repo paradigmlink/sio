@@ -407,4 +407,43 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn selective_receive_and_send_test() {
+        let input =
+        r#"
+        mod app/mod _ {
+        } in {
+            summon name :: (str: String) -> String {
+                process ! "string"
+                receive all {
+                    skip
+                    x="string"
+                }
+                receive proceess {
+                    skip
+                    x=true
+                }
+            }
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::module_def => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
 }

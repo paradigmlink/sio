@@ -11,6 +11,8 @@ statement = {
     | conditional
     | pattern_match
     | procedure_call
+    | async_send
+    | selective_receive
 }
     return_value = {
         value
@@ -341,6 +343,20 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
         procedure_body = {
             statement* ~ return_value?
         }
+    async_send     =  { ident ~ "!" ~ value }
+    selective_receive = {
+        "receive"
+        ~ (deterministic_receive | nondeterministic_receive)
+        ~ brace_open
+        ~ statement+
+        ~ brace_close
+    }
+    deterministic_receive = {
+        ident
+    }
+    nondeterministic_receive = {
+        "all"
+    }
 
 ident = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
 
