@@ -417,12 +417,15 @@ mod tests {
             summon name :: (str: String) -> String {
                 process ! "string"
                 receive all {
-                    skip
-                    x="string"
+                | [||] => { skip }
+                | [] => { skip }
+                | true => { skip }
                 }
                 receive proceess {
-                    skip
-                    x=true
+                | false => { skip }
+                | 'h' => { skip }
+                | _ => { skip }
+                | "hello" => { skip }
                 }
             }
         }

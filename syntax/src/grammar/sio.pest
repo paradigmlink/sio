@@ -348,7 +348,7 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
         "receive"
         ~ (deterministic_receive | nondeterministic_receive)
         ~ brace_open
-        ~ statement+
+        ~ match_body+
         ~ brace_close
     }
     deterministic_receive = {
