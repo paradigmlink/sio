@@ -41,7 +41,9 @@ mod tests {
     fn data_variant_test() {
         let input =
         r#"
-        mod list {
+        mod app/mod
+        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd17ac4e3e3f23d094935d65f113f62c5d73e2fab8dc62a28fed4b6c1b9b7b830d
+        {
             data DataType = Constructor
             data DataType = Constractor([Int], [Int])
             data DataType = Sheep({name: Bool, naked: Bool})
@@ -140,7 +142,9 @@ mod tests {
     fn pattern_match_test() {
         let input =
         r#"
-        mod list {
+        mod app/mod
+        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd17ac4e3e3f23d094935d65f113f62c5d73e2fab8dc62a28fed4b6c1b9b7b830d
+        {
         } in {
             name0 :: () -> Simple {
                 match [|3|] {
@@ -179,7 +183,9 @@ mod tests {
     fn var_to_var_binding_test() {
         let input =
         r#"
-        mod list {
+        mod app/mod
+        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd17ac4e3e3f23d094935d65f113f62c5d73e2fab8dc62a28fed4b6c1b9b7b830d
+        {
         } in {
             name0 :: () -> Simple {
                 a = Type
@@ -250,7 +256,9 @@ mod tests {
     fn print_test() {
         let input =
         r#"
-        mod list {
+        mod app/mod
+        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd17ac4e3e3f23d094935d65f113f62c5d73e2fab8dc62a28fed4b6c1b9b7b830d
+        {
         } in {
             name0 :: () -> Simple {
                 hi = {1:2}
@@ -297,7 +305,9 @@ mod tests {
     fn return_value_test() {
         let input =
         r#"
-        mod module {
+        mod app/mod
+        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd17ac4e3e3f23d094935d65f113f62c5d73e2fab8dc62a28fed4b6c1b9b7b830d
+        {
         } in {
             summon name :: (str: String) -> String { skip x="string" }
             summon name :: () -> String { "string" }
@@ -340,9 +350,22 @@ mod tests {
     fn module_def_test() {
         let input =
         r#"
-        mod farm {
-            use module_name1::{hi1, Type1, hi1, Type1}
-            use module_name2::{hi2, Type2, hi2, Type2}
+        mod app/mod
+        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd17ac4e3e3f23d094935d65f113f62c5d73e2fab8dc62a28fed4b6c1b9b7b830d {
+            use 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae00b6a4a1c789ad2d6c8668bcf56dcb80e0adf1dc07b2a72e5dd65f1933b05003::{
+                app1::{
+                    mod1::{hi1, Type1}
+                    mod2::{hi2, Type2}
+                }
+                app3::{
+                    mod3::{hi3, Type3}
+                }
+            }
+            use 879f8ba6106e519ac7b6e09cb7a0905f9c8e6c9779cd76e1ece709277aa2b97b2d576ae86dd6c93ceaf61100e7a06c75aa841758e8477be62089475c8a7af00c::{
+                app1::{
+                    mod1::{hi1, Type1}
+                }
+            }
             data Sheep =
                 | Version1 ({name: String, naked: Bool})
                 | Version2 ({name: String, naked: Bool, breed: Breed})

@@ -69,7 +69,7 @@ statement = {
             }
             type_constructor = {
                 procedure_call
-                | type_decl ~ "::" ~ type_constructor
+                | type_decl ~ separator ~ type_constructor
             }
             number_inst = { decimal_inst | integer_inst }
                 integer_inst = @{ "_"? ~ ASCII_DIGIT+ }
@@ -260,27 +260,46 @@ statement = {
                 ~ brace_close
             }
     module_def = {
-        "mod" ~ module_name ~ brace_open
+        "mod" ~ hbfi ~ brace_open
             ~ module_declaration*
         ~ brace_close ~ "in" ~ brace_open
             ~ named_procedure_def+
         ~ brace_close
     }
         module_name = @{ ident }
+        hbfi = {
+            application ~ "/" ~ module ~ public_key
+        }
+            public_key = @{ ASCII_ALPHANUMERIC {128} }
+            application = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")*  }
+            module = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
         module_declaration = {
-            module_import
+            import_statement
             | module_data_type_export
             | ident_and_type
         }
-            module_import = {
+            import_statement = {
                 "use"
-                ~ module_name
-                ~ "::"
+                ~ import_from_public_key+
+            }
+            import_from_public_key = {
+                public_key
+                ~ separator
                 ~ brace_open
-                  ~ (
-                    (module_import_function_name | module_import_type_name)
-                    ~ (comma ~ (module_import_function_name | module_import_type_name))*
-                  )+
+                ~ import_from_application+
+                ~ brace_close
+            }
+            import_from_application = {
+                application
+                ~ separator
+                ~ brace_open
+                ~ import_from_module+
+                ~ brace_close
+            }
+            import_from_module = {
+                module ~ separator ~ brace_open
+                ~ (module_import_function_name | module_import_type_name)
+                ~ (comma ~ (module_import_function_name | module_import_type_name))*
                 ~ brace_close
             }
             module_import_function_name = @{ident}
@@ -291,7 +310,7 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
     named_procedure_header = {
         stability?
         ~ procedure_name
-        ~ "::"
+        ~ separator
     }
     stability = @{ summon | sketch | stable | sunset | seeyou }
         summon = { "summon" }
@@ -327,6 +346,8 @@ ident = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
 
 WHITESPACE = _{ " " | "\t" | NEWLINE }
 COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/"}
+
+separator = @{ "::" }
 
 /* Type Declaration */
 data_type_decl = {
