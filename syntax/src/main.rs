@@ -41,9 +41,7 @@ mod tests {
     fn data_variant_test() {
         let input =
         r#"
-        mod app/mod
-        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd17ac4e3e3f23d094935d65f113f62c5d73e2fab8dc62a28fed4b6c1b9b7b830d
-        {
+        mod app/mod _ {
             data DataType = Constructor
             data DataType = Constractor([Int], [Int])
             data DataType = Sheep({name: Bool, naked: Bool})
@@ -142,9 +140,7 @@ mod tests {
     fn pattern_match_test() {
         let input =
         r#"
-        mod app/mod
-        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd17ac4e3e3f23d094935d65f113f62c5d73e2fab8dc62a28fed4b6c1b9b7b830d
-        {
+        mod app/mod _ {
         } in {
             name0 :: () -> Simple {
                 match [|3|] {
@@ -183,9 +179,7 @@ mod tests {
     fn var_to_var_binding_test() {
         let input =
         r#"
-        mod app/mod
-        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd17ac4e3e3f23d094935d65f113f62c5d73e2fab8dc62a28fed4b6c1b9b7b830d
-        {
+        mod app/mod _ {
         } in {
             name0 :: () -> Simple {
                 a = Type
@@ -256,9 +250,7 @@ mod tests {
     fn print_test() {
         let input =
         r#"
-        mod app/mod
-        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd17ac4e3e3f23d094935d65f113f62c5d73e2fab8dc62a28fed4b6c1b9b7b830d
-        {
+        mod app/mod _ {
         } in {
             name0 :: () -> Simple {
                 hi = {1:2}
@@ -305,9 +297,7 @@ mod tests {
     fn return_value_test() {
         let input =
         r#"
-        mod app/mod
-        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd17ac4e3e3f23d094935d65f113f62c5d73e2fab8dc62a28fed4b6c1b9b7b830d
-        {
+        mod app/mod _ {
         } in {
             summon name :: (str: String) -> String { skip x="string" }
             summon name :: () -> String { "string" }

@@ -270,7 +270,7 @@ statement = {
         hbfi = {
             application ~ "/" ~ module ~ public_key
         }
-            public_key = @{ ASCII_ALPHANUMERIC {128} }
+            public_key = @{ "_" | ASCII_ALPHANUMERIC {128} }
             application = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")*  }
             module = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
         module_declaration = {
