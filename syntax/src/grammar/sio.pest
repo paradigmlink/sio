@@ -14,6 +14,7 @@ statement = {
     | async_send
     | selective_receive
     | process_spawn
+    | thread
 }
     return_value = {
         value
@@ -328,6 +329,12 @@ statement = {
         ~ statement+
         ~ brace_close
     }
+    thread = {
+        "thread"
+        ~ brace_open
+        ~ statement+
+        ~ brace_close
+    }
 
 named_procedure_def = { named_procedure_header ~ procedure_def }
     named_procedure_header = {
@@ -341,12 +348,15 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
         stable = { "stable" }
         sunset = { "sunset" }
         seeyou = { "seeyou" }
-    procedure_name = { generic_procedure | concrete_procedure }
+    procedure_name = { lazy? ~ (generic_procedure | concrete_procedure) }
     generic_procedure = {
         ident
         ~ angle_open
         ~ generic_type_label ~ (comma ~ generic_type_label)*
         ~ angle_close
+    }
+    lazy = {
+        "lazy"
     }
     concrete_procedure = {
         ident

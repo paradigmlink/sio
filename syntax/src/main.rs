@@ -517,4 +517,39 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn thread_test() {
+        let input =
+        r#"
+        mod app/mod _ {
+        } in {
+            summon lazy name :: () {
+                let {} in {
+                    thread {
+                        skip
+                    }
+                }
+            }
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::module_def => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
 }
