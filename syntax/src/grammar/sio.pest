@@ -13,6 +13,7 @@ statement = {
     | procedure_call
     | async_send
     | selective_receive
+    | process_spawn
 }
     return_value = {
         value
@@ -307,6 +308,26 @@ statement = {
             module_import_function_name = @{ident}
             module_import_type_name = @{type_decl}
             module_data_type_export = { (stability? ~ data_type_decl) }
+    async_send     =  { ident ~ "!" ~ value }
+    selective_receive = {
+        "receive"
+        ~ (deterministic_receive | nondeterministic_receive)
+        ~ brace_open
+        ~ match_body+
+        ~ brace_close
+    }
+        deterministic_receive = {
+            ident
+        }
+        nondeterministic_receive = {
+            "all"
+        }
+    process_spawn = {
+        "spawn"
+        ~ brace_open
+        ~ statement+
+        ~ brace_close
+    }
 
 named_procedure_def = { named_procedure_header ~ procedure_def }
     named_procedure_header = {
@@ -352,20 +373,6 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
         procedure_body = {
             statement* ~ return_value?
         }
-    async_send     =  { ident ~ "!" ~ value }
-    selective_receive = {
-        "receive"
-        ~ (deterministic_receive | nondeterministic_receive)
-        ~ brace_open
-        ~ match_body+
-        ~ brace_close
-    }
-    deterministic_receive = {
-        ident
-    }
-    nondeterministic_receive = {
-        "all"
-    }
 
 ident = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
 
