@@ -1,7 +1,4 @@
-main = _{ SOI ~ sio_main+ ~ EOI }
-sio_main = {
-    module_def+
-}
+main = _{ SOI ~ statement+ ~ EOI }
 statement = {
     skip
     | print
@@ -15,6 +12,7 @@ statement = {
     | selective_receive
     | process_spawn
     | thread
+    | module_def
 }
     return_value = {
         value
@@ -44,6 +42,7 @@ statement = {
     }
         declaration = {
             data_type_decl
+            | named_procedure_def
             | ident_and_type
         }
             ident_and_type = { ident ~ ":" ~ type_decl }
@@ -379,9 +378,25 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
         ~ brace_open
         ~ procedure_body
         ~ brace_close
+        ~ procedure_in?
+        ~ procedure_where?
     }
         procedure_body = {
             statement* ~ return_value?
+        }
+        in_lit = { "in" }
+        where_lit = { "where" }
+        procedure_in = {
+            in_lit
+            ~ brace_open
+            ~ statement+
+            ~ brace_close
+        }
+        procedure_where = {
+            where_lit
+            ~ brace_open
+            ~ statement+
+            ~ brace_close
         }
 
 ident = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }

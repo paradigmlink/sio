@@ -33,7 +33,7 @@ mod list {
     }
 }
 #[cfg(test)]
-mod tests {
+mod parse_tests {
     use super::*;
 
 
@@ -524,13 +524,80 @@ mod tests {
         r#"
         mod app/mod _ {
         } in {
-            summon lazy name :: () {
+            summon name :: () {
                 let {} in {
                     thread {
                         skip
                     }
                 }
             }
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::module_def => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
+
+    #[test]
+    fn lazy_test() {
+        let input =
+        r#"
+        mod app/mod _ {
+        } in {
+            summon lazy name :: () {
+                skip
+            }
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::module_def => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
+
+    #[test]
+    fn procedure_in_where_test() {
+        let input =
+        r#"
+        let {
+            name :: () {
+                skip
+            } in {
+                skip
+            } where {
+                skip
+            }
+        } in {
+            name()
         }
         "#;
 
