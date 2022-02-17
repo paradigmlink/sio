@@ -370,9 +370,26 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
             procedure_parameter
             ~ (comma ~ procedure_parameter)*
         }
-            procedure_parameter = { ident_and_type }
+            procedure_parameter = {
+                ident ~ ":" ~ higher_order_procedure_header
+                | ident_and_type
+            }
+    higher_order_procedure_header = {
+        paren_open
+        ~ higher_order_procedure_parameters?
+        ~ paren_close
+        ~ procedure_return_type?
+    }
+        higher_order_procedure_parameters = {
+            higher_order_procedure_parameter
+            ~ (comma ~ higher_order_procedure_parameter)*
+        }
+            higher_order_procedure_parameter = {
+                type_decl
+                | ident ~ ":" ~ higher_order_procedure_header
+            }
             self_lit = { "self" ~ comma? }
-        procedure_return_type = { "->" ~ type_decl }
+        procedure_return_type = { "->" ~ ( higher_order_procedure_header | type_decl ) }
     procedure_def = {
         procedure_header
         ~ brace_open
@@ -384,8 +401,8 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
         procedure_body = {
             statement* ~ return_value?
         }
-        in_lit = { "in" }
-        where_lit = { "where" }
+        in_lit = @{ "in" }
+        where_lit = @{ "where" }
         procedure_in = {
             in_lit
             ~ brace_open

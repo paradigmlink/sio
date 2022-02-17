@@ -619,4 +619,54 @@ mod parse_tests {
             }
         }
     }
+
+    #[test]
+    fn higher_order_procedure_test() {
+        let input =
+        r#"
+        let {
+            name :: (a: ()->Hi) {
+                skip
+            }
+            name :: (a: (B)->Hi) {
+                skip
+            }
+            name :: (a: (B)->Hi, b: (C)->Hi) {
+                skip
+            }
+            name :: (a: (B)->[Hi], b: (C)->[|3;Hi|]) {
+                skip
+            }
+            name<A> :: (a: (A, A)->(A)->Bool, b: (A, A)->(A)->Hi) -> Hi{
+                skip
+            }
+            name<A,B,C> :: (
+                a: (A, A)->(C)->Bool,
+                b: (A, B)->(C)->Bool
+            ) -> (A)->Bool {
+                skip
+            }
+        } in {
+            name()
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::module_def => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
 }
