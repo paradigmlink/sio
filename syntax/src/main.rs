@@ -43,7 +43,7 @@ mod parse_tests {
         r#"
         mod app/mod _ {
             data DataType = Constructor
-            data DataType = Constractor([Int], [Int])
+            data DataType = Constructor([Int], [Int])
             data DataType = Sheep({name: Bool, naked: Bool})
             data DataType<A,B,C> = Constructor(Option<T>, Result<String, I64>)
             data A =
@@ -99,6 +99,7 @@ mod parse_tests {
                 e_array = MyArray([|1,2,3|])
                 e_list = MyList([1,2,3])
                 e_tuple = MyTuple((1,2))
+                e_tuple = (ident)
                 e_record = MyRecord({
                     an_atom:[|1,2|],
                     true:[1],
@@ -144,6 +145,8 @@ mod parse_tests {
         } in {
             name0 :: () -> Simple {
                 match [|3|] {
+                | [first|second|tail] => { skip }
+                | [head|tail] => { skip }
                 | [||] => { skip }
                 | [] => { skip }
                 | true => { skip }
@@ -340,9 +343,8 @@ mod parse_tests {
     fn module_def_test() {
         let input =
         r#"
-        mod app/mod
-        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd17ac4e3e3f23d094935d65f113f62c5d73e2fab8dc62a28fed4b6c1b9b7b830d {
-            use 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae00b6a4a1c789ad2d6c8668bcf56dcb80e0adf1dc07b2a72e5dd65f1933b05003::{
+        mod app/mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd {
+            use 9b397a7b41de899b986208961e34b09f52166315e1be0ac62e6aed2f854eb55b::{
                 app1::{
                     mod1::{hi1, Type1}
                     mod2::{hi2, Type2}
@@ -351,7 +353,7 @@ mod parse_tests {
                     mod3::{hi3, Type3}
                 }
             }
-            use 879f8ba6106e519ac7b6e09cb7a0905f9c8e6c9779cd76e1ece709277aa2b97b2d576ae86dd6c93ceaf61100e7a06c75aa841758e8477be62089475c8a7af00c::{
+            use 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae::{
                 app1::{
                     mod1::{hi1, Type1}
                 }
@@ -359,6 +361,7 @@ mod parse_tests {
             data Sheep =
                 | Version1 ({name: String, naked: Bool})
                 | Version2 ({name: String, naked: Bool, breed: Breed})
+            sketch data Sheep<I> = sketch Sheep({push: (I) -> Stack<I>, pop: ()->(I, Stack<I>), is_empty: Bool})
             sketch data Sheep =
                 | sketch Version1 ({name: String, naked: Bool})
                 | summon Version2 ({name: String, naked: Bool, breed: Breed})
@@ -625,6 +628,9 @@ mod parse_tests {
         let input =
         r#"
         let {
+            name :: () -> {String:Hi} {
+                skip
+            }
             name :: (a: ()->Hi) {
                 skip
             }
@@ -634,20 +640,67 @@ mod parse_tests {
             name :: (a: (B)->Hi, b: (C)->Hi) {
                 skip
             }
-            name :: (a: (B)->[Hi], b: (C)->[|3;Hi|]) {
+            name :: (a: ([B])->[Hi], b: (C)->[|3;Hi|]) {
                 skip
             }
             name<A> :: (a: (A, A)->(A)->Bool, b: (A, A)->(A)->Hi) -> Hi{
                 skip
             }
             name<A,B,C> :: (
-                a: (A, A)->(C)->Bool,
-                b: (A, B)->(C)->Bool
+                a: (A, A) -> (C) -> Bool,
+                b: (A, B) -> (C) -> Bool
             ) -> (A)->Bool {
                 skip
             }
         } in {
             name()
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::module_def => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
+
+    #[test]
+    fn stack_test() {
+        let input =
+        r#"
+        mod collection/stack 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae {
+            sketch data Stack<I> = sketch Stack({ push: (I)->Stack<I>, pop: ()->(I, Stack<I>), is_empty: Bool})
+            stack<I> :: (inner_stack: [I]) -> Stack<I> {
+                push :: (item: I) -> Stack<I> {
+                    stack(item|stack)
+                }
+                pop :: () -> (I, Stack<I>) {
+                    match inner_stack {
+                        | [head|tail] => {(head, stack(tail))}
+                    }
+                }
+                is_empty :: () -> Bool {
+                    inner_stack == []
+                }
+            } in {
+                Stack({push, pop, is_empty})
+            }
+        } in {
+            sketch new_stack<I> :: () -> Stack<I> {
+                stack([])
+            }
         }
         "#;
 

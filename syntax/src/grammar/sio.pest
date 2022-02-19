@@ -13,12 +13,11 @@ statement = {
     | process_spawn
     | thread
     | module_def
+    | named_procedure_def
 }
     return_value = {
-        value
-        | self_lit ~ dot ~ return_value
-        | self_lit
-        | ident
+        expr
+        | value
     }
     print = {
         (println_lit | print_lit)
@@ -29,7 +28,6 @@ statement = {
         print_lit = { "print" }
         print_arg = {
             procedure_call
-            | self_lit ~ dot ~ print_arg
             | ident
         }
     skip = { "skip" }
@@ -66,7 +64,6 @@ statement = {
         }
             dot_member = {
                 procedure_call
-                | self_lit ~ dot ~ dot_member
                 | ident ~ dot ~ dot_member
                 | ident
             }
@@ -82,8 +79,13 @@ statement = {
                 false_lit = { "false" }
             string_inst = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
             char_inst = { "'" ~ ASCII_ALPHA ~ "'" }
-            record_inst = { brace_open ~ ( record_pair ~ ( comma ~ record_pair )* )? ~ brace_close }
-                record_pair    = { record_key~ ":" ~ value }
+            record_inst = {
+                brace_open
+                    ~ ( record_pair ~ ( comma ~ record_pair )*
+                        | value ~ (comma ~ value)* )?
+                ~ brace_close
+            }
+                record_pair    = { record_key ~ ":" ~ value }
                 record_key= {
                     integer_inst
                     | atom_inst
@@ -128,15 +130,17 @@ statement = {
         ~ brace_close
     }
     procedure_call = {
-        self_lit ~ dot ~ procedure_call
-        | ident ~ dot ~ procedure_call
+        ident ~ dot ~ procedure_call
+        | list_append
         | ident ~ paren_open ~ args? ~ paren_close
     }
+        list_append = { ident ~ pipe ~ ident }
+        list_head_tail = { ident ~ pipe ~ ident }
         op_unary_minus =  { "-" }
         op_unary_not   =  { "!" }
         op_unary       = _{
-            op_unary_minus |
-            op_unary_not
+            op_unary_minus
+            | op_unary_not
         }
         op_plus          =  { "+" }
         op_minus         =  { "-" }
@@ -174,6 +178,7 @@ statement = {
         array_close      = { "|]" }
         dot              = { "." }
         comma            = { "," }
+        pipe             = { "|" }
         args  = _{ expr ~ (comma ~ expr)* }
         term = { op_unary* ~ value ~ (dot ~ procedure_call)* }
         expr = { term ~ (op_infix ~ term)* }
@@ -191,75 +196,75 @@ statement = {
             | string_match
         }
             list_match = {
-                "|"
+                pipe
                 ~ bracket_open
                   ~ ident
-                  ~ comma
+                  ~ pipe
                   ~ ident
-                  ~ comma
+                  ~ pipe
                   ~ ident
                 ~ bracket_close ~ "=>" ~ brace_open
-                  ~ statement*
+                  ~ statement* ~ return_value?
                 ~ brace_close
-                | "|"
+                | pipe
                 ~ bracket_open
                   ~ ident
-                  ~ comma
+                  ~ pipe
                   ~ ident
                 ~ bracket_close  ~ "=>" ~ brace_open
-                  ~ statement*
+                  ~ statement* ~ return_value?
                 ~ brace_close
-                | "|"
+                | pipe
                 ~ bracket_open
                 ~ bracket_close ~ "=>" ~ brace_open
-                  ~ statement*
+                  ~ statement* ~ return_value?
                 ~ brace_close
             }
             array_match = {
-                "|"
+                pipe
                 ~ array_open
                   ~ ident
-                  ~ comma
+                  ~ pipe
                   ~ ident
                 ~ array_close ~ "=>" ~ brace_open
-                  ~ statement*
+                  ~ statement* ~ return_value?
                 ~ brace_close
-                | "|"
+                | pipe
                 ~ array_open
                   ~ ident
                 ~ array_close ~ "=>" ~ brace_open
-                  ~ statement*
+                  ~ statement* ~ return_value?
                 ~ brace_close
-                | "|"
+                | pipe
                 ~ array_open
                 ~ array_close ~ "=>" ~ brace_open
-                  ~ statement*
+                  ~ statement* ~ return_value?
                 ~ brace_close
             }
             boolean_match = {
-                "|"
+                pipe
                 ~ true_lit ~ "=>" ~ brace_open
-                  ~ statement*
+                  ~ statement* ~ return_value?
                 ~ brace_close
-                | "|"
+                | pipe
                 ~ false_lit ~ "=>" ~ brace_open
-                  ~ statement*
+                  ~ statement* ~ return_value?
                 ~ brace_close
             }
             char_match = {
-                "|"
+                pipe
                 ~ char_inst ~ "=>" ~ brace_open
-                  ~ statement*
+                  ~ statement* ~ return_value?
                 ~ brace_close
-                | "|"
+                | pipe
                 ~ "_" ~ "=>" ~ brace_open
-                  ~ statement*
+                  ~ statement* ~ return_value?
                 ~ brace_close
             }
             string_match = {
-                "|"
+                pipe
                 ~ string_inst ~ "=>" ~ brace_open
-                  ~ statement*
+                  ~ statement* ~ return_value?
                 ~ brace_close
             }
     module_def = {
@@ -273,11 +278,12 @@ statement = {
         hbfi = {
             application ~ "/" ~ module ~ public_key
         }
-            public_key = @{ "_" | ASCII_ALPHANUMERIC {128} }
+            public_key = @{ "_" | ASCII_ALPHANUMERIC {64} }
             application = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")*  }
             module = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
         module_declaration = {
             import_statement
+            | named_procedure_def
             | module_data_type_export
             | ident_and_type
         }
@@ -388,7 +394,6 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
                 type_decl
                 | ident ~ ":" ~ higher_order_procedure_header
             }
-            self_lit = { "self" ~ comma? }
         procedure_return_type = { "->" ~ ( higher_order_procedure_header | type_decl ) }
     procedure_def = {
         procedure_header
@@ -406,13 +411,13 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
         procedure_in = {
             in_lit
             ~ brace_open
-            ~ statement+
+            ~ statement* ~ return_value?
             ~ brace_close
         }
         procedure_where = {
             where_lit
             ~ brace_open
-            ~ statement+
+            ~ statement* ~ return_value?
             ~ brace_close
         }
 
@@ -428,7 +433,7 @@ data_type_decl = {
     "data"
     ~ type_decl
     ~ "="
-    | ("|" ~ variant_constructor) {2,}
+    | (pipe ~ variant_constructor) {2,}
     | variant_constructor
 }
 type_decl = {
@@ -490,7 +495,7 @@ record_type_decl = {
     ~ (record_pair_decl ~ (comma ~ record_pair_decl)*)
     ~ brace_close
 }
-    record_pair_decl = { key_type_decl ~ ":" ~ type_decl}
+    record_pair_decl = { key_type_decl ~ ":" ~ (higher_order_procedure_header | type_decl) }
         key_type_decl  = {
             atom_inst
             | i64_type
@@ -512,8 +517,7 @@ array_type_decl  = {
     array_length = { integer_inst }
 tuple_type_decl  = {
     paren_open
-    ~ (type_decl
-        ~ (comma ~ type_decl)*)?
+    ~ (type_decl ~ (comma ~ type_decl)*)?
     ~ paren_close
 }
 set_type_decl = {
