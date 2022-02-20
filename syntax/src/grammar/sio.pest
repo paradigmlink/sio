@@ -45,7 +45,7 @@ statement = {
         }
             ident_and_type = { ident ~ ":" ~ type_decl }
     var_to_var_binding = { ident ~ "=" ~ ident }
-    value_creation = { ident ~ "=" ~ value }
+    value_creation = { ident ~ "=" ~ (expr|value) }
         value = {
             number_inst
             | boolean_inst

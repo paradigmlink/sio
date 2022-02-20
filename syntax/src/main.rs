@@ -213,16 +213,16 @@ mod parse_tests {
                         hi=true
                         hi=false
                         hi='h'
-                        hi=(3+3)
-                        hi=(3*3)
-                        hi=(3/3)
-                        hi=(3-3)
-                        hi=(3==3)
-                        hi=(3<3)
-                        hi=(3>3)
-                        hi=(true||false)
-                        hi=(true&&false)
-                        hi=(3<=3)
+                        hi=3+3
+                        hi=3*3
+                        hi=3/3/3
+                        hi=3-3
+                        hi=3==3
+                        hi=3<3
+                        hi=3>3
+                        hi=true||false
+                        hi=true&&false
+                        hi=3<=3
                         hi=((((((((3>=3)+3)/3)*3)-3)<=3)&&3)||3)
                     }
                 l = Sheep({name: self.name, naked: true})
@@ -305,6 +305,8 @@ mod parse_tests {
             summon name :: (str: String) -> String { skip x="string" }
             summon name :: () -> String { "string" }
             summon name :: () -> String { 32 }
+            summon name :: () -> String { 32+32 }
+            summon name :: () -> String { 32*32*32 }
             summon name :: () -> String { 32.42 }
             summon name :: () -> String { true }
             summon name :: () -> String { false }
