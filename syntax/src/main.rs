@@ -179,10 +179,41 @@ mod parse_tests {
     }
 
     #[test]
+    fn empty_tuple_or_no_arg_procedure_test() {
+        let input =
+        r#"
+        let {
+            data Export = Export({ export_procedure: Char, ExportType: Char })
+        } in {
+            hi = Export({export_procedure, ExportType})
+        }
+        "#;
+
+        let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::variable_creation => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
+
+    #[test]
     fn var_to_var_binding_test() {
         let input =
         r#"
         mod app/mod _ {
+            data Rec = Rec({ name: (), name: (A)->A })
         } in {
             name0 :: () -> Simple {
                 a = Type
@@ -202,29 +233,29 @@ mod parse_tests {
                 k = (hi: Hi, hi: Hi) -> Hi { skip }
                 k = (hi: Hi, hi: Hi<I64>) -> Result<Option<I64>, String> { skip }
                 k = (hi: [|3; Hi|], hi: [Hi]) -> <Hi> {
-                        skip
-                        hi=[|3,2,1|]
-                        hi=[3,2,1]
-                        hi=<3,2,1>
-                        hi=(3,2,1)
-                        hi="hi"
-                        hi=3
-                        hi=3.3
-                        hi=true
-                        hi=false
-                        hi='h'
-                        hi=3+3
-                        hi=3*3
-                        hi=3/3/3
-                        hi=3-3
-                        hi=3==3
-                        hi=3<3
-                        hi=3>3
-                        hi=true||false
-                        hi=true&&false
-                        hi=3<=3
-                        hi=((((((((3>=3)+3)/3)*3)-3)<=3)&&3)||3)
-                    }
+                    skip
+                    hi=[|3,2,1|]
+                    hi=[3,2,1]
+                    hi=<3,2,1>
+                    hi=(3,2,1)
+                    hi="hi"
+                    hi=3
+                    hi=3.3
+                    hi=true
+                    hi=false
+                    hi='h'
+                    hi=3+3
+                    hi=3*3
+                    hi=3/3/3
+                    hi=3-3
+                    hi=3==3
+                    hi=3<3
+                    hi=3>3
+                    hi=true||false
+                    hi=true&&false
+                    hi=3<=3
+                    hi=((((((((3>=3)+3)/3)*3)-3)<=3)&&3)||3)
+                }
                 l = Sheep({name: self.name, naked: true})
             }
         }

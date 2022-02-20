@@ -502,6 +502,7 @@ record_type_decl = {
             | bool_type
             | string_type
             | char_type
+            | data_type_name
         }
 list_type_decl   = {
     bracket_open
