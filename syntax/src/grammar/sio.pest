@@ -123,7 +123,7 @@ statement = {
             }
 
     conditional = {
-        "if" ~ procedure_call ~ brace_open
+        "if" ~ return_value ~ brace_open
             ~ statement* ~ return_value?
         ~ brace_close ~ "else" ~ brace_open
             ~ statement* ~ return_value?
@@ -192,8 +192,11 @@ statement = {
             list_match
             | array_match
             | boolean_match
+            | tuple_match
             | char_match
             | string_match
+            | ident_and_type_match
+            | variant_match
         }
             list_match = {
                 pipe
@@ -241,6 +244,19 @@ statement = {
                   ~ statement* ~ return_value?
                 ~ brace_close
             }
+            tuple_match = {
+                pipe
+                ~ paren_open
+                  ~ ident_and_type ~ (comma ~ ident_and_type)*
+                ~ paren_close ~ "=>" ~ brace_open
+                  ~ statement* ~ return_value?
+                ~ brace_close
+                | pipe
+                ~ paren_open
+                ~ paren_close ~ "=>" ~ brace_open
+                  ~ statement* ~ return_value?
+                ~ brace_close
+            }
             boolean_match = {
                 pipe
                 ~ true_lit ~ "=>" ~ brace_open
@@ -267,20 +283,42 @@ statement = {
                   ~ statement* ~ return_value?
                 ~ brace_close
             }
+            ident_and_type_match = {
+                pipe
+                ~ ident_and_type ~ "=>" ~ brace_open
+                  ~ statement* ~ return_value?
+                ~ brace_close
+            }
+            variant_match = {
+                pipe ~ (product_variant_constructor_match | empty_variant_constructor_match)
+                ~ "=>" ~ brace_open
+                  ~ statement* ~ return_value?
+                ~ brace_close
+            }
+                variant_constructor_match = {
+                    product_variant_constructor_match
+                    | empty_variant_constructor_match
+                }
+                product_variant_constructor_match = {
+                    variant_constructor_name
+                    ~ paren_open
+                    ~ ident ~ ":" ~ type_decl ~ (comma ~ ident ~ ":" ~ type_decl)*
+                    ~ paren_close
+                }
+                empty_variant_constructor_match = {
+                    variant_constructor_name
+                }
+
     module_def = {
         "mod" ~ hbfi ~ brace_open
-            ~ module_declaration*
-        ~ brace_close ~ "in" ~ brace_open
-            ~ named_procedure_def+
+            ~ (module_declaration | named_procedure_def)*
         ~ brace_close
     }
-        module_name = @{ ident }
         hbfi = {
-            application ~ "/" ~ module ~ public_key
+            public_key ~ separator ~ module_namespace ~ ("/" ~ module_namespace)*
         }
-            public_key = @{ "_" | ASCII_ALPHANUMERIC {64} }
-            application = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")*  }
-            module = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
+            public_key              = @{ "_" | ASCII_ALPHANUMERIC {64} }
+            module_namespace        = @{ ident }
         module_declaration = {
             import_statement
             | named_procedure_def
@@ -288,33 +326,25 @@ statement = {
             | ident_and_type
         }
             import_statement = {
-                "use"
-                ~ import_from_public_key+
+                "use" ~ import_from_public_key+
             }
-            import_from_public_key = {
-                public_key
-                ~ separator
-                ~ brace_open
-                ~ import_from_application+
-                ~ brace_close
-            }
-            import_from_application = {
-                application
-                ~ separator
-                ~ brace_open
-                ~ import_from_module+
-                ~ brace_close
-            }
-            import_from_module = {
-                module ~ separator ~ brace_open
-                ~ (module_import_function_name | module_import_type_name)
-                ~ (comma ~ (module_import_function_name | module_import_type_name))*
-                ~ brace_close
-            }
-            module_import_function_name = @{ident}
-            module_import_type_name = @{type_decl}
+                import_from_public_key = {
+                    public_key ~ separator ~ brace_open
+                    ~ (import_namespace | type_decl | module_or_function_name)
+                    ~ (comma ~ (import_namespace | type_decl | module_or_function_name))*
+                    ~ comma?
+                    ~ brace_close
+                }
+                    import_namespace = {
+                        module_namespace ~ separator ~ brace_open
+                        ~ (import_namespace | type_decl | module_or_function_name)
+                        ~ (comma ~ (import_namespace | type_decl | module_or_function_name))*
+                        ~ comma?
+                        ~ brace_close
+                    }
+                    module_or_function_name = @{ident}
             module_data_type_export = { (stability? ~ data_type_decl) }
-    async_send     =  { ident ~ "!" ~ value }
+    async_send     =  { ident ~ "!" ~ (expr | value) }
     selective_receive = {
         "receive"
         ~ (deterministic_receive | nondeterministic_receive)
@@ -331,7 +361,7 @@ statement = {
     process_spawn = {
         "spawn"
         ~ brace_open
-        ~ statement+
+        ~ statement* ~ return_value?
         ~ brace_close
     }
     thread = {

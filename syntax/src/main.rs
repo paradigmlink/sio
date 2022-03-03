@@ -12,7 +12,7 @@ pub struct SioParser;
 fn main() {
     let unparsed_file =
 r#"
-mod list {
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/list {
   name2 :: () -> {I64: Hi} {
     hi = {1:2}
   }
@@ -41,7 +41,7 @@ mod parse_tests {
     fn data_variant_test() {
         let input =
         r#"
-        mod app/mod _ {
+       mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             data DataType = Constructor
             data DataType = Constructor([Int], [Int])
             data DataType = Sheep({name: Bool, naked: Bool})
@@ -91,7 +91,6 @@ mod parse_tests {
             k_2: K<I64, Bool>
             p_1: P<I64>
             p_2: P<Option<I65>>
-        } in {
             name0 :: () -> Simple {
                 skip
                 a = A
@@ -141,19 +140,22 @@ mod parse_tests {
     fn pattern_match_test() {
         let input =
         r#"
-        mod app/mod _ {
-        } in {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             name0 :: () -> Simple {
                 match [|3|] {
-                | [first|second|tail] => { skip }
-                | [head|tail] => { skip }
-                | [||] => { skip }
-                | [] => { skip }
-                | true => { skip }
-                | false => { skip }
-                | 'h' => { skip }
-                | _ => { skip }
-                | "hello" => { skip }
+                    | [first|second|tail] => { skip }
+                    | [head|tail] => { skip }
+                    | [||] => { skip }
+                    | [] => { skip }
+                    | true => { skip }
+                    | false => { skip }
+                    | 'h' => { skip }
+                    | _ => { skip }
+                    | "hello" => { skip }
+                    | val: Int => { skip }
+                    | (val: Int, str: String) => { skip }
+                    | Rectangle(hi: Hi) => { skip }
+                    | Rectangle(width: Int, height: Int) => { skip }
                 }
             }
         }
@@ -179,7 +181,7 @@ mod parse_tests {
     }
 
     #[test]
-    fn empty_tuple_or_no_arg_procedure_test() {
+    fn capitalized_record_key_test() {
         let input =
         r#"
         let {
@@ -212,9 +214,8 @@ mod parse_tests {
     fn var_to_var_binding_test() {
         let input =
         r#"
-        mod app/mod _ {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             data Rec = Rec({ name: (), name: (A)->A })
-        } in {
             name0 :: () -> Simple {
                 a = Type
                 b = Type(2)
@@ -284,8 +285,7 @@ mod parse_tests {
     fn print_test() {
         let input =
         r#"
-        mod app/mod _ {
-        } in {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             name0 :: () -> Simple {
                 hi = {1:2}
                 print("...")
@@ -331,8 +331,7 @@ mod parse_tests {
     fn return_value_test() {
         let input =
         r#"
-        mod app/mod _ {
-        } in {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             summon name :: (str: String) -> String { skip x="string" }
             summon name :: () -> String { "string" }
             summon name :: () -> String { 32 }
@@ -376,15 +375,55 @@ mod parse_tests {
     fn module_def_test() {
         let input =
         r#"
-        mod app/mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
+            use 9b397a7b41de899b986208961e34b09f52166315e1be0ac62e6aed2f854eb55b::{
+                fun,
+                Type,
+                widget::{
+                    fun,
+                    Type,
+                    wiget::{
+                        fun,
+                        Type,
+                        wiget::{
+                            fun,
+                            Type,
+                            wiget::{
+                                fun,
+                                Type,
+                                wiget::{
+                                    fun,
+                                    Type,
+                                    wiget::{
+                                        fun,
+                                        Type,
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                widget::{
+                    fun,
+                    Type,
+                    wiget::{
+                        fun,
+                        Type,
+                        wiget::{
+                            fun,
+                            Type,
+                        }
+                    }
+                }
+            }
             use 9b397a7b41de899b986208961e34b09f52166315e1be0ac62e6aed2f854eb55b::{
                 app1::{
-                    mod1::{hi1, Type1}
-                    mod2::{hi2, Type2}
-                }
+                    mod1::{hi1, Type1},
+                    mod2::{hi2, Type2},
+                },
                 app3::{
                     mod3::{hi3, Type3}
-                }
+                },
             }
             use 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae::{
                 app1::{
@@ -403,7 +442,6 @@ mod parse_tests {
             stable data DataType = stable Constructor
             sunset data DataType = sunset Constructor
             seeyou data DataType = seeyou Constructor
-        } in {
             name0 :: () -> Simple {
                 hi = {1:2}
             }
@@ -448,20 +486,20 @@ mod parse_tests {
     fn selective_receive_and_send_test() {
         let input =
         r#"
-        mod app/mod _ {
-        } in {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             summon name :: (str: String) -> String {
                 process ! "string"
                 receive all {
-                | [||] => { skip }
-                | [] => { skip }
-                | true => { skip }
+                    | [||] => { skip }
+                    | [] => { skip }
+                    | true => { skip }
                 }
-                receive proceess {
-                | false => { skip }
-                | 'h' => { skip }
-                | _ => { skip }
-                | "hello" => { skip }
+                receive process {
+                    | false => { skip }
+                    | 'h' => { skip }
+                    | _ => { skip }
+                    | "hello" => { skip }
+                    | val: Int => { skip }
                 }
             }
         }
@@ -490,8 +528,7 @@ mod parse_tests {
     fn generic_function_test() {
         let input =
         r#"
-        mod app/mod _ {
-        } in {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             summon name :: () { skip }
             summon name :: (a: A) { skip }
             summon name<A> :: (a: A) -> A { skip }
@@ -523,8 +560,7 @@ mod parse_tests {
     fn process_spawn_test() {
         let input =
         r#"
-        mod app/mod _ {
-        } in {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             summon name :: () {
                 let {} in {
                     spawn {
@@ -558,8 +594,7 @@ mod parse_tests {
     fn thread_test() {
         let input =
         r#"
-        mod app/mod _ {
-        } in {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             summon name :: () {
                 let {} in {
                     thread {
@@ -593,8 +628,7 @@ mod parse_tests {
     fn lazy_test() {
         let input =
         r#"
-        mod app/mod _ {
-        } in {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             summon lazy name :: () {
                 skip
             }
@@ -713,7 +747,7 @@ mod parse_tests {
     fn stack_test() {
         let input =
         r#"
-        mod collection/stack 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             sketch data Stack<I> = sketch Stack({ push: (I)->Stack<I>, pop: ()->(I, Stack<I>), is_empty: Bool})
             stack<I> :: (inner_stack: [I]) -> Stack<I> {
                 push :: (item: I) -> Stack<I> {
@@ -730,7 +764,6 @@ mod parse_tests {
             } in {
                 Stack({push, pop, is_empty})
             }
-        } in {
             sketch new_stack<I> :: () -> Stack<I> {
                 stack([])
             }
@@ -738,6 +771,29 @@ mod parse_tests {
         "#;
 
         let parsed = SioParser::parse(Rule::main, &input);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::module_def => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
+
+    #[test]
+    fn area_server_test() {
+        use std::fs;
+        let unparsed_file = fs::read_to_string("examples/area_server.sio").expect("cannot read file");
+        let parsed = SioParser::parse(Rule::main, &unparsed_file);
         match parsed {
             Ok(mut res) => {
                 for statement in res.next().unwrap().into_inner() {

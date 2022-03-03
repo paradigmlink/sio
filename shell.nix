@@ -18,6 +18,7 @@ stdenv.mkDerivation {
       #rust-overlay
       cargo-download
   ];
-  buildInputs = [ pkgconfig ripgrep gitui nasm rustup qemu mc];
+  buildInputs = [ pkgconfig ripgrep rustup gitui mc];
+  #nasm qemu
 }
 
