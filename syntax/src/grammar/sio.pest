@@ -10,13 +10,13 @@ statement = {
     | procedure_call
     | async_send
     | selective_receive
-    | process_spawn
     | thread
     | module_def
     | named_procedure_def
 }
     return_value = {
-        expr
+        url
+        | expr
         | value
     }
     print = {
@@ -130,7 +130,8 @@ statement = {
         ~ brace_close
     }
     procedure_call = {
-        ident ~ dot ~ procedure_call
+        process_spawn
+        | ident ~ dot ~ procedure_call
         | list_append
         | ident ~ paren_open ~ args? ~ paren_close
     }
@@ -310,11 +311,11 @@ statement = {
                 }
 
     module_def = {
-        "mod" ~ hbfi ~ brace_open
+        "mod" ~ url ~ brace_open
             ~ (module_declaration | named_procedure_def)*
         ~ brace_close
     }
-        hbfi = {
+        url = {
             public_key ~ separator ~ module_namespace ~ ("/" ~ module_namespace)*
         }
             public_key              = @{ "_" | ASCII_ALPHANUMERIC {64} }
@@ -360,10 +361,21 @@ statement = {
         }
     process_spawn = {
         "spawn"
-        ~ brace_open
-        ~ statement* ~ return_value?
-        ~ brace_close
+        ~ paren_open
+        ~ pid
+        ~ comma
+        ~ spawn_function
+        ~ comma
+        ~ spawn_argument
+        ~ paren_close
     }
+        pid = { url | ident }
+        spawn_function = {
+            ident
+        }
+        spawn_argument = {
+            value
+        }
     thread = {
         "thread"
         ~ brace_open

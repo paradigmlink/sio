@@ -562,10 +562,13 @@ mod parse_tests {
         r#"
         mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             summon name :: () {
-                let {} in {
-                    spawn {
-                        skip
-                    }
+                let {
+                    pid1 : Pid
+                    pid2 : Pid
+                } in {
+                    spawn(79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server, loop, [])
+                    pid1 = spawn(79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server, loop, [])
+                    pid2 = spawn(pid1, loop, [])
                 }
             }
         }
