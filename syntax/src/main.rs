@@ -569,6 +569,8 @@ mod parse_tests {
                     spawn(79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server, loop, [])
                     pid1 = spawn(79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server, loop, [])
                     pid2 = spawn(pid1, loop, [])
+                    register("process_name/name", identity)
+                    register(url_string, 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server)
                 }
             }
         }

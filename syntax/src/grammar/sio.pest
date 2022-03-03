@@ -47,7 +47,8 @@ statement = {
     var_to_var_binding = { ident ~ "=" ~ ident }
     value_creation = { ident ~ "=" ~ (expr|value) }
         value = {
-            number_inst
+            url
+            | number_inst
             | boolean_inst
             | char_inst
             | string_inst
@@ -131,6 +132,7 @@ statement = {
     }
     procedure_call = {
         process_spawn
+        | register_url
         | ident ~ dot ~ procedure_call
         | list_append
         | ident ~ paren_open ~ args? ~ paren_close
@@ -370,12 +372,16 @@ statement = {
         ~ paren_close
     }
         pid = { url | ident }
-        spawn_function = {
-            ident
-        }
-        spawn_argument = {
-            value
-        }
+        spawn_function = { ident }
+        spawn_argument = { value }
+    register_url = {
+        "register"
+        ~ paren_open
+        ~ (ident | string_inst)
+        ~ comma
+        ~ (url | ident)
+        ~ paren_close
+    }
     thread = {
         "thread"
         ~ brace_open
