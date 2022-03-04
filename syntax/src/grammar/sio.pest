@@ -15,8 +15,7 @@ statement = {
     | named_procedure_def
 }
     return_value = {
-        url
-        | expr
+        expr
         | value
     }
     print = {
