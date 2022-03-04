@@ -31,18 +31,9 @@ statement = {
         }
     skip = { "skip" }
     variable_creation = {
-        "let" ~ brace_open
-            ~ declaration*
-        ~ brace_close ~ "in" ~ brace_open
-            ~ statement*
-        ~ brace_close
+        "let" ~ ident_and_type ~ ("=" ~ value)?
     }
-        declaration = {
-            data_type_decl
-            | named_procedure_def
-            | ident_and_type
-        }
-            ident_and_type = { ident ~ ":" ~ type_decl }
+        ident_and_type = { ident ~ ":" ~ type_decl }
     var_to_var_binding = { ident ~ "=" ~ ident }
     value_creation = { ident ~ "=" ~ (expr|value) }
         value = {

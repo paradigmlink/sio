@@ -8,17 +8,14 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/s
     sketch data Area =
         | sketch Rectangle(Int, Int)
         | sketch Circle(Int)
-    sketch start :: (remote: Bool) -> Url {
-        if remote {
-            79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::live/area_server
-        } else {
-            let {
-                live_area_server_url: Url
-            } in {
-                live_area_server_url = spawn(79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area_server, loop, [])
-                register("live/area_server", live_area_server_url)
-            }
-        }
+    sketch data Permission = sketch Permission({admin: [Url], access: [Url], ban: [Url]})
+    sketch use_remote_server :: () -> Url {
+        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::live/area/server
+    }
+    sketch start_local_server :: (permission: Permission) -> Url {
+        let local_url: Url = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server
+        let live_area_server_url: Url = spawn(local_url, loop, permission)
+        register("live/area/server", live_area_server_url)
     }
     sketch area :: (url: Url, request: Area) {
         url ! request
@@ -27,7 +24,7 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/s
         }
 
     }
-    sketch loop :: () {
+    sketch loop :: (permissions: Permission) {
         receive all {
             | (from: Url, area: Area) => {
                 match area {
@@ -49,7 +46,7 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/s
     }
 }
 /*
-1> url: Url = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:start(true).
+1> url: Url = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:use_remote_server().
 "79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::live/area_server"
 2> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:area(url, Area::Rectangle(10, 8)).
 80
@@ -57,7 +54,7 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/s
 50.2654
 
 
-3> url: Url = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:start(false).
+3> url: Url = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:start_local_server(false).
 "9b397a7b41de899b986208961e34b09f52166315e1be0ac62e6aed2f854eb55b::live/area_server"
 4> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:area(url, Area::Rectangle(10, 8)).
 80

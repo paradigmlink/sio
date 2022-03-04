@@ -184,10 +184,11 @@ mod parse_tests {
     fn capitalized_record_key_test() {
         let input =
         r#"
-        let {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             data Export = Export({ export_procedure: Char, ExportType: Char })
-        } in {
-            hi = Export({export_procedure, ExportType})
+            summon name :: () -> String {
+                hi = Export({export_procedure, ExportType})
+            }
         }
         "#;
 
@@ -562,16 +563,13 @@ mod parse_tests {
         r#"
         mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             summon name :: () {
-                let {
-                    pid1 : Pid
-                    pid2 : Pid
-                } in {
-                    spawn(79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server, loop, [])
-                    pid1 = spawn(79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server, loop, [])
-                    pid2 = spawn(pid1, loop, [])
-                    register("process_name/name", identity)
-                    register(url_string, 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server)
-                }
+                let pid1: Pid
+                let pid2: Pid
+                spawn(79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server, loop, [])
+                pid1 = spawn(79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server, loop, [])
+                pid2 = spawn(pid1, loop, [])
+                register("process_name/name", identity)
+                register(url_string, 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server)
             }
         }
         "#;
@@ -601,10 +599,8 @@ mod parse_tests {
         r#"
         mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             summon name :: () {
-                let {} in {
-                    thread {
-                        skip
-                    }
+                thread {
+                    skip
                 }
             }
         }
@@ -663,7 +659,7 @@ mod parse_tests {
     fn procedure_in_where_test() {
         let input =
         r#"
-        let {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             name :: () {
                 skip
             } in {
@@ -671,8 +667,6 @@ mod parse_tests {
             } where {
                 skip
             }
-        } in {
-            name()
         }
         "#;
 
@@ -699,7 +693,7 @@ mod parse_tests {
     fn higher_order_procedure_test() {
         let input =
         r#"
-        let {
+        mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
             name :: () -> {String:Hi} {
                 skip
             }
@@ -724,8 +718,6 @@ mod parse_tests {
             ) -> (A)->Bool {
                 skip
             }
-        } in {
-            name()
         }
         "#;
 
