@@ -1,0 +1,21 @@
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server 100 {
+    summon name :: (str: string) -> string {
+        p ! "string"
+        p ! 123
+        p ! 123.03
+        p ! 'c'
+        p ! 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server
+        p ! SubscriptionResonse::Rectangle(tx)
+        p ! Rectangle(tx)
+        p ! Rectangle
+        receive {
+            | [hi] Rectangle > who what => { skip }
+            | [hi] SubscriptionResponse::Rectangle > who what => { skip }
+            | [79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server] who > who what => { skip }
+            | ident char > who what => { skip }
+            | ident f64 > who what => { skip }
+            | ident i64 > who what => { skip }
+            | ident string > who what => { skip }
+        }
+    }
+}

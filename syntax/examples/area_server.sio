@@ -1,69 +1,231 @@
-mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server {
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server 100 {
     use 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae::{
-        namespace_name,
-        namespace_name1::{
-            module_name::{function_name, TypeName}
+        finance::{
+            bitcoin::{make_transaction, SatoshiPayment}
         }
     }
-    sketch data Area =
-        | sketch Rectangle(Int, Int)
-        | sketch Circle(Int)
-    sketch data Permission = sketch Permission({admin: [Url], access: [Url], ban: [Url]})
-    sketch use_remote_server :: () -> Url {
-        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::live/area/server
+    sketch data AreaRequest =
+        | sketch Rectangle(i64, i64)
+        | sketch Circle(i64)
+    sketch data AreaResponse =
+        | sketch Rectangle(i64)
+        | sketch Circle(i64)
+    sketch data Permission = sketch Permission({rectangle_allow: [who], cicle_allow: [who], subscription_checkers: [who]})
+    data SubscriptionRequest =
+        | Circle(i64)
+        | Rectangle(i64)
+    data SubscriptionResponse =
+        | Circle(bool)
+        | Rectangle(bool)
+    sketch use_remote_server :: () -> who {
+        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/live/area/server
     }
-    sketch start_local_server :: (permission: Permission) -> Url {
-        let local_url: Url = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server
-        let live_area_server_url: Url = spawn(local_url, loop, permission)
-        register("live/area/server", live_area_server_url)
+    sketch start_local_server :: (permission: Permission) -> who {
+        let src_url: who = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server
+        let live_area_server_url: who = spawn(src_url, loop, permission)
+        register(::/live/area/server, live_area_server_url)
     }
-    sketch area :: (url: Url, request: Area) {
-        url ! request
-        receive url {
-            | response: Int => { response }
-        }
-
-    }
-    sketch loop :: (permissions: Permission) {
-        receive all {
-            | (from: Url, area: Area) => {
-                match area {
-                    | Rectangle(width: Int, height: Int) => {
-                        from ! width * height
-                        loop()
-                    }
-                    | Circle(radius: Int) => {
-                        from ! 3.14159 * radius * radius
-                        loop()
+    sketch subscribe_rectangle :: (server_url: who) -> SubscriptionResponse {
+        let tx: SatoshiPayment = make_transaction(my_bitcoin_address, server_url, 15)
+        server_url ! SubscriptionRequest::Rectangle(tx)
+        receive {
+            | [server_url] SubscriptionResponse::Rectangle > from response => {
+                match response {
+                    | Rectangle => {
+                        print("subscribed to rectangle")
                     }
                 }
             }
-            | _ => {
-                println!("error")
-                loop()
+        }
+    }
+    sketch subscribe_circle:: (server_url: who) -> SubscriptionResponse {
+        let tx: SatoshiPayment = make_transaction(my_bitcoin_address, server_url, 10)
+        server_url ! SubscriptionRequest::Circle(tx)
+        receive {
+            | [server_url] SubscriptionResponse::Circle > from response => {
+                match response {
+                    | Circle => {
+                        print("subscribed to circle")
+                    }
+                }
+            }
+        }
+    }
+    sketch area :: (server_url: who, request: AreaRequest) {
+        server_url ! request
+        receive {
+            | [server_url] AreaResponse > from response => {
+                match response {
+                    | Circle(result) => {
+                        println("The circle's area is {}", result)
+                    }
+                    | Rectangle(result) => {
+                        println("The rectangle's area is {}", result)
+                    }
+                }
+            }
+        }
+    }
+    check_payment :: (subscriber: who) {
+        receive {
+            | [subscriber] SubscriptionRequest > who what => {
+                match what {
+                    | Circle(amount) => {
+                        if amount == 10 {
+                            who ! SubscriptionResponse::Circle(true)
+                        } else {
+                            who ! SubscriptionResponse::Circle(false)
+                        }
+                    }
+                    | Rectangle(amount) => {
+                        if amount == 15 {
+                            who ! SubscriptionResponse::Rectangle(true)
+                        } else {
+                            who ! SubscriptionResponse::Rectangle(false)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    sketch loop :: (perms: Permission) {
+        match perms {
+            | Permission(p) => {
+                receive {
+                    | [] SubscriptionRequest > from what => {
+                        match what {
+                            | Rectangle(amount) => {
+                                let pid: who = spawn(check_payment(self()))
+                                pid ! SubscriptionRequest::Rectangle(amount)
+                                loop(Permission({
+                                    rectangle_allow:       p.rectangle_allow,
+                                    circle_allow:          p.circle_allow,
+                                    subscription_checkers: [from|p.permission_checkers]
+                                }))
+                            }
+                            | Circle(amount) => {
+                                let pid: who = spawn(check_payment(self))
+                                pid ! SubscriptionRequest::Circle(amount)
+                                loop(Permission({
+                                    rectangle_allow:       p.rectangle_allow,
+                                    circle_allow:          p.circle_allow,
+                                    subscription_checkers: [from|p.permission_checkers]
+                                }))
+                            }
+                        }
+                    }
+                    | p.subscription_checkers SubscriptionResponse > from what => {
+                        remove_from :: (a: who) -> Bool { a==from }
+                        match what {
+                            | Circle(result) => {
+                                if result {
+                                    loop(Permission({
+                                        rectangle_allow:       p.rectangle_allow,
+                                        circle_allow:          [from|p.circle_allow],
+                                        subscription_checkers: filter(p.subscription_checkers, remove_from)
+                                    }))
+                                } else {
+                                    loop(Permission({
+                                        rectangle_allow:       p.rectangle_allow,
+                                        circle_allow:          p.circle_allow,
+                                        subscription_checkers: filter(p.subscription_checkers, remove_from)
+                                    }))
+                                }
+                            }
+                            | Rectangle(result) => {
+                                if result {
+                                    loop(Permission({
+                                        rectangle_allow:       [from|p.rectangle_allow],
+                                        circle_allow:          p.circle_allow,
+                                        subscription_checkers: filter(p.subscription_checkers, remove_from)
+                                    }))
+                                } else {
+                                    loop(Permission({
+                                        rectangle_allow:       p.rectangle_allow,
+                                        circle_allow:          p.circle_allow,
+                                        subscription_checkers: filter(p.subscription_checkers, remove_from)
+                                    }))
+                                }
+                            }
+                        }
+                    }
+                    | p.rectangle_allow AreaRequest::Rectangle > from what => {
+                        match what {
+                            | Rectangle(width, height) => {
+                                from ! AreaResponse::Rectangle(width * height)
+                                loop(p)
+                            }
+                        }
+                    }
+                    | p.circle_allow AreaRequest::Circle > from what => {
+                        match what {
+                            | Circle(radius) => {
+                                from ! AreaResponse::Circle(3.14159 * radius * radius)
+                                loop(p)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 /*
-1> url: Url = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:use_remote_server().
+1> url: who = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:use_remote_server().
 "79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::live/area_server"
-2> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:area(url, Area::Rectangle(10, 8)).
-80
-3> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:area(url, Area::Circle(4)).
-50.2654
+2> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:subscribe_rectangle(url).
+3> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:area(url, AreaRequest::Rectangle(10, 8)).
+The rectangle's area is 80
+4> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:subscribe_circle(url).
+5> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:area(url, AreaRequest::Circle(4)).
+The circle's area is 50.2654
 
 
-3> url: Url = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:start_local_server(false).
+6> url: who = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:start_local_server(false).
 "9b397a7b41de899b986208961e34b09f52166315e1be0ac62e6aed2f854eb55b::live/area_server"
-4> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:area(url, Area::Rectangle(10, 8)).
-80
-5> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:area(url, Area::Circle(4)).
-50.2654
+7> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:subscribe_rectangle(url).
+8> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:area(url, AreaRequest::Rectangle(10, 8)).
+The rectangle's area is 80
+9> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:subscribe_circle(url).
+10> 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::src/area/server:area(url, AreaRequest::Circle(4)).
+The circle's area is 50.2654
 
 Notice the url outputs on line 1 and 3 are different.
 - 1st url server is the running process on the remote machine, the author of the module.
 - 2nd url server is spawned and run locally.
 
 The code is network transparent.
+
+data Whos = Whos([who])
+loop :: (from_urls: Whos) {
+    receive {
+        | from_urls Int > from what => {
+            print("{}", what)
+            match from_urls {
+                [h|t] => {
+                    thread {
+                        loop(t)
+                    }
+                    loop(t)
+                }
+                [] => { print("done") }
+            }
+        }
+    }
+}
+  receive syntax explanation:
+    - "|" is a particular case of the receive
+    - `from_urls` is a list of pubkeys a message can come from;
+    - `Int`       is the expected type,
+    - ">"         symbolizes "filter for" i.e. The above section is the constraints and the below section is the result
+    - `from`      identifier bound to the pubkey of the sender that is in the `from_urls` list where the data in the message is of type `Int`,
+    - `what`      is the identifier bound to the data of type Int
+    - "=>"
+    - "{ ... }"
+
+example usage:
+loop(Whos([9b397a7b41de899b986208961e34b09f52166315e1be0ac62e6aed2f854eb55b, 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd, 82b37a7b41de899b986208961e34b09f52166315e1be0ac62e6aed2f854e44dc]))
+
+82b37a7b41de899b986208961e34b09f52166315e1be0ac62e6aed2f854e44dc ! 1
+82b37a7b41de899b986208961e34b09f52166315e1be0ac62e6aed2f854e44dc ! 2
 */

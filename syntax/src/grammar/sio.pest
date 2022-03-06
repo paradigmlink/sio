@@ -7,6 +7,7 @@ statement = {
     | var_to_var_binding
     | conditional
     | pattern_match
+    | register
     | procedure_call
     | async_send
     | selective_receive
@@ -35,32 +36,34 @@ statement = {
     }
         ident_and_type = { ident ~ ":" ~ type_decl }
     var_to_var_binding = { ident ~ "=" ~ ident }
-    value_creation = { ident ~ "=" ~ (expr|value) }
+    value_creation = { ident ~ "=" ~ (expr | value) }
         value = {
-            url
-            | number_inst
-            | boolean_inst
-            | char_inst
-            | string_inst
+            primitive_inst
             | procedure_def
-            | record_inst
-            | array_inst
-            | list_inst
-            | tuple_inst
-            | set_inst
-            | type_constructor
+            | collection_op
+            | collection_inst
             | dot_member
             | type_inst
             | paren_open ~ expr ~ paren_close
         }
+            primitive_inst = {
+                who_inst
+                | number_inst
+                | boolean_inst
+                | char_inst
+                | string_inst
+            }
+            collection_inst = {
+                record_inst
+                | array_inst
+                | list_inst
+                | tuple_inst
+                | set_inst
+            }
             dot_member = {
                 procedure_call
                 | ident ~ dot ~ dot_member
                 | ident
-            }
-            type_constructor = {
-                procedure_call
-                | type_decl ~ separator ~ type_constructor
             }
             number_inst = { decimal_inst | integer_inst }
                 integer_inst = @{ "_"? ~ ASCII_DIGIT+ }
@@ -70,6 +73,10 @@ statement = {
                 false_lit = { "false" }
             string_inst = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
             char_inst = { "'" ~ ASCII_ALPHA ~ "'" }
+            who_inst = { public_key ~ module_path }
+                public_key = @{ "_" | ASCII_ALPHANUMERIC {64} }
+                module_path = { separator ~ "/" ~ module_namespace ~ ("/" ~ module_namespace)* }
+                module_namespace = @{ ident }
             record_inst = {
                 brace_open
                     ~ ( record_pair ~ ( comma ~ record_pair )*
@@ -106,12 +113,30 @@ statement = {
                 ~ angle_close
             }
             type_inst = {
-                data_type_name
-                ~ paren_open
-                ~ ( value ~ ( comma ~ value )* )
-                ~ paren_close
+                primitive_data_type_decl
+                | data_type_name ~ separator
+                    ~ variant_constructor_name
+                    ~ paren_open
+                    ~ ( (expr|value) ~ ( comma ~ (expr|value) )* )
+                    ~ paren_close
+                | variant_constructor_name
+                    ~ paren_open
+                    ~ ( (expr|value) ~ ( comma ~ (expr|value) )* )
+                    ~ paren_close
+                | data_type_name ~ separator ~ variant_constructor_name
                 | data_type_name
             }
+            collection_op = {
+                list_op
+                //| record_op
+                //| array_op
+                //| tuple_op
+                //| set_op
+            }
+            list_op = {
+                bracket_open ~ value ~ pipe ~ value ~ bracket_close
+            }
+
 
     conditional = {
         "if" ~ return_value ~ brace_open
@@ -121,14 +146,12 @@ statement = {
         ~ brace_close
     }
     procedure_call = {
-        process_spawn
-        | register_url
+        register_who
+        | hot_swap_spawn_process
+        | cold_spawn_process
         | ident ~ dot ~ procedure_call
-        | list_append
         | ident ~ paren_open ~ args? ~ paren_close
     }
-        list_append = { ident ~ pipe ~ ident }
-        list_head_tail = { ident ~ pipe ~ ident }
         op_unary_minus =  { "-" }
         op_unary_not   =  { "!" }
         op_unary       = _{
@@ -295,23 +318,23 @@ statement = {
                 product_variant_constructor_match = {
                     variant_constructor_name
                     ~ paren_open
-                    ~ ident ~ ":" ~ type_decl ~ (comma ~ ident ~ ":" ~ type_decl)*
+                    ~ ident ~ (comma ~ ident)*
                     ~ paren_close
                 }
                 empty_variant_constructor_match = {
                     variant_constructor_name
                 }
-
+    register = {
+        "register" ~ paren_open ~ (module_path | ident) ~ comma ~ (who_inst | ident) ~ paren_close
+    }
     module_def = {
-        "mod" ~ url ~ brace_open
+        "mod" ~ who_inst ~ price ~ brace_open
             ~ (module_declaration | named_procedure_def)*
         ~ brace_close
     }
-        url = {
-            public_key ~ separator ~ module_namespace ~ ("/" ~ module_namespace)*
+        price = @{
+            ASCII_DIGIT {1, 8}
         }
-            public_key              = @{ "_" | ASCII_ALPHANUMERIC {64} }
-            module_namespace        = @{ ident }
         module_declaration = {
             import_statement
             | named_procedure_def
@@ -337,21 +360,17 @@ statement = {
                     }
                     module_or_function_name = @{ident}
             module_data_type_export = { (stability? ~ data_type_decl) }
-    async_send     =  { ident ~ "!" ~ (expr | value) }
+    async_send =  { ident ~ "!" ~ (expr | value) }
     selective_receive = {
         "receive"
-        ~ (deterministic_receive | nondeterministic_receive)
         ~ brace_open
-        ~ match_body+
+        ~ receive_body+
         ~ brace_close
     }
-        deterministic_receive = {
-            ident
+        receive_body = {
+            ("|" ~ value ~ type_inst ~ ">" ~ ident ~ ident ~ "=>" ~ brace_open ~ statement+ ~ brace_close)+
         }
-        nondeterministic_receive = {
-            "all"
-        }
-    process_spawn = {
+    hot_swap_spawn_process = {
         "spawn"
         ~ paren_open
         ~ pid
@@ -361,15 +380,21 @@ statement = {
         ~ spawn_argument
         ~ paren_close
     }
-        pid = { url | ident }
+    cold_spawn_process = {
+        "spawn"
+        ~ paren_open
+        ~ procedure_call
+        ~ paren_close
+    }
+        pid = { who_inst | ident }
         spawn_function = { ident }
         spawn_argument = { value }
-    register_url = {
+    register_who = {
         "register"
         ~ paren_open
         ~ (ident | string_inst)
         ~ comma
-        ~ (url | ident)
+        ~ (who_inst | ident)
         ~ paren_close
     }
     thread = {
@@ -475,10 +500,25 @@ data_type_decl = {
     | variant_constructor
 }
 type_decl = {
-    generic_data_type_decl
+    primitive_data_type_decl
+    | generic_data_type_decl
     | no_generic_data_type_decl
     | collection_decl
 }
+primitive_data_type_decl = {
+    bool_type
+    | i64_type
+    | f64_type
+    | string_type
+    | char_type
+    | who_type
+}
+    bool_type   = @{ "bool" }
+    i64_type    = @{ "i64" }
+    f64_type    = @{ "f64" }
+    string_type = @{ "string" }
+    char_type   = @{ "char" }
+    who_type   =  @{ "who" }
 generic_data_type_decl = {
     data_type_name
     ~ angle_open
@@ -564,11 +604,3 @@ set_type_decl = {
     ~ type_decl
     ~ angle_close
 }
-
-bool_type   = { "Bool" }
-i64_type    = { "I64" }
-f64_type    = { "F64" }
-string_type = { "String" }
-char_type   = { "Char" }
-unit_type   = { "Unit" }
-
