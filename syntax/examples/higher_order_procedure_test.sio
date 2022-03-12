@@ -1,0 +1,26 @@
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server 100 {
+    name :: () -> {string:Hi} {
+        skip
+    }
+    name :: (a: ()->Hi) {
+        skip
+    }
+    name :: (a: (B)->Hi) {
+        skip
+    }
+    name :: (a: (B)->Hi, b: (C)->Hi) {
+        skip
+    }
+    name :: (a: ([B])->[Hi], b: (C)->[|3;Hi|]) {
+        skip
+    }
+    name<A> :: (a: (A, A)->(A)->bool, b: (A, A)->(A)->Hi) -> Hi{
+        skip
+    }
+    name<A,B,C> :: (
+        a: (A, A) -> (C) -> bool,
+        b: (A, B) -> (C) -> bool
+    ) -> (A)->bool {
+        skip
+    }
+}

@@ -1,0 +1,46 @@
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server 100 {
+    data Rec = Rec({ name: (), name: (A)->A })
+    name0 :: () -> Simple {
+        a = Type
+        b = Type(2)
+        c = Type(true)
+        d1 = "43"
+        d2 = "43.43"
+        e = true
+        f = <3>
+        g = ["hi"]
+        h = [|3|]
+        i = (Type("hi"),Type(3))
+        j = false
+        i = () { skip }
+        k = () -> Hi { skip }
+        k = (hi: Hi) -> Hi { skip }
+        k = (hi: Hi, hi: Hi) -> Hi { skip }
+        k = (hi: Hi, hi: Hi<i64>) -> Result<Option<i64>, string> { skip }
+        k = (hi: [|3; Hi|], hi: [Hi]) -> <Hi> {
+            skip
+            hi=[|3,2,1|]
+            hi=[3,2,1]
+            hi=<3,2,1>
+            hi=(3,2,1)
+            hi="hi"
+            hi=3
+            hi=3.3
+            hi=true
+            hi=false
+            hi='h'
+            hi=3+3
+            hi=3*3
+            hi=3/3/3
+            hi=3-3
+            hi=3==3
+            hi=3<3
+            hi=3>3
+            hi=true||false
+            hi=true&&false
+            hi=3<=3
+            hi=((((((((3>=3)+3)/3)*3)-3)<=3)&&3)||3)
+        }
+        l = Sheep({name: self.name, naked: true})
+    }
+}

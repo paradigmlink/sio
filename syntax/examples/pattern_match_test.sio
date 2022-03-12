@@ -1,0 +1,19 @@
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server 100 {
+    name0 :: () -> Simple {
+        match [|3|] {
+            | [first|second|tail] => { skip }
+            | [head|tail] => { skip }
+            | [||] => { skip }
+            | [] => { skip }
+            | true => { skip }
+            | false => { skip }
+            | 'h' => { skip }
+            | _ => { skip }
+            | "hello" => { skip }
+            | val: i64 => { skip }
+            | (val: i64, str: string) => { skip }
+            | Rectangle(hi) => { skip }
+            | Rectangle(width, height) => { skip }
+        }
+    }
+}

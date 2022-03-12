@@ -1,0 +1,86 @@
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server 10000000 {
+    use 9b397a7b41de899b986208961e34b09f52166315e1be0ac62e6aed2f854eb55b::{
+        fun,
+        Type,
+        widget::{
+            fun,
+            Type,
+            wiget::{
+                fun,
+                Type,
+                wiget::{
+                    fun,
+                    Type,
+                    wiget::{
+                        fun,
+                        Type,
+                        wiget::{
+                            fun,
+                            Type,
+                            wiget::{
+                                fun,
+                                Type,
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        widget::{
+            fun,
+            Type,
+            wiget::{
+                fun,
+                Type,
+                wiget::{
+                    fun,
+                    Type,
+                }
+            }
+        }
+    }
+    use 9b397a7b41de899b986208961e34b09f52166315e1be0ac62e6aed2f854eb55b::{
+        app1::{
+            mod1::{hi1, Type1},
+            mod2::{hi2, Type2},
+        },
+        app3::{
+            mod3::{hi3, Type3}
+        },
+    }
+    use 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae::{
+        app1::{
+            mod1::{hi1, Type1}
+        }
+    }
+    data Sheep =
+        | Version1 ({name: string, naked: bool})
+        | Version2 ({name: string, naked: bool, breed: Breed})
+    sketch data Sheep<I> = sketch Sheep({push: (I) -> Stack<I>, pop: ()->(I, Stack<I>), is_empty: bool})
+    sketch data Sheep =
+        | sketch Version1 ({name: string, naked: bool})
+        | summon Version2 ({name: string, naked: bool, breed: Breed})
+    summon data DataType = sketch Constructor
+    sketch data DataType = sketch Constructor
+    stable data DataType = stable Constructor
+    sunset data DataType = sunset Constructor
+    seeyou data DataType = seeyou Constructor
+    name0 :: () -> Simple {
+        hi = {1:2}
+    }
+    summon name1 :: () -> Generic<Simple> {
+        hi = {1:2}
+    }
+    sketch name2 :: () -> {i64: Simple} {
+        hi = {1:2}
+    }
+    stable name3 :: () -> [Generic<Simple>] {
+        hi = {1:2}
+    }
+    sunset name4 :: () -> [|3; Hi|] {
+        hi = {1:2}
+    }
+    seeyou name5 :: () -> <Hi> {
+        hi = {1:2}
+    }
+}

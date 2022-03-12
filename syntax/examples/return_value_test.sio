@@ -1,0 +1,19 @@
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server 100 {
+    summon name :: (str: string) -> string { skip x="string" }
+    summon name :: () -> string { "string" }
+    summon name :: () -> string { 32 }
+    summon name :: () -> string { 32+32 }
+    summon name :: () -> string { 32*32*32 }
+    summon name :: () -> string { 32.42 }
+    summon name :: () -> string { true }
+    summon name :: () -> string { false }
+    summon name :: () -> string { 'c' }
+    summon name :: () -> string { (32,42) }
+    summon name :: () -> string { <32,42> }
+    summon name :: () -> string { {thirty_two: 32, fourty_two: 42} }
+    summon name :: () -> string { [32, 42] }
+    summon name :: () -> string { [|32, 42|] }
+    summon name :: () -> string { Constructor }
+    summon name :: () -> string { Constructor([32]) }
+    summon name :: () -> string { Constructor([32], [32]) }
+}

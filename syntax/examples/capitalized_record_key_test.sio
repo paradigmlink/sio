@@ -1,0 +1,6 @@
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server 100 {
+    data Export = Export({ export_procedure: char, ExportType: char })
+    summon name :: () -> string {
+        hi = Export({export_procedure, ExportType})
+    }
+}
