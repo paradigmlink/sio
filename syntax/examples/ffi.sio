@@ -1,0 +1,56 @@
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/finance/bitcoin 100 {
+    summon import_public_key :: (pubkey: BtcPublicKey, label: string, rescan: bool) -> bool {
+        ffi_import_btc_public_key
+            :: 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/rpc/bitcoin/import_public_key
+            :: (pubkey: string, label: string, rescan: bool)
+            -> bool
+        let result: bool = ffi_import_btc_public_key(pubkey, label, rescan)
+    }
+}
+
+    /*
+
+    arguments and return values must only be a union of primitives supported by sio and rust. The programmer is to marshall the data into and out of this conduit.
+
+
+            +-----+                                                                                          +-----------------------+
+            | sio |                                                                                          | copernica_bridge_btc  |
+            +-----+                                                                                          +-----------------------+
+               |                                                                                                         |
+               | sends request-to-pull for resource usage \n(79f7...03abd::/rpc/bitcoin/get_balance)                     |
+               |-------------------------------------------------------------------------------------------------------->|
+               |                                                                                                         |
+               |                                                   response with session_id in the response body and ACK |
+               |<--------------------------------------------------------------------------------------------------------|
+               |                                                                                                         | -----------------------\
+               |                                                                                                         |-| copernica_bridge_btc |
+               |                                                                                                         | | starts the pull      |
+               |                                                                                                         | |----------------------|
+               |                     request for bitcoin balance parameters with session_id encoded in arg field of HBFI |
+               |<--------------------------------------------------------------------------------------------------------|
+               |                                                                                                         |
+               | respond with balance parameters in response body and session_id in HBFI arg field                       |
+               |-------------------------------------------------------------------------------------------------------->|
+               |                                                                                                         | ---------------------------\
+               |                                                                                                         |-| applies the bitcoin core |
+               |                                                                                                         | | get_balance function     |
+               |                                                                                                         | | with required parameters |
+               |                                          sends request-to-pull result with session_id in HBFI arg field | |--------------------------|
+               |<--------------------------------------------------------------------------------------------------------|
+               |                                                                                                         |
+               | responds with an ACK in response body and session_id in HBFI arg field                                  |
+               |-------------------------------------------------------------------------------------------------------->|
+-------------\ |                                                                                                         |
+| sio starts |-|                                                                                                         |
+| the pull   | |                                                                                                         |
+|------------| |                                                                                                         |
+               | sends request for btc_core get_balance function results and session_id in HBFI arg field                |
+               |-------------------------------------------------------------------------------------------------------->|
+               |                                                                                                         |
+               |             responds with the results of btc_core get_balance function and session_id in HBFI arg field |
+               |<--------------------------------------------------------------------------------------------------------|
+               |                                                                                                         |
+
+
+
+               */

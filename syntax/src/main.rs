@@ -426,4 +426,27 @@ mod parse_tests {
             }
         }
     }
+
+    #[test]
+    fn ffi_test() {
+        use std::fs;
+        let unparsed_file = fs::read_to_string("examples/ffi.sio").expect("cannot read file");
+        let parsed = SioParser::parse(Rule::main, &unparsed_file);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::module_def => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{:#?}", e);
+                panic!()
+            }
+        }
+    }
 }

@@ -13,6 +13,7 @@ statement = {
     | selective_receive
     | thread
     | module_def
+    | ffi_def_header
     | named_procedure_def
 }
     return_value = {
@@ -31,10 +32,11 @@ statement = {
             | ident
         }
     skip = { "skip" }
-    variable_creation = {
-        "let" ~ ident_and_type ~ ("=" ~ value)?
-    }
-        ident_and_type = { ident ~ ":" ~ type_decl }
+    variable_creation = { btc_tx_send | script_creation | dataflow_variable }
+        btc_tx_send =  { "let" ~ ident_and_type ~ "!!" ~ value }
+        script_creation = { "let" ~ ident ~ ":" ~ script_type ~ "=" ~ script }
+        dataflow_variable = { "let" ~ ident_and_type ~ ("=" ~ value)? }
+            ident_and_type = { ident ~ ":" ~ type_decl }
     var_to_var_binding = { ident ~ "=" ~ ident }
     value_creation = { ident ~ "=" ~ (expr | value) }
         value = {
@@ -48,6 +50,7 @@ statement = {
         }
             primitive_inst = {
                 who_inst
+                | unit_inst
                 | number_inst
                 | boolean_inst
                 | char_inst
@@ -71,11 +74,12 @@ statement = {
             boolean_inst = { true_lit | false_lit }
                 true_lit = { "true" }
                 false_lit = { "false" }
+            unit_inst = { "unit" }
             string_inst = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
             char_inst = { "'" ~ ASCII_ALPHA ~ "'" }
             who_inst = { public_key ~ module_path }
-                public_key = @{ "_" | ASCII_ALPHANUMERIC {64} }
-                module_path = { separator ~ "/" ~ module_namespace ~ ("/" ~ module_namespace)* }
+                public_key = @{ ident | ASCII_ALPHANUMERIC {64} }
+                module_path = { separator ~ "/" ~ module_namespace ~ ("/" ~ module_namespace)*  }
                 module_namespace = @{ ident }
             record_inst = {
                 brace_open
@@ -329,7 +333,7 @@ statement = {
     }
     module_def = {
         "mod" ~ who_inst ~ price ~ brace_open
-            ~ (module_declaration | named_procedure_def)*
+            ~ (module_declaration)*
         ~ brace_close
     }
         price = @{
@@ -338,6 +342,7 @@ statement = {
         module_declaration = {
             import_statement
             | named_procedure_def
+            | ffi_def
             | module_data_type_export
             | ident_and_type
         }
@@ -403,7 +408,17 @@ statement = {
         ~ statement+
         ~ brace_close
     }
+    script = {
+        "script"
+        ~ brace_open
+        ~ statement+
+        ~ brace_close
+    }
 
+ffi_def = { ffi_def_header }
+    ffi_def_header = { concrete_procedure ~ separator ~ who_inst ~ separator ~ ffi_args ~ "->" ~ return_value }
+        ffi_args = { paren_open ~ ident_and_primitive_type ~ ( comma ~ ident_and_primitive_type )* ~ paren_close }
+        ident_and_primitive_type = { ident ~ ":" ~ primitive_data_type_decl }
 named_procedure_def = { named_procedure_header ~ procedure_def }
     named_procedure_header = {
         stability?
@@ -507,6 +522,8 @@ type_decl = {
 }
 primitive_data_type_decl = {
     bool_type
+    | script_type
+    | unit_type
     | i64_type
     | f64_type
     | string_type
@@ -514,6 +531,8 @@ primitive_data_type_decl = {
     | who_type
 }
     bool_type   = @{ "bool" }
+    script_type = @{ "script" }
+    unit_type   = @{ paren_open ~ paren_close }
     i64_type    = @{ "i64" }
     f64_type    = @{ "f64" }
     string_type = @{ "string" }
