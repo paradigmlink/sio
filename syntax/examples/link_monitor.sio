@@ -1,0 +1,54 @@
+mod 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae::/src/sio_std/process 0 {
+    summon data Flag = summon TrapExit(bool)
+    ffi_trap_exit
+        :: master::/sio/process/trap_exit
+        :: (flag: bool)
+        -> bool
+    summon trap_exit :: (flag: Flag) {
+        match flag {
+            | TrapExit(b) => {
+                ffi_trap_exit(b)
+            }
+        }
+    }
+}
+
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/link_monitor/tester 100 {
+    use 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae::{
+        src::sio_std::process::{trap_exit, Flag}
+    }
+    summon data Chain = summon Chain(i8)
+    summon start :: () -> who {
+        let chain: Chain = Chain(3)
+        let src_url: who = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/link_monitor/tester
+        let live_url: who = spawn(src_url, with_trap_exit, chain)
+        monitor(live_url)
+        demonitor(live_url)
+        delink(live_url)
+        register(::/live/link_monitor/tester, live_url)
+    }
+    summon with_trap_exit :: (c: Chain) {
+        trap_exit(Flag::TrapExit(true))
+        match c {
+            | Chain(n) => {
+                chain_spawn(n)
+            }
+        }
+    }
+    summon no_trap_exit :: (c: Chain) {
+        match c {
+            | Chain(n) => {
+                chain_spawn(n)
+            }
+        }
+    }
+    chain_spawn :: (n: i8) {
+        if n == 0 {
+            exit("chain dies here")
+        } else {
+            let pid: who = spawn((){chain_spawn(n-1)})
+            link(pid)
+        }
+    }
+}
+

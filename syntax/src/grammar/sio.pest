@@ -150,7 +150,12 @@ statement = {
         ~ brace_close
     }
     procedure_call = {
-        register_who
+        link_process
+        | delink_process
+        | monitor_process
+        | demonitor_process
+        | exit_process
+        | register_who
         | hot_swap_spawn_process
         | cold_spawn_process
         | ident ~ dot ~ procedure_call
@@ -357,11 +362,13 @@ statement = {
                     ~ brace_close
                 }
                     import_namespace = {
-                        module_namespace ~ separator ~ brace_open
+                        module_namespace ~ separator ~
+                        ( import_namespace
+                        | brace_open
                         ~ (import_namespace | type_decl | module_or_function_name)
                         ~ (comma ~ (import_namespace | type_decl | module_or_function_name))*
                         ~ comma?
-                        ~ brace_close
+                        ~ brace_close )
                     }
                     module_or_function_name = @{ident}
             module_data_type_export = { (stability? ~ data_type_decl) }
@@ -388,7 +395,7 @@ statement = {
     cold_spawn_process = {
         "spawn"
         ~ paren_open
-        ~ procedure_call
+        ~ (ident | procedure_def)
         ~ paren_close
     }
         pid = { who_inst | ident }
@@ -400,6 +407,36 @@ statement = {
         ~ (ident | string_inst)
         ~ comma
         ~ (who_inst | ident)
+        ~ paren_close
+    }
+    link_process = {
+        "link"
+        ~ paren_open
+        ~ (ident | who_inst)
+        ~ paren_close
+    }
+    delink_process = {
+        "delink"
+        ~ paren_open
+        ~ (ident | who_inst)
+        ~ paren_close
+    }
+    monitor_process = {
+        "monitor"
+        ~ paren_open
+        ~ (ident | who_inst)
+        ~ paren_close
+    }
+    demonitor_process = {
+        "demonitor"
+        ~ paren_open
+        ~ (ident | who_inst)
+        ~ paren_close
+    }
+    exit_process = {
+        "exit"
+        ~ paren_open
+        ~ (ident | string_inst)
         ~ paren_close
     }
     thread = {
@@ -525,7 +562,17 @@ primitive_data_type_decl = {
     | script_type
     | unit_type
     | i64_type
+    | i32_type
+    | i16_type
+    | i8_type
     | f64_type
+    | f32_type
+    | f16_type
+    | f8_type
+    | u64_type
+    | u32_type
+    | u16_type
+    | u8_type
     | string_type
     | char_type
     | who_type
@@ -534,7 +581,17 @@ primitive_data_type_decl = {
     script_type = @{ "script" }
     unit_type   = @{ paren_open ~ paren_close }
     i64_type    = @{ "i64" }
+    i32_type    = @{ "i32" }
+    i16_type    = @{ "i16" }
+    i8_type     = @{ "i8" }
+    u64_type    = @{ "u64" }
+    u32_type    = @{ "u32" }
+    u16_type    = @{ "u16" }
+    u8_type     = @{ "u8" }
     f64_type    = @{ "f64" }
+    f32_type    = @{ "f32" }
+    f16_type    = @{ "f16" }
+    f8_type     = @{ "f8" }
     string_type = @{ "string" }
     char_type   = @{ "char" }
     who_type   =  @{ "who" }
