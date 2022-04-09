@@ -13,7 +13,7 @@ statement = {
     | selective_receive
     | thread
     | module_def
-    | ffi_def_header
+    | ffi_def
     | named_procedure_def
 }
     return_value = {
@@ -452,10 +452,14 @@ statement = {
         ~ brace_close
     }
 
-ffi_def = { ffi_def_header }
-    ffi_def_header = { concrete_procedure ~ separator ~ who_inst ~ separator ~ ffi_args ~ "->" ~ return_value }
-        ffi_args = { paren_open ~ ident_and_primitive_type ~ ( comma ~ ident_and_primitive_type )* ~ paren_close }
-        ident_and_primitive_type = { ident ~ ":" ~ primitive_data_type_decl }
+ffi_def = { concrete_procedure ~ separator ~ who_inst ~ separator ~ ffi_args ~ "->" ~ primitive_return_value }
+    ffi_args = { paren_open ~ primititive_procedure_parameter ~ ( comma ~ primititive_procedure_parameter )* ~ paren_close }
+        primititive_procedure_parameter = {
+            ident ~ ":" ~ (primitive_data_type_decl | primitive_collection_decl )
+        }
+        primitive_return_value = {
+            (primitive_data_type_decl | primitive_collection_decl)
+        }
 named_procedure_def = { named_procedure_header ~ procedure_def }
     named_procedure_header = {
         stability?
@@ -554,7 +558,7 @@ data_type_decl = {
 type_decl = {
     primitive_data_type_decl
     | generic_data_type_decl
-    | no_generic_data_type_decl
+    | concrete_data_type_decl
     | collection_decl
 }
 primitive_data_type_decl = {
@@ -601,7 +605,7 @@ generic_data_type_decl = {
     ~ type_decl ~ (comma ~ type_decl)*
     ~ angle_close
 }
-no_generic_data_type_decl = {
+concrete_data_type_decl = {
     data_type_name
 }
 variant_constructor = {
@@ -636,6 +640,27 @@ variant_constructor_name = @{
     ~ (ASCII_ALPHA_LOWER
       | ASCII_DIGIT
       | ASCII_ALPHA_UPPER)*
+}
+primitive_collection_decl = {
+    primitive_list_type_decl
+    | primitive_array_type_decl
+    | primitive_tuple_type_decl
+}
+primitive_list_type_decl   = {
+    bracket_open
+    ~ primitive_data_type_decl
+    ~ bracket_close
+}
+primitive_array_type_decl  = {
+    array_open
+    ~ array_length ~ ";"
+    ~ primitive_data_type_decl
+    ~ array_close
+}
+primitive_tuple_type_decl  = {
+    paren_open
+    ~ (primitive_data_type_decl ~ (comma ~ primitive_data_type_decl)*)?
+    ~ paren_close
 }
 collection_decl = {
     record_type_decl
