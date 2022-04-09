@@ -4,7 +4,7 @@ mod 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae::/src/sio_s
         | summon LinkAuthList([who])
         | summon Link(who)
     ffi_trap_exit
-        :: master::/sio/process/trap_exit
+        :: sio_vm::/sio/process/trap_exit
         :: (flag: bool)
         -> bool
     summon trap_exit :: (flag: Flag) {
@@ -15,7 +15,7 @@ mod 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae::/src/sio_s
         }
     }
     ffi_link_auth_list
-        :: master::/sio/process/link_auth_list
+        :: sio_vm::/sio/process/link_auth_list
         :: (list: [who])
         -> [bool]
     summon link_auth_list :: (flag: Flag) {
@@ -26,7 +26,7 @@ mod 4d018d92514612192d2cb602da12c4a8a56229e146ba5e2716b723c785a6a6ae::/src/sio_s
         }
     }
     ffi_link_with
-        :: master::/sio/process/link_with
+        :: sio_vm::/sio/process/link_with
         :: (link_with: who)
         -> bool
     summon link :: (flag: Flag) {
