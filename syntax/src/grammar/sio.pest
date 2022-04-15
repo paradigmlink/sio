@@ -32,9 +32,7 @@ statement = {
             | ident
         }
     skip = { "skip" }
-    variable_creation = { btc_tx_send | script_creation | dataflow_variable }
-        btc_tx_send =  { "let" ~ ident_and_type ~ "!!" ~ value }
-        script_creation = { "let" ~ ident ~ ":" ~ script_type ~ "=" ~ script }
+    variable_creation = { dataflow_variable }
         dataflow_variable = { "let" ~ ident_and_type ~ ("=" ~ value)? }
             ident_and_type = { ident ~ ":" ~ type_decl }
     var_to_var_binding = { ident ~ "=" ~ ident }
@@ -51,6 +49,8 @@ statement = {
             primitive_inst = {
                 who_inst
                 | unit_inst
+                | binary_inst
+                | hexadecimal_inst
                 | number_inst
                 | boolean_inst
                 | char_inst
@@ -76,6 +76,8 @@ statement = {
                 false_lit = { "false" }
             unit_inst = { "unit" }
             string_inst = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
+            hexadecimal_inst = @{ "0x" ~ ASCII_HEX_DIGIT ~ ( ASCII_HEX_DIGIT | "_")*  }
+            binary_inst = @{ "0b" ~ ASCII_BIN_DIGIT ~ ( ASCII_BIN_DIGIT | "_")* }
             char_inst = { "'" ~ ASCII_ALPHA ~ "'" }
             who_inst = { public_key ~ module_path }
                 public_key = { sio_vm | ident | ASCII_ALPHANUMERIC {64} }
@@ -446,12 +448,6 @@ statement = {
         ~ statement+
         ~ brace_close
     }
-    script = {
-        "script"
-        ~ brace_open
-        ~ statement+
-        ~ brace_close
-    }
 
 ffi_def = { concrete_procedure ~ separator ~ who_inst ~ separator ~ ffi_args ~ "->" ~ primitive_return_value }
     ffi_args = { paren_open ~ primititive_procedure_parameter ~ ( comma ~ primititive_procedure_parameter )* ~ paren_close }
@@ -564,8 +560,10 @@ type_decl = {
 }
 primitive_data_type_decl = {
     bool_type
-    | script_type
     | unit_type
+    | who_type
+    | binary_type
+    | hexadecimal_type
     | i64_type
     | i32_type
     | i16_type
@@ -580,26 +578,26 @@ primitive_data_type_decl = {
     | u8_type
     | string_type
     | char_type
-    | who_type
 }
-    bool_type   = @{ "bool" }
-    script_type = @{ "script" }
-    unit_type   = @{ paren_open ~ paren_close }
-    i64_type    = @{ "i64" }
-    i32_type    = @{ "i32" }
-    i16_type    = @{ "i16" }
-    i8_type     = @{ "i8" }
-    u64_type    = @{ "u64" }
-    u32_type    = @{ "u32" }
-    u16_type    = @{ "u16" }
-    u8_type     = @{ "u8" }
-    f64_type    = @{ "f64" }
-    f32_type    = @{ "f32" }
-    f16_type    = @{ "f16" }
-    f8_type     = @{ "f8" }
-    string_type = @{ "string" }
-    char_type   = @{ "char" }
-    who_type   =  @{ "who" }
+    bool_type         = @{ "bool" }
+    unit_type         = @{ paren_open ~ paren_close }
+    i64_type          = @{ "i64" }
+    i32_type          = @{ "i32" }
+    i16_type          = @{ "i16" }
+    i8_type           = @{ "i8" }
+    u64_type          = @{ "u64" }
+    u32_type          = @{ "u32" }
+    u16_type          = @{ "u16" }
+    u8_type           = @{ "u8" }
+    f64_type          = @{ "f64" }
+    f32_type          = @{ "f32" }
+    f16_type          = @{ "f16" }
+    f8_type           = @{ "f8" }
+    string_type       = @{ "string" }
+    hexadecimal_type  = @{ "hex" }
+    binary_type       = @{ "bin" }
+    char_type         = @{ "char" }
+    who_type          = @{ "who" }
 generic_data_type_decl = {
     data_type_name
     ~ angle_open
