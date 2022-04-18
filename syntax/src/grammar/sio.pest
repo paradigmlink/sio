@@ -1,4 +1,5 @@
-main = _{ SOI ~ statement+ ~ EOI }
+main = _{ SOI ~ module_def+ ~ EOI }
+
 statement = {
     skip
     | print
@@ -12,7 +13,6 @@ statement = {
     | async_send
     | selective_receive
     | thread
-    | module_def
     | ffi_def
     | named_procedure_def
 }

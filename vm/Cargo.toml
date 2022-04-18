@@ -8,4 +8,7 @@ name = "sio_vm"
 path = "src/main.rs"
 
 [dependencies]
+pest = "2.1.0"
+pest_derive = "2.1.0"
 sio_syntax = { version = "0.1.0", path = "../syntax" }
+ariadne = "0.1.5"
