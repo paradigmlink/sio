@@ -1,13 +1,8 @@
 [package]
-name = "sio_vm"
+name = "sio_visa"
 version = "0.1.0"
 edition = "2021"
-
-[[bin]]
-name = "sio_vm"
-path = "src/main.rs"
 
 [dependencies]
 pest = "2.1.0"
 pest_derive = "2.1.0"
-ariadne = "0.1.5"

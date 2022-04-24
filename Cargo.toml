@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "vm",
-    "syntax",
+    "frontend",
+    "visa",
     "unikernel",
 ]
 exclude = ["target"]

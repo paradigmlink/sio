@@ -1,0 +1,73 @@
+(md
+  (pr i8)
+  (pr i32)
+  (pr i64)
+  (pr i128)
+  (pr u8)
+  (pr u32)
+  (pr u64)
+  (pr u128)
+  (pr f32)
+  (pr f64)
+  (pr bool)
+  (pr char)
+
+  (rs i8)
+  (rs i32)
+  (rs i64)
+  (rs i128)
+  (rs u8)
+  (rs u32)
+  (rs u64)
+  (rs u128)
+  (rs f32)
+  (rs f64)
+  (rs bool)
+  (rs char)
+
+  (ef
+    i8.eq
+    i8.eqz
+    i32.eq
+    i32.eqz
+    i64.eq
+    i64.eqz
+    i128.eq
+    i128.eqz
+    u8.eq
+    u8.eqz
+    u32.eq
+    u32.eqz
+    u64.eq
+    u64.eqz
+    u128.eq
+    u128.eqz
+    f32.eq
+    f32.eqz
+    f64.eq
+    f64.eqz
+    bool.eqz
+    char.eq)
+  (sf
+    i8.eq
+    i8.eqz
+    i32.eq
+    i32.eqz
+    i64.eq
+    i64.eqz
+    i128.eq
+    i128.eqz
+    u8.eq
+    u8.eqz
+    u32.eq
+    u32.eqz
+    u64.eq
+    u64.eqz
+    u128.eq
+    u128.eqz
+    f32.eq
+    f32.eqz
+    f64.eq
+    f64.eqz
+    bool.eqz
+    char.eq))

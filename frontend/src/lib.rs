@@ -6,7 +6,7 @@ pub use {
 };
 
 #[derive(Parser)]
-#[grammar = "grammar/sio.pest"]
+#[grammar = "grammar/sio_frontend.pest"]
 pub struct SioParser;
 
 #[cfg(test)]

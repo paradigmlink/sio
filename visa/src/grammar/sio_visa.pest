@@ -1,0 +1,92 @@
+main = _{ SOI ~ module+ ~ EOI }
+paren_open = { "(" }
+paren_close = { ")" }
+module = {
+    paren_open ~
+    "md" ~
+    module_body+ ~
+    paren_close
+}
+module_body = {
+    param |
+    result |
+    function
+}
+function = {
+    paren_open ~
+    (exported_function | secret_function) ~
+    instruction+ ~
+    paren_close
+}
+exported_function = { "ef" }
+secret_function = { "sf" }
+instruction = {
+    numeric_instruction |
+    boolean_instruction |
+    char_instruction
+}
+numeric_instruction = {
+    number_lit ~ "." ~ number_op
+}
+boolean_instruction = {
+    boolean_lit ~ "." ~ boolean_op
+}
+char_instruction = {
+    char_lit ~ "." ~ char_op
+}
+number_op = {
+    eqz_op |
+    eq_op
+}
+boolean_op = {
+    eqz_op
+}
+char_op = {
+    eq_op
+}
+eqz_op = { "eqz" }
+eq_op = { "eq" }
+primitive_lit = {
+    number_lit |
+    boolean_lit |
+    char_lit
+}
+number_lit = {
+    i8_lit |
+    i32_lit |
+    i64_lit |
+    i128_lit |
+    u8_lit |
+    u32_lit |
+    u64_lit |
+    u128_lit |
+    f32_lit |
+    f64_lit
+}
+i8_lit = { "i8" }
+i32_lit = { "i32" }
+i64_lit = { "i64" }
+i128_lit = { "i128" }
+u8_lit = { "u8" }
+u32_lit = { "u32" }
+u64_lit = { "u64" }
+u128_lit = { "u128" }
+f32_lit = { "f32" }
+f64_lit = { "f64" }
+
+boolean_lit = { "bool" }
+boolean_val = {
+    true_lit |
+    false_lit
+}
+true_lit = { "t" }
+false_lit = { "f" }
+char_lit = { "char" }
+param = {
+    paren_open ~ "pr" ~ primitive_lit ~ paren_close
+}
+result = {
+    paren_open ~ "rs" ~ primitive_lit ~ paren_close
+}
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+COMMENT = _{ ("/*" ~ (!"*/" ~ ANY)* ~ "*/" | "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE)}

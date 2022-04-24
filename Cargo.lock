@@ -359,7 +359,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "sio_syntax"
+name = "sio_frontend"
 version = "0.1.0"
 dependencies = [
  "pest",
@@ -376,13 +376,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "sio_visa"
+version = "0.1.0"
+dependencies = [
+ "pest",
+ "pest_derive",
+]
+
+[[package]]
 name = "sio_vm"
 version = "0.1.0"
 dependencies = [
  "ariadne",
  "pest",
  "pest_derive",
- "sio_syntax",
 ]
 
 [[package]]

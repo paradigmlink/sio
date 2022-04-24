@@ -540,7 +540,7 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
 ident = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
 
 WHITESPACE = _{ " " | "\t" | NEWLINE }
-COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/"}
+COMMENT = _{ ("/*" ~ (!"*/" ~ ANY)* ~ "*/" | "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE)}
 
 separator = @{ "::" }
 
