@@ -3,27 +3,44 @@ paren_open = { "(" }
 paren_close = { ")" }
 module = {
     paren_open ~
-    "md" ~
-    module_body+ ~
+    "mod" ~
+    who_inst ~
+    module_body ~
     paren_close
 }
 module_body = {
-    param |
-    result |
-    function
+    function+
 }
 function = {
     paren_open ~
     (exported_function | internal_function) ~
-    instruction+ ~
+    ident ~
+    param* ~
+    result ~
+    function_body~
     paren_close
 }
-exported_function = { "ef" }
-internal_function = { "if" }
+exported_function = { "efn" }
+internal_function = { "ifn" }
+hot_process = {
+    paren_open ~ "pro" ~ mfa ~ paren_close
+}
+cold_process = {
+    paren_open ~ "pro" ~ ident ~ paren_close
+}
+mfa = { who_inst ~ ident ~ "[" ~ ident* ~ "]" }
+who_inst = { public_key ~ module_path }
+public_key = { ASCII_ALPHANUMERIC {64} }
+module_path = { separator ~ "/" ~ module_namespace ~ ("/" ~ module_namespace){0, 5} }
+separator = @{ "::" }
+module_namespace = @{ ident }
+function_body = { paren_open ~ "bod" ~ instruction* ~ paren_close }
 instruction = {
     numeric_instruction |
     boolean_instruction |
-    char_instruction
+    char_instruction |
+    hot_process |
+    cold_process
 }
 numeric_instruction = {
     signed_integer_instruction |
@@ -43,6 +60,8 @@ signed_integer_op = {
     constant_op |
     equal_zero_op |
     equal_op |
+    negate_op |
+    nearest_op |
     not_equal_op |
     greater_than_op |
     less_than_op |
@@ -62,12 +81,20 @@ signed_integer_op = {
     rotate_right_op |
     count_leading_zeros |
     count_trailing_zeros |
-    population_count
+    population_count |
+    remainder_op |
+    minimum_op |
+    maximum_op |
+    ceiling_op |
+    floor_op |
+    absolute_op |
+    square_root_op
 }
 unsigned_integer_op = {
     constant_op |
     equal_zero_op |
     equal_op |
+    nearest_op |
     not_equal_op |
     greater_than_op |
     less_than_op |
@@ -87,7 +114,14 @@ unsigned_integer_op = {
     rotate_right_op |
     count_leading_zeros |
     count_trailing_zeros |
-    population_count
+    population_count |
+    remainder_op |
+    minimum_op |
+    maximum_op |
+    ceiling_op |
+    floor_op |
+    absolute_op |
+    square_root_op
 }
 float_op = {
     constant_op |
@@ -205,10 +239,12 @@ char_op = {
 }
 char_lit = { "char" }
 param = {
-    paren_open ~ "pr" ~ primitive_lit ~ paren_close
+    paren_open ~ "par" ~ primitive_lit ~ paren_close
 }
 result = {
-    paren_open ~ "rs" ~ primitive_lit ~ paren_close
+    paren_open ~ "res" ~ primitive_lit ~ paren_close
 }
+ident = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
 WHITESPACE = _{ " " | "\t" | NEWLINE }
 COMMENT = _{ ("/*" ~ (!"*/" ~ ANY)* ~ "*/" | "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE)}
+

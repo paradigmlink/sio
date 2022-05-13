@@ -82,7 +82,7 @@ statement = {
             who_inst = { public_key ~ module_path }
                 public_key = { sio_vm | ident | ASCII_ALPHANUMERIC {64} }
                     sio_vm = @{ "sio_vm" } // refers to the pubkey of process 1 aka sio_vm
-                module_path = { separator ~ "/" ~ module_namespace ~ ("/" ~ module_namespace)*  }
+                module_path = { separator ~ "/" ~ module_namespace ~ ("/" ~ module_namespace) {0, 5}  }
                 module_namespace = @{ ident }
             record_inst = {
                 brace_open
