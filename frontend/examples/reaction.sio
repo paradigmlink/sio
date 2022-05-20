@@ -1,0 +1,151 @@
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast_making 100 {
+    summon data Jam
+        | summon Strawberry
+        | summon Marmalade
+    summmon data Order
+        | PlainToast
+        | StrawberryJamToast
+        | MarmaladeToast
+    summon data Bread
+        | summon White
+        | summon Wheat
+        | summon Sourdough
+    summon data Permissions
+        | summon JamMaker({retail_outlets: [who]})
+        | summon ButterMaker({retail_outlets: [who]})
+        | summon StrawberryMaker({retail_outlets: [who]})
+        | summon MarmaladeMaker({retail_outlets: [who]})
+}
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast_box_shop 100 {
+    use {
+        79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::{
+            /src/toast_making { Jam, Bread, Permissions, Order }
+            /src/butter_maker { self }
+            /src/bread_maker { self }
+            /src/jam_maker { self }
+        }
+    }
+    sketch start :: () -> who {
+        let src_url: who = 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast_box_shop
+        let toast_box_shop_id: who = spawn(src_url, loop)
+        let butter_makes_id: who = spawn(butter_maker, loop)
+        let bread_makes_id: who = spawn(bread_maker, loop)
+        let strawberry_jam_maker_id: who = spawn(jam_maker, loop)
+        let marmalade_jam_maker_id: who = spawn(jam_maker, loop)
+
+        let jam_maker_p: Permission = Permission::JamMaker({retail_outlets: [toast_box_shop_id]})
+        let butter_maker_p: Permission = Permission::ButterMaker({retail_outlets: [toast_box_shop_id]})
+        let bread_maker_p: Permission = Permission::BreadMaker({retail_outlets: [toast_box_shop_id]})
+        let toast_shop_p: Permission = Permission::ToastShop(
+          { strawberry_jam_makers: [strawberry_jam_maker_id],
+            marmelade_jam_makers: [marmalade_jam_maker_id],
+            butter_makers: [butter_maker_id],
+            bread_makers: [butter_maker_id]
+          }
+        )
+        run(toast_box_shop_id, ::/live/toaster, [toast_shop_p])
+        run(strawberry_jam_maker_id, ::/live/strawberry_jam_maker, [jam_maker_p])
+        run(marmalade_jam_maker_id, ::/live/marmalade_jam_maker, [jam_maker_p])
+        run(butter_maker_id, ::/live/butter_maker_id, [butter_maker_p])
+        run(bread_maker_id, ::/live/bread_maker_id, [bread_maker_p])
+    }
+    summon loop :: (p: Permission) {
+        match p {
+            ToastShop({strawberry_jam_makers, marmalade_jam_makers, butter_makers, bread_makers}) => {
+                reaction {
+                    customer_request<[] Order -> customer order> => {
+                        let toast_type: mol = match order {
+                            PlainToast => {
+                                butter_makers.0 ! butter_request<>
+                                bread_makers.0 ! bread_request<>
+                                plain_toast<>
+                            }
+                            StrawberryJamToast => {
+                                butter_makers.0 ! butter_request<>
+                                bread_makers.0 ! bread_request<>
+                                strawberry_jam_makers.0 ! strawberry_jam_request<>
+                                strawberry_jam_butter_toast<>
+                            }
+                            MarmaladeToast => {
+                                butter_makers.0 ! butter_request<>
+                                bread_makers.0 ! bread_request<>
+                                marmalade_makers.0 ! marmalade_request<>
+                                marmalade_toast<>
+                            }
+                        }
+                        toast_type
+                    }
+                    plain_toast<[me] () -> () ()> +
+                    bread<bread_makers Bread -> bread_who bread> +
+                    butter<butter_makers Butter -> butter_who butter> => {
+                        println("Toasting {} and spreading {} ", bread, butter)
+                    }
+                    strawberry_jam_toast<[me] () -> () ()> +
+                    bread<bread_makers Bread -> bread_who bread> +
+                    butter<butter_makers Butter -> butter_who butter> +
+                    strawberry_jam<jam_makers Jam -> jam_who strawberry_jam> => {
+                        println("Toasting {} and spreading {} and {}", bread, butter, stawberry_jam)
+                    }
+                    marmalade_toast<[me] () -> () ()> +
+                    bread<bread_makers Bread -> bread_who bread> +
+                    butter<butter_makers Butter -> butter_who butter> +
+                    marmalade<jam_makers Jam -> jam_who marmalade> => {
+                        println("Toasting {} and spreading {} and {}", bread, butter, marmalade)
+                    }
+                }
+            }
+        }
+    }
+}
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/butter_maker 100 {
+    use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast_making {
+        Permissions
+    }
+    summon loop :: (p: Permission) {
+        match p {
+            ButterMaker({retail_outlets}) => {
+                reaction {
+                    butter_order<retail_outlets Order -> customer order> => {
+                        customer ! butter<>
+                    }
+                }
+            }
+        }
+    }
+}
+
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/bread_maker 100 {
+    use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast_making {
+        Permissions
+    }
+    summon loop :: (p: Permission) {
+        match p {
+            BreadMaker({retail_outlets}) => {
+                reaction {
+                    bread_order<retail_outlets Order -> customer order> => {
+                        customer ! bread<>
+                    }
+                }
+            }
+        }
+    }
+}
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/jam_maker 100 {
+    use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast_making {
+        Permissions
+    }
+    summon loop :: (p: Permission) {
+        match p {
+            JamMaker({retail_outlets}) => {
+                reaction {
+                    strawberry_jam_order<retail_outlets Order -> customer order> => {
+                        customer ! strawberry_jam<>
+                    }
+                    marmalade_order<retail_outlets Order -> customer order> => {
+                        customer ! marmalade<>
+                    }
+                }
+            }
+        }
+    }
+}
