@@ -1,9 +1,9 @@
 mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server 100 {
-    data DataType = Constructor
-    data DataType = Constructor([i64], [i64])
-    data DataType =
-        | Constructor([i64], [i64])
-        | Constructor([i64], [i64])
+    summon data DataType = summon Constructor
+    summon data DataType = summon Constructor([i64], [i64])
+    summon data DataType =
+        | summon Constructor([i64], [i64])
+        | summon Constructor([i64], [i64])
     data DataType = Sheep({name: bool, naked: bool})
     data DataType<A,B,C> = Constructor(Option<T>, Result<string, i64>)
     data A =

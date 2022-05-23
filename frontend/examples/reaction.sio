@@ -1,28 +1,34 @@
 mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast_making 100 {
-    summon data Jam
+    summon data Jam =
         | summon Strawberry
         | summon Marmalade
-    summmon data Order
+    summon data Order =
         | PlainToast
         | StrawberryJamToast
         | MarmaladeToast
-    summon data Bread
+    summon data Bread =
         | summon White
         | summon Wheat
         | summon Sourdough
-    summon data Permissions
+    summon data Permissions =
         | summon JamMaker({retail_outlets: [who]})
         | summon ButterMaker({retail_outlets: [who]})
         | summon StrawberryMaker({retail_outlets: [who]})
         | summon MarmaladeMaker({retail_outlets: [who]})
+        | summon ToastShop({
+            strawberry_jam_makers: [who],
+            marmalade_makers: [who],
+            butter_makers: [who],
+            bread_makers: [who]
+          })
 }
 mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast_box_shop 100 {
     use {
         79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::{
-            /src/toast_making { Jam, Bread, Permissions, Order }
-            /src/butter_maker { self }
-            /src/bread_maker { self }
-            /src/jam_maker { self }
+            src::toast_making::{ Jam, Bread, Permissions, Order }
+            src::butter_maker::{ self }
+            src::bread_maker::{ self }
+            src::jam_maker::{ self }
         }
     }
     sketch start :: () -> who {
@@ -43,15 +49,15 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast
             bread_makers: [butter_maker_id]
           }
         )
-        run(toast_box_shop_id, ::/live/toaster, [toast_shop_p])
-        run(strawberry_jam_maker_id, ::/live/strawberry_jam_maker, [jam_maker_p])
-        run(marmalade_jam_maker_id, ::/live/marmalade_jam_maker, [jam_maker_p])
-        run(butter_maker_id, ::/live/butter_maker_id, [butter_maker_p])
-        run(bread_maker_id, ::/live/bread_maker_id, [bread_maker_p])
+        run(toast_box_shop_id, live/toaster, [toast_shop_p])
+        run(strawberry_jam_maker_id, live/strawberry_jam_maker, [jam_maker_p])
+        run(marmalade_jam_maker_id, live/marmalade_jam_maker, [jam_maker_p])
+        run(butter_maker_id, live/butter_maker_id, [butter_maker_p])
+        run(bread_maker_id, live/bread_maker_id, [bread_maker_p])
     }
     summon loop :: (p: Permission) {
         match p {
-            ToastShop({strawberry_jam_makers, marmalade_jam_makers, butter_makers, bread_makers}) => {
+            | ToastShop({strawberry_jam_makers, marmalade_jam_makers, butter_makers, bread_makers}) => {
                 reaction {
                     customer_request<[] Order -> customer order> => {
                         let toast_type: mol = match order {

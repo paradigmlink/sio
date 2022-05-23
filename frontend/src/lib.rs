@@ -30,7 +30,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -53,7 +53,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -76,7 +76,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -99,7 +99,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -122,7 +122,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -145,7 +145,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -168,7 +168,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -191,7 +191,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -214,7 +214,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -237,7 +237,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -260,7 +260,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -283,7 +283,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -306,7 +306,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -329,7 +329,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -352,7 +352,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -375,7 +375,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -398,7 +398,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -421,7 +421,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -444,7 +444,7 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
                 panic!()
             }
         }
@@ -454,7 +454,6 @@ mod parse_tests {
         use std::fs;
         let unparsed_file = fs::read_to_string("examples/binary_hexadecimal_test.sio").expect("cannot read file");
         let parsed = SioParser::parse(Rule::main, &unparsed_file);
-        println!("{:#?}", parsed);
         match parsed {
             Ok(mut res) => {
                 for statement in res.next().unwrap().into_inner() {
@@ -467,7 +466,29 @@ mod parse_tests {
                 }
             },
             Err(e) => {
-                println!("{:#?}", e);
+                println!("{}", e.to_string());
+                panic!()
+            }
+        }
+    }
+    #[test]
+    fn reaction_test() {
+        use std::fs;
+        let unparsed_file = fs::read_to_string("examples/reaction.sio").expect("cannot read file");
+        let parsed = SioParser::parse(Rule::main, &unparsed_file);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::module_def => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{}", e.to_string());
                 panic!()
             }
         }
