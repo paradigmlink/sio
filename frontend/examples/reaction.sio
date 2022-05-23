@@ -59,43 +59,43 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast
         match p {
             | ToastShop({strawberry_jam_makers, marmalade_jam_makers, butter_makers, bread_makers}) => {
                 reaction {
-                    customer_request<[] Order -> customer order> => {
+                    | customer_request<[] Order -> customer order> => {
                         let toast_type: mol = match order {
-                            PlainToast => {
-                                butter_makers.0 ! butter_request<>
-                                bread_makers.0 ! bread_request<>
+                            | PlainToast => {
+                                butter_makers ! butter_request<>
+                                bread_makers ! bread_request<>
                                 plain_toast<>
                             }
-                            StrawberryJamToast => {
-                                butter_makers.0 ! butter_request<>
-                                bread_makers.0 ! bread_request<>
-                                strawberry_jam_makers.0 ! strawberry_jam_request<>
+                            | StrawberryJamToast => {
+                                butter_makers ! butter_request<>
+                                bread_makers ! bread_request<>
+                                strawberry_jam_makers ! strawberry_jam_request<>
                                 strawberry_jam_butter_toast<>
                             }
-                            MarmaladeToast => {
-                                butter_makers.0 ! butter_request<>
-                                bread_makers.0 ! bread_request<>
-                                marmalade_makers.0 ! marmalade_request<>
+                            | MarmaladeToast => {
+                                butter_makers ! butter_request<>
+                                bread_makers ! bread_request<>
+                                marmalade_makers ! marmalade_request<>
                                 marmalade_toast<>
                             }
                         }
                         toast_type
                     }
-                    plain_toast<[me] () -> () ()> +
-                    bread<bread_makers Bread -> bread_who bread> +
-                    butter<butter_makers Butter -> butter_who butter> => {
+                    | plain_toast<[me] _ -> _ _> +
+                      bread<bread_makers Bread -> bread_who bread> +
+                      butter<butter_makers Butter -> butter_who butter> => {
                         println("Toasting {} and spreading {} ", bread, butter)
                     }
-                    strawberry_jam_toast<[me] () -> () ()> +
-                    bread<bread_makers Bread -> bread_who bread> +
-                    butter<butter_makers Butter -> butter_who butter> +
-                    strawberry_jam<jam_makers Jam -> jam_who strawberry_jam> => {
+                    | strawberry_jam_toast<[me] _ -> _ _> +
+                      bread<bread_makers Bread -> bread_who bread> +
+                      butter<butter_makers Butter -> butter_who butter> +
+                      strawberry_jam<jam_makers Jam -> jam_who strawberry_jam> => {
                         println("Toasting {} and spreading {} and {}", bread, butter, stawberry_jam)
                     }
-                    marmalade_toast<[me] () -> () ()> +
-                    bread<bread_makers Bread -> bread_who bread> +
-                    butter<butter_makers Butter -> butter_who butter> +
-                    marmalade<jam_makers Jam -> jam_who marmalade> => {
+                    | marmalade_toast<[me] _ -> _ _> +
+                      bread<bread_makers Bread -> bread_who bread> +
+                      butter<butter_makers Butter -> butter_who butter> +
+                      marmalade<jam_makers Jam -> jam_who marmalade> => {
                         println("Toasting {} and spreading {} and {}", bread, butter, marmalade)
                     }
                 }
@@ -104,14 +104,14 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast
     }
 }
 mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/butter_maker 100 {
-    use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast_making {
-        Permissions
+    use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::{
+        src::toast_making::{ Permissions }
     }
     summon loop :: (p: Permission) {
         match p {
-            ButterMaker({retail_outlets}) => {
+            | ButterMaker({retail_outlets}) => {
                 reaction {
-                    butter_order<retail_outlets Order -> customer order> => {
+                    | butter_order<retail_outlets Order -> customer order> => {
                         customer ! butter<>
                     }
                 }
@@ -121,14 +121,14 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/butte
 }
 
 mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/bread_maker 100 {
-    use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast_making {
-        Permissions
+    use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::{
+        src::toast_making::{ Permissions }
     }
     summon loop :: (p: Permission) {
         match p {
-            BreadMaker({retail_outlets}) => {
+            | BreadMaker({retail_outlets}) => {
                 reaction {
-                    bread_order<retail_outlets Order -> customer order> => {
+                    | bread_order<retail_outlets Order -> customer order> => {
                         customer ! bread<>
                     }
                 }
@@ -137,17 +137,17 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/bread
     }
 }
 mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/jam_maker 100 {
-    use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast_making {
-        Permissions
+    use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::{
+        src::toast_making::{ Permissions }
     }
     summon loop :: (p: Permission) {
         match p {
-            JamMaker({retail_outlets}) => {
+            | JamMaker({retail_outlets}) => {
                 reaction {
-                    strawberry_jam_order<retail_outlets Order -> customer order> => {
+                    | strawberry_jam_order<retail_outlets Order -> customer order> => {
                         customer ! strawberry_jam<>
                     }
-                    marmalade_order<retail_outlets Order -> customer order> => {
+                    | marmalade_order<retail_outlets Order -> customer order> => {
                         customer ! marmalade<>
                     }
                 }

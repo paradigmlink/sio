@@ -12,6 +12,7 @@ statement = {
     | procedure_call
     | async_send
     | selective_receive
+    | reaction
     | thread
     | ffi_def
     | named_procedure_def
@@ -33,7 +34,7 @@ statement = {
         }
     skip = { "skip" }
     variable_creation = { dataflow_variable }
-        dataflow_variable = { "let" ~ ident_and_type ~ ("=" ~ value)? }
+        dataflow_variable = { "let" ~ ident_and_type ~ ("=" ~ (pattern_match | value))? }
             ident_and_type = { ident ~ ":" ~ type_decl }
     var_to_var_binding = { ident ~ "=" ~ ident }
     value_creation = { ident ~ "=" ~ (expr | value) }
@@ -48,6 +49,7 @@ statement = {
         }
             primitive_inst = {
                 who_inst
+                | molecule_inst
                 | unit_inst
                 | binary_inst
                 | hexadecimal_inst
@@ -78,6 +80,7 @@ statement = {
             string_inst = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
             hexadecimal_inst = @{ "0x" ~ ASCII_HEX_DIGIT ~ ( ASCII_HEX_DIGIT | "_")*  }
             binary_inst = @{ "0b" ~ ASCII_BIN_DIGIT ~ ( ASCII_BIN_DIGIT | "_")* }
+            molecule_inst = { ident ~ angle_open ~ (value ~ (comma ~ value)*)? ~ angle_close }
             char_inst = { "'" ~ ASCII_ALPHA ~ "'" }
             who_inst = { public_key ~ module_path }
                 public_key = { sio_vm | ident | ASCII_ALPHANUMERIC {64} }
@@ -364,6 +367,20 @@ statement = {
         receive_body = {
             ("|" ~ value ~ type_inst ~ ">" ~ ident ~ ident ~ "=>" ~ brace_open ~ statement+ ~ brace_close)+
         }
+
+    reaction = {
+        "reaction"
+        ~ brace_open
+        ~ reaction_body+
+        ~ brace_close
+    }
+        reaction_body = {
+            pipe ~ molecule_match ~ ( "+" ~ molecule_match)* ~ "=>" ~ brace_open ~ statement+ ~ (ident | molecule_inst)? ~ brace_close
+        }
+        molecule_match = {
+            ident ~ angle_open ~ value ~ ("_" | type_inst) ~ "->" ~ ("_" | ident) ~ ("_" | ident)  ~ angle_close
+        }
+
     hot_swap_spawn_process = {
         "spawn"
         ~ paren_open
@@ -541,6 +558,7 @@ type_decl = {
 primitive_data_type_decl = {
     bool_type
     | unit_type
+    | molecule_type
     | who_type
     | binary_type
     | hexadecimal_type
@@ -560,6 +578,7 @@ primitive_data_type_decl = {
     | char_type
 }
     bool_type         = @{ "bool" }
+    molecule_type     = @{ "mol" }
     unit_type         = @{ paren_open ~ paren_close }
     i64_type          = @{ "i64" }
     i32_type          = @{ "i32" }
