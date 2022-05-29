@@ -71,16 +71,17 @@ statement = {
                 | ident
             }
             number_inst = { decimal_inst | integer_inst }
-                integer_inst = @{ "_"? ~ ASCII_DIGIT+ }
-                decimal_inst = @{ "_"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* }
+                integer_inst = @{ wildcard? ~ ASCII_DIGIT+ }
+                decimal_inst = @{ wildcard? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* }
             boolean_inst = { true_lit | false_lit }
                 true_lit = { "true" }
                 false_lit = { "false" }
             unit_inst = { "unit" }
             string_inst = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
-            hexadecimal_inst = @{ "0x" ~ ASCII_HEX_DIGIT ~ ( ASCII_HEX_DIGIT | "_")*  }
-            binary_inst = @{ "0b" ~ ASCII_BIN_DIGIT ~ ( ASCII_BIN_DIGIT | "_")* }
-            molecule_inst = { ident ~ angle_open ~ (value ~ (comma ~ value)*)? ~ angle_close }
+            hexadecimal_inst = @{ "0x" ~ ASCII_HEX_DIGIT ~ ( ASCII_HEX_DIGIT | wildcard)*  }
+            binary_inst = @{ "0b" ~ ASCII_BIN_DIGIT ~ ( ASCII_BIN_DIGIT | wildcard)* }
+            molecule_inst = { basename ~ angle_open ~ value? ~ angle_close }
+            basename = @{ ident }
             char_inst = { "'" ~ ASCII_ALPHA ~ "'" }
             who_inst = { public_key ~ module_path }
                 public_key = { sio_vm | ident | ASCII_ALPHANUMERIC {64} }
@@ -207,6 +208,9 @@ statement = {
         angle_close      = { ">" }
         array_open       = { "[|" }
         array_close      = { "|]" }
+        right_arrow      = { "->" }
+        colon            = { ":" }
+        wildcard         = { "_" }
         dot              = { "." }
         comma            = { "," }
         pipe             = { "|" }
@@ -294,7 +298,7 @@ statement = {
                     false_lit
                 }
             char_match = {
-                char_inst | "_"
+                char_inst | wildcard
             }
             string_match = {
                 string_inst
@@ -378,9 +382,19 @@ statement = {
             pipe ~ molecule_match ~ ( "+" ~ molecule_match)* ~ "=>" ~ brace_open ~ statement+ ~ (ident | molecule_inst)? ~ brace_close
         }
         molecule_match = {
-            ident ~ angle_open ~ value ~ ("_" | type_inst) ~ "->" ~ ("_" | ident) ~ ("_" | ident)  ~ angle_close
+            ident ~ angle_open
+            ~ ( reaction_who_only_match | reaction_what_only_match | reaction_what_who_match )?
+            ~ angle_close
         }
-
+        reaction_who_only_match = {
+            wildcard ~ comma ~ ident ~ colon ~ (list_type_decl | ident)
+        }
+        reaction_what_only_match = {
+            ident ~ colon ~ type_inst ~ comma ~ wildcard
+        }
+        reaction_what_who_match = {
+            ident ~ colon ~ type_inst ~ comma ~ ident ~ colon ~ (list_type_decl | ident)
+        }
     hot_swap_spawn_process = {
         "spawn"
         ~ paren_open
@@ -445,7 +459,7 @@ statement = {
         ~ brace_close
     }
 
-ffi_def = { concrete_procedure ~ separator ~ who_inst ~ separator ~ ffi_args ~ "->" ~ primitive_return_value }
+ffi_def = { concrete_procedure ~ separator ~ who_inst ~ separator ~ ffi_args ~ right_arrow ~ primitive_return_value }
     ffi_args = { paren_open ~ primititive_procedure_parameter ~ ( comma ~ primititive_procedure_parameter )* ~ paren_close }
         primititive_procedure_parameter = {
             ident ~ ":" ~ (primitive_data_type_decl | primitive_collection_decl )
@@ -506,7 +520,7 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
                 type_decl
                 | ident ~ ":" ~ higher_order_procedure_header
             }
-        procedure_return_type = { "->" ~ ( higher_order_procedure_header | type_decl ) }
+        procedure_return_type = { right_arrow ~ ( higher_order_procedure_header | type_decl ) }
     procedure_def = {
         procedure_header
         ~ brace_open
@@ -533,7 +547,7 @@ named_procedure_def = { named_procedure_header ~ procedure_def }
             ~ brace_close
         }
 
-ident = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | "_")* }
+ident = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | wildcard)* }
 
 WHITESPACE = _{ " " | "\t" | NEWLINE }
 COMMENT = _{ ("/*" ~ (!"*/" ~ ANY)* ~ "*/" | "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE)}

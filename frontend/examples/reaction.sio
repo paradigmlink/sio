@@ -10,11 +10,14 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast
         | summon White
         | summon Wheat
         | summon Sourdough
+    summon data Butter =
+        | summon CowsMilk
+        | summon GoatsMilk
     summon data Permissions =
-        | summon JamMaker({retail_outlets: [who]})
-        | summon ButterMaker({retail_outlets: [who]})
-        | summon StrawberryMaker({retail_outlets: [who]})
-        | summon MarmaladeMaker({retail_outlets: [who]})
+        | summon JamMaker({toast_box_shops: [who]})
+        | summon ButterMaker({toast_box_shops: [who]})
+        | summon StrawberryMaker({toast_box_shops: [who]})
+        | summon MarmaladeMaker({toast_box_shops: [who]})
         | summon ToastShop({
             strawberry_jam_makers: [who],
             marmalade_makers: [who],
@@ -37,29 +40,29 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast
         let butter_makes_id: who = spawn(butter_maker, loop)
         let bread_makes_id: who = spawn(bread_maker, loop)
         let strawberry_jam_maker_id: who = spawn(jam_maker, loop)
-        let marmalade_jam_maker_id: who = spawn(jam_maker, loop)
+        let marmalade_maker_id: who = spawn(jam_maker, loop)
 
-        let jam_maker_p: Permission = Permission::JamMaker({retail_outlets: [toast_box_shop_id]})
-        let butter_maker_p: Permission = Permission::ButterMaker({retail_outlets: [toast_box_shop_id]})
-        let bread_maker_p: Permission = Permission::BreadMaker({retail_outlets: [toast_box_shop_id]})
-        let toast_shop_p: Permission = Permission::ToastShop(
+        let jam_maker_p: Permissions = Permissions::JamMaker({toast_box_shops: [toast_box_shop_id]})
+        let butter_maker_p: Permissions = Permissions::ButterMaker({toast_box_shops: [toast_box_shop_id]})
+        let bread_maker_p: Permissions = Permissions::BreadMaker({toast_box_shops: [toast_box_shop_id]})
+        let toast_shop_p: Permissions = Permissions::ToastShop(
           { strawberry_jam_makers: [strawberry_jam_maker_id],
-            marmelade_jam_makers: [marmalade_jam_maker_id],
+            marmelade_makers: [marmalade_maker_id],
             butter_makers: [butter_maker_id],
             bread_makers: [butter_maker_id]
           }
         )
         run(toast_box_shop_id, live/toaster, [toast_shop_p])
         run(strawberry_jam_maker_id, live/strawberry_jam_maker, [jam_maker_p])
-        run(marmalade_jam_maker_id, live/marmalade_jam_maker, [jam_maker_p])
+        run(marmalade_maker_id, live/marmalade_maker, [jam_maker_p])
         run(butter_maker_id, live/butter_maker_id, [butter_maker_p])
         run(bread_maker_id, live/bread_maker_id, [bread_maker_p])
     }
-    summon loop :: (p: Permission) {
+    summon loop :: (p: Permissions) {
         match p {
             | ToastShop({strawberry_jam_makers, marmalade_jam_makers, butter_makers, bread_makers}) => {
                 reaction {
-                    | customer_request<[] Order -> customer order> => {
+                    | customer_request<order: Order, customer: [who]> => {
                         let toast_type: mol = match order {
                             | PlainToast => {
                                 butter_makers ! butter_request<>
@@ -70,32 +73,36 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/toast
                                 butter_makers ! butter_request<>
                                 bread_makers ! bread_request<>
                                 strawberry_jam_makers ! strawberry_jam_request<>
-                                strawberry_jam_butter_toast<>
+                                strawberry_jam_butter_toast<"testing_usecase">
                             }
                             | MarmaladeToast => {
                                 butter_makers ! butter_request<>
                                 bread_makers ! bread_request<>
                                 marmalade_makers ! marmalade_request<>
-                                marmalade_toast<>
+                                marmalade_butter_toast<>
                             }
                         }
                         toast_type
                     }
-                    | plain_toast<[me] _ -> _ _> +
-                      bread<bread_makers Bread -> bread_who bread> +
-                      butter<butter_makers Butter -> butter_who butter> => {
+                    | plain_toast<> +
+                      bread<bread: Bread, bread_who: bread_makers> => {
                         println("Toasting {} and spreading {} ", bread, butter)
                     }
-                    | strawberry_jam_toast<[me] _ -> _ _> +
-                      bread<bread_makers Bread -> bread_who bread> +
-                      butter<butter_makers Butter -> butter_who butter> +
-                      strawberry_jam<jam_makers Jam -> jam_who strawberry_jam> => {
+                    | buttered_toast<> +
+                      bread<bread: Bread, bread_who: bread_makers> +
+                      butter<butter: Butter, butter_who: butter_makers> => {
+                        println("Toasting {} and spreading {} ", bread, butter)
+                    }
+                    | strawberry_jam_butter_toast<string_instance: string, _> +
+                      bread<bread: Bread, bread_who: bread_makers> +
+                      butter<butter: Butter, butter_who: butter_makers> +
+                      strawberry_jam<strawberry_jam: Jam, jam_who: jam_makers> => {
                         println("Toasting {} and spreading {} and {}", bread, butter, stawberry_jam)
                     }
-                    | marmalade_toast<[me] _ -> _ _> +
-                      bread<bread_makers Bread -> bread_who bread> +
-                      butter<butter_makers Butter -> butter_who butter> +
-                      marmalade<jam_makers Jam -> jam_who marmalade> => {
+                    | marmalade_butter_toast<> +
+                      bread<bread: Bread, bread_who: bread_makers> +
+                      butter<butter: Butter, butter_who: butter_makers> +
+                      marmalade<marmalade: Jam, jam_who: jam_makers> => {
                         println("Toasting {} and spreading {} and {}", bread, butter, marmalade)
                     }
                 }
@@ -107,12 +114,12 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/butte
     use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::{
         src::toast_making::{ Permissions }
     }
-    summon loop :: (p: Permission) {
+    summon loop :: (p: Permissions) {
         match p {
-            | ButterMaker({retail_outlets}) => {
+            | ButterMaker({toast_box_shops}) => {
                 reaction {
-                    | butter_order<retail_outlets Order -> customer order> => {
-                        customer ! butter<>
+                    | butter_order<_, customer: toast_box_shops> => {
+                        customer ! butter<Butter::CowsMilk>
                     }
                 }
             }
@@ -124,12 +131,12 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/bread
     use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::{
         src::toast_making::{ Permissions }
     }
-    summon loop :: (p: Permission) {
+    summon loop :: (p: Permissions) {
         match p {
-            | BreadMaker({retail_outlets}) => {
+            | BreadMaker({toast_box_shops}) => {
                 reaction {
-                    | bread_order<retail_outlets Order -> customer order> => {
-                        customer ! bread<>
+                    | bread_order<_, customer: toast_box_shops> => {
+                        customer ! bread<Bread::Wheat>
                     }
                 }
             }
@@ -140,15 +147,15 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/jam_m
     use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::{
         src::toast_making::{ Permissions }
     }
-    summon loop :: (p: Permission) {
+    summon loop :: (p: Permissions) {
         match p {
-            | JamMaker({retail_outlets}) => {
+            | JamMaker({toast_box_shops}) => {
                 reaction {
-                    | strawberry_jam_order<retail_outlets Order -> customer order> => {
-                        customer ! strawberry_jam<>
+                    | strawberry_jam_order<_, customer: toast_box_shops> => {
+                        customer ! strawberry_jam<Jam::StrawberryJam>
                     }
-                    | marmalade_order<retail_outlets Order -> customer order> => {
-                        customer ! marmalade<>
+                    | marmalade_order<_, customer: toast_box_shops> => {
+                        customer ! marmalade<Jam::Marmalade>
                     }
                 }
             }
