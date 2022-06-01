@@ -175,9 +175,9 @@ mod parse_tests {
     }
 
     #[test]
-    fn selective_receive_and_send_test() {
+    fn reaction_and_send_test() {
         use std::fs;
-        let unparsed_file = fs::read_to_string("examples/selective_receive_and_send_test.sio").expect("cannot read file");
+        let unparsed_file = fs::read_to_string("examples/reaction_and_send_test.sio").expect("cannot read file");
         let parsed = SioParser::parse(Rule::main, &unparsed_file);
         match parsed {
             Ok(mut res) => {

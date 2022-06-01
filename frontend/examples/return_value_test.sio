@@ -9,7 +9,6 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
     summon name :: () -> string { false }
     summon name :: () -> string { 'c' }
     summon name :: () -> string { (32,42) }
-    summon name :: () -> string { <32,42> }
     summon name :: () -> string { {thirty_two: 32, fourty_two: 42} }
     summon name :: () -> string { [32, 42] }
     summon name :: () -> string { [|32, 42|] }

@@ -3,6 +3,8 @@ main = _{ SOI ~ module_def+ ~ EOI }
 statement = {
     skip
     | print
+    | async_send
+    | reaction
     | value_creation
     | variable_creation
     | var_to_var_binding
@@ -10,9 +12,6 @@ statement = {
     | pattern_match
     | register
     | procedure_call
-    | async_send
-    | selective_receive
-    | reaction
     | thread
     | ffi_def
     | named_procedure_def
@@ -63,7 +62,6 @@ statement = {
                 | array_inst
                 | list_inst
                 | tuple_inst
-                | set_inst
             }
             dot_member = {
                 procedure_call
@@ -118,11 +116,6 @@ statement = {
                 ~ ( value ~ ( comma ~ value )* )?
                 ~ paren_close
             }
-            set_inst = {
-                angle_open
-                ~ ( value ~ ( comma ~ value )* )?
-                ~ angle_close
-            }
             type_inst = {
                 primitive_data_type_decl
                 | data_type_name ~ separator
@@ -142,7 +135,6 @@ statement = {
                 //| record_op
                 //| array_op
                 //| tuple_op
-                //| set_op
             }
             list_op = {
                 bracket_open ~ value ~ pipe ~ value ~ bracket_close
@@ -361,17 +353,7 @@ statement = {
                     }
                     module_or_function_name = @{ident}
             module_data_type_export = { (stability? ~ data_type_decl) }
-    async_send =  { ident ~ "!" ~ (expr | value) }
-    selective_receive = {
-        "receive"
-        ~ brace_open
-        ~ receive_body+
-        ~ brace_close
-    }
-        receive_body = {
-            ("|" ~ value ~ type_inst ~ ">" ~ ident ~ ident ~ "=>" ~ brace_open ~ statement+ ~ brace_close)+
-        }
-
+    async_send =  { (who_inst | ident) ~ "!" ~ (molecule_inst | ident) }
     reaction = {
         "reaction"
         ~ brace_open
@@ -379,7 +361,7 @@ statement = {
         ~ brace_close
     }
         reaction_body = {
-            pipe ~ molecule_match ~ ( "+" ~ molecule_match)* ~ "=>" ~ brace_open ~ statement+ ~ (ident | molecule_inst)? ~ brace_close
+            pipe ~ molecule_match ~ ( "+" ~ molecule_match)* ~ "=>" ~ brace_open ~ statement* ~ molecule_return? ~ brace_close
         }
         molecule_match = {
             ident ~ angle_open
@@ -387,13 +369,16 @@ statement = {
             ~ angle_close
         }
         reaction_who_only_match = {
-            wildcard ~ comma ~ ident ~ colon ~ (list_type_decl | ident)
+            wildcard ~ comma ~ ident ~ colon ~ value
         }
         reaction_what_only_match = {
             ident ~ colon ~ type_inst ~ comma ~ wildcard
         }
         reaction_what_who_match = {
-            ident ~ colon ~ type_inst ~ comma ~ ident ~ colon ~ (list_type_decl | ident)
+            ident ~ colon ~ type_inst ~ comma ~ ident ~ colon ~ value
+        }
+        molecule_return = {
+            (molecule_inst | ident) ~ ("+" ~ (molecule_inst | ident))*
         }
     hot_swap_spawn_process = {
         "spawn"
@@ -668,7 +653,6 @@ collection_decl = {
     | list_type_decl
     | array_type_decl
     | tuple_type_decl
-    | set_type_decl
 }
 record_type_decl = {
     brace_open
@@ -700,9 +684,4 @@ tuple_type_decl  = {
     paren_open
     ~ (type_decl ~ (comma ~ type_decl)*)?
     ~ paren_close
-}
-set_type_decl = {
-    angle_open
-    ~ type_decl
-    ~ angle_close
 }

@@ -10,7 +10,10 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
     sketch data AreaResponse =
         | sketch Rectangle(i64)
         | sketch Circle(i64)
-    sketch data Permission = sketch Permission({rectangle_allow: [who], cicle_allow: [who], subscription_checkers: [who]})
+    sketch data Permission =
+        | sketch RectangleAllow({rectangle_allow: [who]})
+        | sketch CircleAllow({cicle_allow: [who]})
+        | sketch SubscriptionChecker({subscription_checkers: [who]})
     data SubscriptionRequest =
         | Circle(i64)
         | Rectangle(i64)
@@ -27,9 +30,9 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
     }
     sketch subscribe_rectangle :: (server_url: who) -> SubscriptionResponse {
         let tx: SatoshiPayment = make_transaction(my_bitcoin_address, server_url, 15)
-        server_url ! SubscriptionRequest::Rectangle(tx)
-        receive {
-            | [server_url] SubscriptionResponse::Rectangle > from response => {
+        server_url ! rectangle_subscription_request<SubscriptionRequest::Rectangle(tx)>
+        reaction {
+            | rectangle_subscription_request<response: SubscriptionResponse::Rectangle, from: [server_url]> => {
                 match response {
                     | Rectangle => {
                         print("subscribed to rectangle")
@@ -40,9 +43,9 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
     }
     sketch subscribe_circle:: (server_url: who) -> SubscriptionResponse {
         let tx: SatoshiPayment = make_transaction(my_bitcoin_address, server_url, 10)
-        server_url ! SubscriptionRequest::Circle(tx)
-        receive {
-            | [server_url] SubscriptionResponse::Circle > from response => {
+        server_url ! circle_subscription_request<SubscriptionRequest::Circle(tx)>
+        reaction {
+            | circle_subscription_request<response: SubscriptionResponse::Circle, from: [server_url]> => {
                 match response {
                     | Circle => {
                         print("subscribed to circle")
@@ -52,9 +55,9 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
         }
     }
     sketch area :: (server_url: who, request: AreaRequest) {
-        server_url ! request
-        receive {
-            | [server_url] AreaResponse > from response => {
+        server_url ! calculate_area<request>
+        reaction {
+            | calculate_area<response: AreaResponse, from: [server_url]> => {
                 match response {
                     | Circle(result) => {
                         println("The circle's area is {}", result)
@@ -67,21 +70,21 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
         }
     }
     check_payment :: (subscriber: who) {
-        receive {
-            | [subscriber] SubscriptionRequest > who what => {
+        reaction {
+            | subscription_request<what: SubscriptionRequest, from: [subscriber]> => {
                 match what {
                     | Circle(amount) => {
                         if amount == 10 {
-                            who ! SubscriptionResponse::Circle(true)
+                            who ! subscribe<SubscriptionResponse::Circle(true)>
                         } else {
-                            who ! SubscriptionResponse::Circle(false)
+                            who ! subscribe<SubscriptionResponse::Circle(false)>
                         }
                     }
                     | Rectangle(amount) => {
                         if amount == 15 {
-                            who ! SubscriptionResponse::Rectangle(true)
+                            who ! subscribe<SubscriptionResponse::Rectangle(true)>
                         } else {
-                            who ! SubscriptionResponse::Rectangle(false)
+                            who ! subscribe<SubscriptionResponse::Rectangle(false)>
                         }
                     }
                 }
@@ -91,12 +94,12 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
     sketch loop :: (perms: Permission) {
         match perms {
             | Permission(p) => {
-                receive {
-                    | [] SubscriptionRequest > from what => {
+                reaction {
+                    | subscribed<what: SubscriptionRequest, from: [subscriber]> => {
                         match what {
                             | Rectangle(amount) => {
                                 let pid: who = spawn(check_payment(self()))
-                                pid ! SubscriptionRequest::Rectangle(amount)
+                                pid ! subscribe_request<SubscriptionRequest::Rectangle(amount)>
                                 loop(Permission({
                                     rectangle_allow:       p.rectangle_allow,
                                     circle_allow:          p.circle_allow,
@@ -105,7 +108,7 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
                             }
                             | Circle(amount) => {
                                 let pid: who = spawn(check_payment(self))
-                                pid ! SubscriptionRequest::Circle(amount)
+                                pid ! subsribe_request<SubscriptionRequest::Circle(amount)>
                                 loop(Permission({
                                     rectangle_allow:       p.rectangle_allow,
                                     circle_allow:          p.circle_allow,
@@ -114,8 +117,8 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
                             }
                         }
                     }
-                    | p.subscription_checkers SubscriptionResponse > from what => {
-                        remove_from :: (a: who) -> Bool { a==from }
+                    | subscribed<what: SubscriptionResponse, from: p.subscription_checkers> => {
+                        remove_from :: (a: who) -> bool { a==from }
                         match what {
                             | Circle(result) => {
                                 if result {
@@ -149,18 +152,18 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
                             }
                         }
                     }
-                    | p.rectangle_allow AreaRequest::Rectangle > from what => {
+                    | calc_rectangle_area<what: AreaRequest::Rectangle, from: p.rectangle_allow> => {
                         match what {
                             | Rectangle(width, height) => {
-                                from ! AreaResponse::Rectangle(width * height)
+                                from ! calc_rectangle_area<AreaResponse::Rectangle(width * height)>
                                 loop(p)
                             }
                         }
                     }
-                    | p.circle_allow AreaRequest::Circle > from what => {
+                    | calc_circle_area<what: AreaRequest::Circle, from: p.circle_allow> => {
                         match what {
                             | Circle(radius) => {
-                                from ! AreaResponse::Circle(3.14159 * radius * radius)
+                                from ! calc_circle_area<AreaResponse::Circle(3.14159 * radius * radius)>
                                 loop(p)
                             }
                         }

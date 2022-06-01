@@ -24,19 +24,16 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
         | sketch MyArray ([|3; Option<Result<i64, string>>|], i64)
         | stable MyList([Option<Result<i64, string>>], i64)
         | summon MyTuple((Option<Result<i64, string>>, i64))
-        | sunset MySet(<Option<Result<i64, string>>>, i64)
         | seeyou MyRecord({
             an_atom: [|2; i64|],
             bool: [i64],
             i64:  (i64),
-            string:<i64>,
             char: {i64:Option<Result<i64, string>>}
           })
     data F = MyRecord({
         an_atom: [|2; i64|],
         bool: [i64],
         i64:  (i64),
-        string:<i64>,
         char: {i64:Option<Result<i64, string>>}
     })
     a: A
@@ -62,11 +59,9 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
         e_record = MyRecord({
             an_atom:[|1,2|],
             true:[1],
-            2:<1>,
             "hi":1,
             'A':[1]
         })
-        e_set = MySet(<2,3>)
         e_sheep = Sheep({name: self.name, naked: true})
         f = J(3)
         k_1 = N(3)

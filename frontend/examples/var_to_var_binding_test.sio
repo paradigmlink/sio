@@ -7,7 +7,6 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
         d1 = "43"
         d2 = "43.43"
         e = true
-        f = <3>
         g = ["hi"]
         h = [|3|]
         i = (Type("hi"),Type(3))
@@ -17,11 +16,10 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/
         k = (hi: Hi) -> Hi { skip }
         k = (hi: Hi, hi: Hi) -> Hi { skip }
         k = (hi: Hi, hi: Hi<i64>) -> Result<Option<i64>, string> { skip }
-        k = (hi: [|3; Hi|], hi: [Hi]) -> <Hi> {
+        k = (hi: [|3; Hi|], hi: [Hi]) -> (Hi) {
             skip
             hi=[|3,2,1|]
             hi=[3,2,1]
-            hi=<3,2,1>
             hi=(3,2,1)
             hi="hi"
             hi=3

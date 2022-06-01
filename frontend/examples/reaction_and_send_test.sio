@@ -1,0 +1,26 @@
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server 100 {
+    summon name :: (str: string) -> string {
+        p ! string<"string">
+        p ! an_integer<123>
+        p ! a_float<123.03>
+        p ! a_char<'c'>
+        p ! a_who<79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/area/server>
+        p ! a_what<SubscriptionResonse::Rectangle(tx)>
+        p ! another_what<Rectangle(tx)>
+        p ! another_another_what<Rectangle>
+        reaction {
+            | label_1<_, ident: ident> => { skip }
+            | label_2<_, a_list_of_one_who: [79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/a/label]> => { skip }
+            | label_3<a_string: string, _> => { skip }
+            | label_4<a_string: string, a_who: a_variable_containing_a_list_of_whos> => { skip }
+            | label_5<a_string: string, a_who: [me]> +
+              label_6<an_int: i64, a_who2: [a_you]> => { skip }
+            | label_7<a_string: string, a_who: [me]> +
+              label_7<a_float: f64, a_who: [me]> +
+              label_8<an_int: f64, a_wh4: [a_you]> => {
+                  skip
+                  a_nothing<> + an_int<123> + a_string<"a_name"> + a_float<0.1>
+              }
+        }
+    }
+}
