@@ -493,4 +493,26 @@ mod parse_tests {
             }
         }
     }
+    #[test]
+    fn dining_philosophers_problem() {
+        use std::fs;
+        let unparsed_file = fs::read_to_string("examples/dining_philosophers_problem.sio").expect("cannot read file");
+        let parsed = SioParser::parse(Rule::main, &unparsed_file);
+        match parsed {
+            Ok(mut res) => {
+                for statement in res.next().unwrap().into_inner() {
+                    match statement.as_rule() {
+                        Rule::module_def => {
+                            println!("{:#?}", statement);
+                        }
+                        _ => (),
+                    }
+                }
+            },
+            Err(e) => {
+                println!("{}", e.to_string());
+                panic!()
+            }
+        }
+    }
 }

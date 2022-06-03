@@ -1,0 +1,85 @@
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/dining_philosophers_problem/table 0 {
+    use 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::{
+        src::dining_philosophers_problem::{
+            waiter::{self}
+            philosopher::{self}
+        }
+    }
+    summon start_dining :: () {
+        let aristotle: who = spawn(philosopher, loop)
+        let russell: who   = spawn(philosopher, loop)
+        let kant: who      = spawn(philosopher, loop)
+        let spinoza: who   = spawn(philosopher, loop)
+        let laotze: who    = spawn(philosopher, loop)
+        let waiter: who    = spawn(waiter, loop)
+        run(aristotle, live/aristotle, [waiter, aristotle])
+        run(russell,   live/russell,   [waiter, russell])
+        run(kant,      live/kant,      [waiter, kant])
+        run(spinoza,   live/spinoza,   [waiter, spinoza])
+        run(laotze,    live/laotze,    [waiter, laotze])
+        run(waiter,    live/waiter,    [aristotle, russell, kant, spinoza, laotze])
+    }
+}
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/dining_philosophers_problem/philosopher 0 {
+    summon loop :: (waiter: who, me: who) {
+        reaction {
+            | hungry<> => {
+                println("Philosopher {} is hungry", me)
+                waiter ! hungry<>
+                waiting_for_chopsticks<>
+            }
+            | waiting_for_chopsticks<> +
+              chopstick<_, _: [waiter]> +
+              chopstick<_, _: [waiter]> => {
+                println("Philosopher {} is eating", me)
+                wait(10)
+                waiter ! chopstick<>
+                waiter ! chopstick<>
+                thinking<>
+            }
+            | thinking<> => {
+                println("Philosopher {} is thinking", me)
+                wait(20)
+                hungry<>
+            }
+        }
+        loop(waiter, me)
+    }
+}
+mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/dining_philosophers_problem/waiter 0 {
+    summon loop :: (aristotle: who, russell: who, kant: who, spinoza: who, laotze: who) {
+        reaction {
+            | chopstick<_, _: [laotze]> +
+              hungry   <_, _: [aristotle]> +
+              chopstick<_, _: [russell]> => {
+                aristotle ! chopstick<>
+                aristotle ! chopstick<>
+            }
+            | chopstick<_, _: [aristotle]> +
+              hungry   <_, _: [russell]> +
+              chopstick<_, _: [kant]> => {
+                russell ! chopstick<>
+                russell ! chopstick<>
+            }
+            | chopstick<_, _: [russell]> +
+              hungry   <_, _: [kant]> +
+              chopstick<_, _: [spinoza]> => {
+                kant ! chopstick<>
+                kant ! chopstick<>
+            }
+            | chopstick<_, _: [kant]> +
+              hungry   <_, _: [spinoza]> +
+              chopstick<_, _: [laotze]> => {
+                spinoza ! chopstick<>
+                spinoza ! chopstick<>
+            }
+            | chopstick<_, _: [spinoza]> +
+              hungry   <_, _: [laotze]> +
+              chopstick<_, _: [aristotle]> => {
+                laotze ! chopstick<>
+                laotze ! chopstick<>
+            }
+        }
+        loop(aristotle, russell, kant, spinoza, laotze)
+    }
+}

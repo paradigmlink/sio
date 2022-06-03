@@ -347,7 +347,7 @@ statement = {
                         ( import_namespace
                         | brace_open
                         ~ (import_namespace | type_decl | module_or_function_name)
-                        ~ (comma ~ (import_namespace | type_decl | module_or_function_name))*
+                        ~ (comma? ~ (import_namespace | type_decl | module_or_function_name))*
                         ~ comma?
                         ~ brace_close )
                     }
@@ -369,7 +369,7 @@ statement = {
             ~ angle_close
         }
         reaction_who_only_match = {
-            wildcard ~ comma ~ ident ~ colon ~ value
+            wildcard ~ comma ~ (wildcard | ident) ~ colon ~ value
         }
         reaction_what_only_match = {
             ident ~ colon ~ type_inst ~ comma ~ wildcard
