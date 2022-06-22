@@ -6,18 +6,18 @@ mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/dinin
         }
     }
     summon start_dining :: () {
-        let aristotle: who = spawn(philosopher, loop)
-        let russell: who   = spawn(philosopher, loop)
-        let kant: who      = spawn(philosopher, loop)
-        let spinoza: who   = spawn(philosopher, loop)
-        let laotze: who    = spawn(philosopher, loop)
-        let waiter: who    = spawn(waiter, loop)
-        run(aristotle, live/aristotle, [waiter, aristotle], hungry<>)
-        run(russell,   live/russell,   [waiter, russell],   thinking<>)
-        run(kant,      live/kant,      [waiter, kant],      hungry<>)
-        run(spinoza,   live/spinoza,   [waiter, spinoza],   thinking<>)
-        run(laotze,    live/laotze,    [waiter, laotze],    hungry<>)
-        run(waiter,    live/waiter,    [aristotle, russell, kant, spinoza, laotze], ())
+        let aristotle: who = spawn(philosopher)
+        let russell: who   = spawn(philosopher)
+        let kant: who      = spawn(philosopher)
+        let spinoza: who   = spawn(philosopher)
+        let laotze: who    = spawn(philosopher)
+        let waiter: who    = spawn(waiter)
+        run(aristotle, live/aristotle, loop, [waiter, aristotle], hungry<> + chopstick<>)
+        run(russell,   live/russell,   loop, [waiter, russell],   thinking<> + chopstick<>)
+        run(kant,      live/kant,      loop, [waiter, kant],      hungry<> + chopstick<>)
+        run(spinoza,   live/spinoza,   loop, [waiter, spinoza],   thinking<> + chopstick<>)
+        run(laotze,    live/laotze,    loop, [waiter, laotze],    hungry<> + chopstick<>)
+        run(waiter,    live/waiter,    loop, [aristotle, russell, kant, spinoza, laotze], ())
     }
 }
 mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/dining_philosophers_problem/philosopher 0 {
