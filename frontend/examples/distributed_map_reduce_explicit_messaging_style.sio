@@ -1,0 +1,106 @@
+public_key : sio79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd
+type       : "src"
+name       : "distributed_map_reduce_explicit_messaging_style"
+app        : public_key::type::appname
+
+mod app::types {
+    summon data Number   | U32(u32)  | U64(u64)
+    summon data Generate | U32       | U64
+    summon data Who      | V1([who])
+}
+mod app::main {
+    use app {
+        producer {self}
+        map {self}
+        reduce {self}
+        types {Who}
+    }
+    summon start :: () {
+        let producer1_id: who = spawn(producer)
+        let producer2_id: who = spawn(producer)
+        let map_id:       who = spawn(map)
+        let reduce_id:    who = spawn(reduce)
+        run(producer1_id, live/producer1, loop,   Who([map_id]), ())
+        run(producer2_id, live/producer2, loop,   Who([map_id]), ())
+        run(map_id,       live/map,       loop,   Who([producer1_id, producer2_id]), ())
+        run(reduce_id,    live/reduce,    reduce, Who([map_id]), add<0u32> + add<0u64>)
+    }
+}
+mod app::producer {
+    use app::types { Number, Generate, Who }
+    generate :: (map: [map]) {
+        reaction {
+            | generate<g: Generate, m:::map> => {
+                println("Generating Number")
+                match g {
+                    U32 => { m ! map<Number::U32(generate_random_u32())> }
+                    U64 => { m ! map<Number::U64(generate_random_u64())> }
+                }
+            }
+        }
+        generate(map)
+    }
+    summon loop :: (map: Who) {
+        match map {
+            | V1(map) => { generate(map) }
+        }
+    }
+}
+mod app::map {
+    use app::types { Number, Generate, Who }
+    square<T> :: (x: T) -> T { x*x }
+    generate :: (producers: [map]) {
+        match producers {
+            | V1(producers) => {
+                // note the reaction is now an expression because it returns a sio type
+                let (p, number): (who, Generate) = reaction {
+                    | map<Number::U32(i), u32p:::producers> => {
+                        map ! reduce<Number::U32(square(i))>
+                        (u32p, Generate::U32)
+                    }
+                    | map<Number::U64(i), u64p:::producers> => {
+                        map ! reduce<Number::U64(square(i))>
+                        (u64p, Generate::U64)
+                    }
+                }
+                select_random(filter(p, producers)) ! generate<number>
+            }
+        }
+        generate(producers)
+    }
+    summon loop :: (map: Who) {
+        match map {
+            | V1(map) => { generate(map) }
+        }
+    }
+}
+mod app::reduce {
+    use app::types { Number, Who }
+    inner_reduce :: (map: [map]) {
+        reaction {
+            | reduce<n: Number, map> => {
+                match n {
+                    U32(i) => { reduce_this<i> }
+                    U64(i) => { reduce_this<i> }
+                }
+            }
+            | accumulator<i1:u32> +
+              reduce_this<i2:u32> => {
+                let i = i1+i2
+                println!("Current reduced u32: {}", i)
+                accumulator<i>
+            }
+            | accumulator<i1:u64> +
+              reduce_this<i2:u64> => {
+                let i = i1+i2
+                println!("Current reduced u64: {}", i)
+                accumulator<i>
+            }
+        }
+    }
+    summon reduce :: (map: Who) {
+        match map {
+            | V1(map) => { inner_reduce(map) }
+        }
+    }
+}
