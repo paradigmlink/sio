@@ -1,7 +1,7 @@
 public_key : sio79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd
 type       : "src"
 name       : "distributed_map_reduce_explicit_messaging_style"
-app        : public_key::type::appname
+app        : public_key::type::name
 
 mod app::types {
     summon data Number   | U32(u32)  | U64(u64)
@@ -16,19 +16,19 @@ mod app::main {
         types {Who}
     }
     summon start :: () {
-        let producer1_id: who = spawn(producer)
-        let producer2_id: who = spawn(producer)
-        let map_id:       who = spawn(map)
-        let reduce_id:    who = spawn(reduce)
-        run(producer1_id, live/producer1, loop,   Who([map_id]), ())
-        run(producer2_id, live/producer2, loop,   Who([map_id]), ())
-        run(map_id,       live/map,       loop,   Who([producer1_id, producer2_id]), ())
-        run(reduce_id,    live/reduce,    reduce, Who([map_id]), add<0u32> + add<0u64>)
+        let producer1_id: who = spawn(producer, live/producer1)
+        let producer2_id: who = spawn(producer, live/producer2)
+        let map_id:       who = spawn(map, live/map)
+        let reduce_id:    who = spawn(reduce, live/reduce)
+        run(producer1_id, generate,   [Who([map_id])], ())
+        run(producer2_id, generate,   [Who([map_id])], ())
+        run(map_id,       map,        [Who([producer1_id, producer2_id])], ())
+        run(reduce_id,    reduce,     [Who([map_id])], add<0u32> + add<0u64>)
     }
 }
 mod app::producer {
     use app::types { Number, Generate, Who }
-    generate :: (map: [map]) {
+    generate :: (map: [who]) {
         reaction {
             | generate<g: Generate, m:::map> => {
                 println("Generating Number")
@@ -49,7 +49,7 @@ mod app::producer {
 mod app::map {
     use app::types { Number, Generate, Who }
     square<T> :: (x: T) -> T { x*x }
-    generate :: (producers: [map]) {
+    generate :: (producers: [who]) {
         match producers {
             | V1(producers) => {
                 // note the reaction is now an expression because it returns a sio type
@@ -76,7 +76,7 @@ mod app::map {
 }
 mod app::reduce {
     use app::types { Number, Who }
-    inner_reduce :: (map: [map]) {
+    inner_reduce :: (map: [who]) {
         reaction {
             | reduce<n: Number, map> => {
                 match n {

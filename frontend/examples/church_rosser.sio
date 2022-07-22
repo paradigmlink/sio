@@ -1,0 +1,170 @@
+public_key : sio79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd
+type       : "src"
+name       : "hotdog_or_hamburger_circuit"
+app        : public_key::type::name
+
+mod app::types {
+    summon data Choice | Hotdog | Burger
+    summon data Food   | Hotdog | Burger
+    summon data Role
+        | Customer(pid)
+        | Manager
+        | Employee
+        | CounterEmployee({[Food], [Food], pid})
+        | BurgerEmployee
+        | HotdogEmployee
+}
+mod app::shop {
+    use app {
+        types {Role}
+        person {self}
+    }
+    summon open_shop :: () {
+        let manager:   pid = spawn(person)
+        let customer:  pid = spawn(person)
+        run(manager,   start, [Role::Manager])
+        run(customer,  start, [Role::Customer(manager)])
+    }
+}
+mod app::person {
+    summon start :: (role: Role) {
+        match role {
+            Manager                      => { setup_shop() }
+            Customer(manager)            => { start_shopping(manager) }
+            CounterEmployee(connections) => { start_counter_work(connections) }
+            BurgerEmployee               => { make_burgers() }
+            HotdogEmployee               => { make_hotdogs() }
+        }
+    }
+    // manager related
+    manager_loop :: (specialist_employees: {pid, pid}) {
+        reaction {
+            | find_employee [] => customer >> ([Choice], [Food]) {
+                let frontend_employee_id: pid = spawn(employee)
+                let hotdog_feed: [Food] = specialist_employees.hotdog::hotdog_feed<>
+                let burger_feed: [Food] = specialist_employees.burger::burger_feed<>
+                run(frontend_employee_id, start, [Role::CounterEmployee({hotdog_feed: hotdog_feed, burger_feed: burger_feed, customer: customer}])
+                let order: [Choice] = frontend_employee_id::order<>
+                let food: [Food] = frontend_employee_id::food<>
+                (order, food)
+            }
+        }
+        manager_loop(specialist_employees)
+    }
+    setup_shop :: () {
+        let burger_employee_id: pid = spawn(employee)
+        let hotdog_employee_id: pid = spawn(employee)
+        run(burger_employee_id, start, [Role::BurgerEmployee({manager: self})])
+        run(hotdog_employee_id, start, [Role::HotdogEmployee({manager: self})])
+        manager_loop({burger: burger_employee_id, hotdog: hotdog_employee_id})
+    }
+    // customer related
+    start_shopping :: (role: Role) {
+        match role {
+            Manager(manager) => {
+                let (order, deliver): ([Choice], [Food]) = manager::find_employee<>
+                let deliver: [Food] = employee::deliver<[Food]>
+                thread {
+                    eat lazy :: (deliver: [Food]) -> [Food] {
+                        match deliver {
+                            h|t => {
+                                println("Eating: {}", h)
+                                wait(10)
+                            }
+                        }
+                        eat(t)
+                    }
+                    // should it be "deliver = eat(deliver)"??
+                    eat(deliver)
+                }
+                wait(5)
+                make_an_order lazy :: (order: [Choice]) -> [Choice] {
+                    match order {
+                        h|t => {
+                            make_an_order(
+                                match h {
+                                    Burger => {
+                                        let o: Choice = Choice::Hotdog
+                                        println("Ordering: {}", o}
+                                        o | order
+                                    }
+                                    Hotdog => {
+                                        let o: Choice = Choice::Burger
+                                        println("Ordering: {}", o}
+                                        o | order
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+                make_an_order(employee::order<[Choice]>)
+            }
+        }
+    }
+    start_counter_work:: (food_feeds: {[Food], [Food]}) {
+        let food: [Food]
+        match role {
+            CounterEmployee => {
+                let order: [Choice]
+                frontend_employee_loop(food_feeds.burger, food_feeds.hotdog, food, order)
+            }
+            BurgerEmployee  => { hotdog_employee_loop(food) }
+            HotdogEmployee  => { burger_employee_loop(food) }
+        }
+    }
+    frontend_employee_loop :: (burger_feed: [Food], hotdog_feed: [Food], food: [Food], order: [Choice]) {
+        reaction {
+            | take_order [customer] >> [Food] {
+                add lazy :: (burger_feed: [Food], hotdog_feed: [Food], food: [Food], order: [Choice]) -> [Food] {
+                    match order {
+                        h|t => {
+                            match h {
+                                Hotdog => {
+                                    match hotdog_feed {
+                                        h|t => {
+                                            h | food
+                                        }
+                                    }
+                                }
+                                Burger => {
+                                    match burger_feed {
+                                        h|t => {
+                                            h | food
+                                        }
+                                    }
+                                }
+                            }
+                            add(burger_feed, hotdog_feed, food, t)
+                        }
+                    }
+                }
+                add(burger_feed, hotdog_feed, food, order)
+            }
+            | order [manager customer] >> [Choice] { order }
+            | food  [manager customer] >> [Food]   { food  }
+        }
+    }
+    hotdog_employee_loop :: (food: [Food]) {
+        reaction {
+            | hotdog_feed frontends >> [Food] {
+                make_hotdog lazy :: (food: Food) -> [Food] {
+                    food | make_hotdog(Food::Hotdog)
+                }
+                make_hotdog(food)
+            }
+        }
+        hotdog_employee_loop(food)
+    }
+    burger_employee_loop :: (food: [Food], frontends: [pid]) {
+        reaction {
+            | burger_feed frontends >> [Food] {
+                make_burger lazy :: (food: Food) -> [Food] {
+                    food | make_burger(Food::Burger)
+                }
+                make_burger(food)
+            }
+        }
+        burger_employee_loop(food)
+    }
+}
