@@ -18,6 +18,6 @@ stdenv.mkDerivation {
       #rust-overlay
       cargo-download
   ];
-  buildInputs = [ pkgconfig ripgrep rustup gitui mc probe-run ];
+  buildInputs = [ pkgconfig ripgrep rustup gitui mc probe-run wasm-pack openssl simple-http-server];
 }
 

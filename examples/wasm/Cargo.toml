@@ -1,0 +1,20 @@
+[package]
+edition = "2021"
+name = "sio-vm-wasm"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+embassy = { version = "0.1.0", features = ["log", "wasm", "nightly"] }
+sio_vm = { version = "^0.1.0", path = "../../vm" }
+
+wasm-logger = "0.2.0"
+wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = ["Document", "Element", "HtmlElement", "Node", "Window" ] }
+log = "0.4.11"
+critical-section = "0.2.5"
+
+[patch.crates-io]
+embassy = { git = "https://github.com/embassy-rs/embassy.git", rev = "0f4c0311feea48323ad60efa7bac3673d412cb60" }

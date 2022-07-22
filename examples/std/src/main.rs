@@ -1,13 +1,16 @@
 #![feature(type_alias_impl_trait)]
 
 use embassy::executor::Spawner;
+use embassy::time::{Duration, Timer};
 use sio_vm::{tick};
+use log::*;
 
 
 #[embassy::task]
 pub async fn run_here() {
     loop {
-        tick().await;
+        Timer::after(Duration::from_secs(1)).await;
+        info!("{}", tick().await);
     }
 }
 
