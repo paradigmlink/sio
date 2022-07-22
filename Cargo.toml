@@ -3,7 +3,6 @@ members = [
     "vm",
     "frontend",
     "visa",
-    "common"
 ]
 exclude = ["target", "examples"]
 
