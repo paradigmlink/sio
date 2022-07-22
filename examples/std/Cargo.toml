@@ -1,0 +1,17 @@
+[package]
+name = "sio_std"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "sio_std"
+path = "src/main.rs"
+
+[dependencies]
+embassy = { version = "^0.1.0", features = ["log", "std", "time", "nightly"]}
+sio_vm = { version = "^0.1.0", path = "../../vm" }
+env_logger = "0.9.0"
+log = "0.4.14"
+
+[patch.crates-io]
+embassy = { git = "https://github.com/embassy-rs/embassy.git", rev = "0f4c0311feea48323ad60efa7bac3673d412cb60" }

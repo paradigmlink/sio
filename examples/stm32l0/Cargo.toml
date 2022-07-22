@@ -1,0 +1,36 @@
+[package]
+name = "sio_vm_stm32l0"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["nightly"]
+nightly = ["embassy-stm32/nightly", "embassy-lora", "lorawan-device", "lorawan", "embedded-io/async"]
+
+[dependencies]
+embassy = { version = "0.1.0", features = ["defmt", "defmt-timestamp-uptime", "time-tick-32768hz"] }
+embassy-stm32 = { version = "0.1.0", features = ["defmt", "stm32l072cz", "time-driver-any", "exti", "unstable-traits", "memory-x"]  }
+embassy-lora = { version = "0.1.0", features = ["sx127x", "time", "defmt"], optional = true}
+
+lorawan-device = { version = "0.7.1", default-features = false, features = ["async"], optional = true }
+lorawan = { version = "0.7.1", default-features = false, features = ["default-crypto"], optional = true }
+
+sio_vm = { version = "^0.1.0", path = "../../vm" }
+
+defmt = "0.3"
+defmt-rtt = "0.3"
+
+embedded-storage = "0.3.0"
+embedded-io = "0.3.0"
+
+cortex-m = "0.7.3"
+cortex-m-rt = "0.7.0"
+panic-probe = { version = "0.3", features = ["print-defmt"] }
+futures = { version = "0.3.17", default-features = false, features = ["async-await"] }
+heapless = { version = "0.7.5", default-features = false }
+embedded-hal = "0.2.6"
+
+[patch.crates-io]
+embassy = { git = "https://github.com/embassy-rs/embassy.git", rev = "0f4c0311feea48323ad60efa7bac3673d412cb60" }
+embassy-stm32 = { git = "https://github.com/embassy-rs/embassy.git", rev = "0f4c0311feea48323ad60efa7bac3673d412cb60" }
+embassy-lora = { git = "https://github.com/embassy-rs/embassy.git", rev = "0f4c0311feea48323ad60efa7bac3673d412cb60" }
