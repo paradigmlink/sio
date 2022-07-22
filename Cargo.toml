@@ -3,9 +3,13 @@ members = [
     "vm",
     "frontend",
     "visa",
-    "unikernel",
+    "common"
 ]
-exclude = ["target"]
+exclude = ["target", "examples"]
+
+[patch.crates-io]
+embassy = { git = "https://github.com/embassy-rs/embassy.git", rev = "0f4c0311feea48323ad60efa7bac3673d412cb60" }
+
 [profile.release]
 opt-level = 2
 debug = false

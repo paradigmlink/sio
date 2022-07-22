@@ -3,11 +3,11 @@ name = "sio_vm"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
+[lib]
 name = "sio_vm"
-path = "src/main.rs"
+path = "src/lib.rs"
 
 [dependencies]
-pest = "2.1.0"
-pest_derive = "2.1.0"
-ariadne = "0.1.5"
+embassy = { version = "^0.1.0", default-features = false}
+log = "0.4.14"
+
