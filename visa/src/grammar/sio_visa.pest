@@ -28,7 +28,7 @@ hot_process = {
 cold_process = {
     paren_open ~ "pro" ~ ident ~ paren_close
 }
-mfa = { who_inst ~ ident ~ "[" ~ ident* ~ "]" }
+mfa = { who_inst ~ ident ~ "[" ~ ident{0, 2} ~ "]" }
 who_inst = { public_key ~ module_path }
 public_key = { ASCII_ALPHANUMERIC {64} }
 module_path = { separator ~ "/" ~ module_namespace ~ ("/" ~ module_namespace){0, 5} }
