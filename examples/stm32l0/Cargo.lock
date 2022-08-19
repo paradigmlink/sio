@@ -1143,6 +1143,7 @@ name = "sio_vm"
 version = "0.1.0"
 dependencies = [
  "embassy",
+ "heapless",
  "log",
 ]
 

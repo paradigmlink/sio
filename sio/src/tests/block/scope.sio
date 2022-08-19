@@ -1,0 +1,7 @@
+let a: string = "outer"
+{
+  let a: string = "inner"
+  print(a) // expect: inner
+}
+print(a) // expect: outer
+

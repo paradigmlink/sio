@@ -9,5 +9,8 @@ path = "src/lib.rs"
 
 [dependencies]
 embassy = { version = "^0.1.0", default-features = false}
+heapless = "0.7"
 log = "0.4.14"
 
+[dev-dependencies]
+proc-macro2 = "1.0"

@@ -22,7 +22,7 @@ mod app::main {
         let display_id:   who = spawn(display, live::display)
         run(producer_id,  setup_produce,  [Who::Single(map_id)]
         run(map_id,       setup_map,      [Who::Single(producer_id), Who::Single(reduce_id)])
-        run(reduce_id,    setup_reduce,   [Who::Single(map_id),      Who::Single(reduce_id)])
+        run(reduce_id,    setup_reduce,   [Who::Single(map_id),      Who::Single(display_id)])
         run(display_id,   display,        [Who::Single(reduce_id)])
     }
 }
@@ -30,7 +30,7 @@ mod app::producer {
     use app::types { Number, Who }
     inner_produce :: (mapper: who) {
         reaction {
-            | produce [mapper] :: () -> [Number] {
+            | produce [mapper] -> [Number] {
                 produce lazy :: (i: u32) -> [Number] {
                     wait(10)
                     Number::U32(i) | produce(i + 1)
@@ -50,7 +50,8 @@ mod app::map {
     square<T> :: (x: T) -> T { x*x }
     inner_map :: (producer: who, reducer: who) {
         reaction {
-            | map [reducer] :: ( n: producer::produce<[Number]> ) -> [Number] {
+            | map [reducer] -> [Number] {
+                let n : [Number] = producer::produce<>
                 map lazy :: (n: [Number]) -> [Number] {
                     match n {
                         h|t => {
@@ -83,7 +84,8 @@ mod app::reduce {
     use app::types { Number, Who }
     inner_reduce :: (displayer: who, map: who) {
         reaction {
-            | reduce displayer :: ( n: map::map<[Number]> ) -> [Number] {
+            | reduce displayer -> [Number] {
+                let n: [Number] = map::map<>
                 reduce lazy :: (n: [Number], accumulator: u32) -> [Number] {
                     match n {
                         h|t => {

@@ -478,6 +478,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "s-expr"
+version = "0.1.0"
+source = "git+https://github.com/vincenthz/s-expr#d3a4195e8a918c5319f185c7f5544933d5180f27"
+dependencies = [
+ "unicode-xid",
+]
+
+[[package]]
 name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -519,7 +527,9 @@ name = "sio_vm"
 version = "0.1.0"
 dependencies = [
  "embassy",
+ "heapless",
  "log",
+ "s-expr",
 ]
 
 [[package]]
@@ -577,6 +587,12 @@ name = "unicode-ident"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "15c61ba63f9235225a22310255a29b806b907c9b8c964bcbd0a2c70f3f2deea7"
+
+[[package]]
+name = "unicode-xid"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "957e51f3646910546462e67d5f7599b9e4fb8acdd304b087a6494730f9eebf04"
 
 [[package]]
 name = "vcell"

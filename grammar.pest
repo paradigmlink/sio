@@ -1,0 +1,58 @@
+main = _{ SOI ~ decl+ ~ EOI }
+
+decl          = { scope | resource | module | expr }
+scope         = { brace_open ~ expr+ ~ brace_close }
+resource      = { ident ~ colon ~ (public_key | module_path | string) }
+module        = { "mod" ~ module_path ~ brace_open ~ expr+ ~ brace_close }
+
+expr          = { skip | conditional | logical | bitwise | relational | arithmetical | spawn_thread | spawn_process | run_process | function_call | literal | resource }
+skip          = { "skip" }
+conditional   = { "if" ~ expr ~ brace_open ~ expr+ ~ brace_close ~ "else" ~ brace_open ~ expr+ ~ brace_close }
+logical       = { paren_open ~ expr ~ ("&&" | "||") ~ expr ~ paren_close | paren_open ~ expr ~ "!" ~ expr ~ paren_close}
+bitwise       = { paren_open ~ expr ~ ("&" | "|" | "<<" | ">>") ~ expr  ~ paren_close | paren_open ~ "~" ~ expr ~ paren_close}
+relational    = { paren_open ~ expr ~ ("==" | "!=" | "<=" | ">=" | "<" | ">" | "=~" | "!~") ~ expr ~ paren_close}
+arithmetical  = { paren_open ~ expr ~ ("+" | "-" | "*" | "/" | "%" | "**") ~ expr ~ paren_close}
+function_call = { ident ~ paren_open ~ expr ~ expr* ~ paren_close }
+spawn_thread  = { "thread" ~ brace_open ~ expr+ ~ brace_close }
+spawn_process = { "spawn" ~ paren_open ~ ident ~ paren_close }
+run_process   = { "run" ~ paren_open ~ ident ~ paren_close }
+literal       = { ident | string | number | value }
+value         = { "true" | "false" }
+/*
+anon_eager_fn = { }
+anon_lazy_fn  = { }
+pub_eager_fn  = { }
+pub_lazy_fn   = { }
+prv_eager_fn  = { }
+prv_lazy_fn   = { }
+*/
+function      = { procedure_header ~ brace_open ~ procedure_body ~ brace_close ~ procedure_in? ~ procedure_where? }
+procedure_header = { paren_open ~ procedure_parameters? ~ paren_close ~ procedure_return_type? }
+function_with_args = { }
+
+
+stability = @{ summon | sketch | stable | sunset | seeyou }
+summon = { "summon" }
+sketch = { "sketch" }
+stable = { "stable" }
+sunset = { "sunset" }
+seeyou = { "seeyou" }
+public_key    = { "s" ~ ASCII_DIGIT {3} ~ ASCII_ALPHANUMERIC {64} }
+module_path   = { ident ~ (separator ~ ident)* }
+separator     = @{ "::" }
+colon         = @{ ":" }
+ident         = @{ ASCII_ALPHA_LOWER ~ ( ASCII_ALPHA_LOWER | ASCII_DIGIT | wildcard)* }
+number        = { decimal | integer }
+integer       = @{ wildcard? ~ ASCII_DIGIT+ }
+decimal       = @{ wildcard? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* }
+string        = @{ "\"" ~ ( "\"\"" | (!"\"" ~ ANY) )* ~ "\"" }
+wildcard      = { "_" }
+paren_open    = { "(" }
+paren_close   = { ")" }
+brace_open    = { "{" }
+brace_close   = { "}" }
+bracket_open  = { "[" }
+bracket_close = { "]" }
+WHITESPACE    = _{ " " | "\t" | NEWLINE }
+COMMENT       = _{ ("/*" ~ (!"*/" ~ ANY)* ~ "*/" | "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE)}
+
