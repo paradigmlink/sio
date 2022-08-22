@@ -1,3 +1,4 @@
-target
-*.lock
+target/
+Cargo.lock
+flake.lock
 pkg

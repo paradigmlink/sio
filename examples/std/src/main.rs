@@ -1,27 +1,25 @@
-#![no_std]
 #![feature(type_alias_impl_trait)]
 
-use embassy::executor::Spawner;
-use embassy::time::{Duration, Timer};
-use sio_vm::{tick, prog2_tokenize};
+use embassy_executor::Spawner;
+use embassy_time::{Duration, Timer};
 use log::*;
+use sio_vm::{tick};
 
 
-#[embassy::task]
-pub async fn run_here() {
-    prog2_tokenize().await;
+#[embassy_executor::task]
+pub async fn run() {
     loop {
-        Timer::after(Duration::from_secs(1)).await;
         info!("{}", tick().await);
+        Timer::after(Duration::from_secs(1)).await;
     }
 }
 
-#[embassy::main]
+#[embassy_executor::main]
 async fn main(spawner: Spawner) {
     env_logger::builder()
         .filter_level(log::LevelFilter::Debug)
         .format_timestamp_nanos()
         .init();
 
-    spawner.spawn(run_here()).unwrap();
+    spawner.spawn(run()).unwrap();
 }

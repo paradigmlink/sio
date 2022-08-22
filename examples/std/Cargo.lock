@@ -17,7 +17,16 @@ version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e14bf7b4f565e5e717d7a7a65b2a05c0b8c96e4db636d6f780f03b15108cdd1b"
 dependencies = [
- "critical-section",
+ "critical-section 0.2.7",
+]
+
+[[package]]
+name = "atomic-polyfill"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d299f547288d6db8d5c3a2916f7b2f66134b15b8c1ac1c4357dd3b8752af7bb2"
+dependencies = [
+ "critical-section 1.1.0",
 ]
 
 [[package]]
@@ -101,6 +110,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "critical-section"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d02ba51481d019be9c74a831d1133c364d78831b75c833478f3a21e1fd91e01a"
+
+[[package]]
 name = "darling"
 version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -136,32 +151,43 @@ dependencies = [
 ]
 
 [[package]]
-name = "embassy"
+name = "embassy-executor"
 version = "0.1.0"
-source = "git+https://github.com/embassy-rs/embassy.git?rev=0f4c0311feea48323ad60efa7bac3673d412cb60#0f4c0311feea48323ad60efa7bac3673d412cb60"
+source = "git+https://github.com/embassy-rs/embassy.git?rev=1b9599025868d3a5d0d8e773593b05df8b2fecf2#1b9599025868d3a5d0d8e773593b05df8b2fecf2"
 dependencies = [
- "atomic-polyfill",
+ "atomic-polyfill 1.0.1",
  "cfg-if",
- "cortex-m",
- "critical-section",
+ "critical-section 1.1.0",
  "embassy-macros",
- "embedded-hal 0.2.7",
- "embedded-hal-async",
- "futures",
- "heapless",
+ "embassy-time",
+ "futures-util",
  "log",
- "pin-project",
 ]
 
 [[package]]
 name = "embassy-macros"
 version = "0.1.0"
-source = "git+https://github.com/embassy-rs/embassy.git?rev=0f4c0311feea48323ad60efa7bac3673d412cb60#0f4c0311feea48323ad60efa7bac3673d412cb60"
+source = "git+https://github.com/embassy-rs/embassy.git?rev=1b9599025868d3a5d0d8e773593b05df8b2fecf2#1b9599025868d3a5d0d8e773593b05df8b2fecf2"
 dependencies = [
  "darling",
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "embassy-time"
+version = "0.1.0"
+source = "git+https://github.com/embassy-rs/embassy.git?rev=1b9599025868d3a5d0d8e773593b05df8b2fecf2#1b9599025868d3a5d0d8e773593b05df8b2fecf2"
+dependencies = [
+ "atomic-polyfill 1.0.1",
+ "cfg-if",
+ "critical-section 1.1.0",
+ "embassy-macros",
+ "embedded-hal 0.2.7",
+ "embedded-hal-async",
+ "futures-util",
+ "log",
 ]
 
 [[package]]
@@ -212,46 +238,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
-name = "futures"
-version = "0.3.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f73fe65f54d1e12b726f517d3e2135ca3125a437b6d998caf1962961f7172d9e"
-dependencies = [
- "futures-channel",
- "futures-core",
- "futures-io",
- "futures-sink",
- "futures-task",
- "futures-util",
-]
-
-[[package]]
-name = "futures-channel"
-version = "0.3.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3083ce4b914124575708913bca19bfe887522d6e2e6d0952943f5eac4a74010"
-dependencies = [
- "futures-core",
- "futures-sink",
-]
-
-[[package]]
 name = "futures-core"
 version = "0.3.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c09fd04b7e4073ac7156a9539b57a484a8ea920f79c7c675d05d289ab6110d3"
-
-[[package]]
-name = "futures-io"
-version = "0.3.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc4045962a5a5e935ee2fdedaa4e08284547402885ab326734432bed5d12966b"
-
-[[package]]
-name = "futures-sink"
-version = "0.3.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21163e139fa306126e6eedaf49ecdb4588f939600f0b1e770f4205ee4b7fa868"
 
 [[package]]
 name = "futures-task"
@@ -265,15 +255,10 @@ version = "0.3.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8b7abd5d659d9b90c8cba917f6ec750a74e2dc23902ef9cd4cc8c8b22e6036a"
 dependencies = [
- "futures-channel",
  "futures-core",
- "futures-io",
- "futures-sink",
  "futures-task",
- "memchr",
  "pin-project-lite",
  "pin-utils",
- "slab",
 ]
 
 [[package]]
@@ -291,7 +276,7 @@ version = "0.7.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f6733da246dc2af610133c8be0667170fd68e8ca5630936b520300eee8846f9"
 dependencies = [
- "atomic-polyfill",
+ "atomic-polyfill 0.1.8",
  "hash32",
  "rustc_version 0.4.0",
  "spin",
@@ -370,26 +355,6 @@ name = "nb"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "546c37ac5d9e56f55e73b677106873d9d9f5190605e41a856503623648488cae"
-
-[[package]]
-name = "pin-project"
-version = "1.0.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78203e83c48cffbe01e4a2d35d566ca4de445d79a85372fc64e378bfc812a260"
-dependencies = [
- "pin-project-internal",
-]
-
-[[package]]
-name = "pin-project-internal"
-version = "1.0.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "710faf75e1b33345361201d36d04e98ac1ed8909151a017ed384700836104c74"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
 
 [[package]]
 name = "pin-project-lite"
@@ -478,14 +443,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "s-expr"
-version = "0.1.0"
-source = "git+https://github.com/vincenthz/s-expr#d3a4195e8a918c5319f185c7f5544933d5180f27"
-dependencies = [
- "unicode-xid",
-]
-
-[[package]]
 name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -516,7 +473,9 @@ checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 name = "sio_std"
 version = "0.1.0"
 dependencies = [
- "embassy",
+ "critical-section 1.1.0",
+ "embassy-executor",
+ "embassy-time",
  "env_logger",
  "log",
  "sio_vm",
@@ -526,19 +485,8 @@ dependencies = [
 name = "sio_vm"
 version = "0.1.0"
 dependencies = [
- "embassy",
  "heapless",
  "log",
- "s-expr",
-]
-
-[[package]]
-name = "slab"
-version = "0.4.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4614a76b2a8be0058caa9dbbaf66d988527d86d003c11a94fbd335d7661edcef"
-dependencies = [
- "autocfg",
 ]
 
 [[package]]
@@ -587,12 +535,6 @@ name = "unicode-ident"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "15c61ba63f9235225a22310255a29b806b907c9b8c964bcbd0a2c70f3f2deea7"
-
-[[package]]
-name = "unicode-xid"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "957e51f3646910546462e67d5f7599b9e4fb8acdd304b087a6494730f9eebf04"
 
 [[package]]
 name = "vcell"
