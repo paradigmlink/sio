@@ -8,7 +8,6 @@ name = "sio_vm"
 path = "src/lib.rs"
 
 [dependencies]
-embassy = { version = "^0.1.0", default-features = false}
 heapless = "0.7"
 log = "0.4.14"
 

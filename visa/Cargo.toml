@@ -1,9 +1,0 @@
-[package]
-name = "sio_visa"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-pest = "2.1.0"
-pest_derive = "2.1.0"
-serde = { version = "1.0.0", features = ["derive"] }

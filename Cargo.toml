@@ -1,7 +1,6 @@
 [workspace]
 members = [
     "vm",
-    #"visa",
     "common",
     "sio"
 ]
