@@ -3,20 +3,20 @@
 #![feature(type_alias_impl_trait)]
 
 use defmt::*;
-use embassy::executor::Spawner;
-use embassy::time::{Duration, Timer};
-use embassy_rp::{gpio, Peripherals};
+use embassy_executor::Spawner;
+use embassy_rp::gpio;
+use embassy_time::{Duration, Timer};
 use gpio::{Level, Output};
 use {defmt_rtt as _, panic_probe as _};
 use sio_vm::{tick};
 
-#[embassy::main]
-async fn main(_spawner: Spawner, p: Peripherals) {
+#[embassy_executor::main]
+async fn main(_spawner: Spawner) {
+    let p = embassy_rp::init(Default::default());
     let mut led = Output::new(p.PIN_25, Level::Low);
 
     loop {
         info!("{}", tick().await);
-
         info!("led on!");
         led.set_high();
         Timer::after(Duration::from_secs(1)).await;

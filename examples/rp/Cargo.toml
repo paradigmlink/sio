@@ -1,19 +1,21 @@
 [package]
 edition = "2021"
-name = "embassy-rp-examples"
+name = "sio_vm_rp"
 version = "0.1.0"
 
 
 [dependencies]
-embassy = { version = "0.1.0", features = ["defmt", "defmt-timestamp-uptime"] }
-embassy-rp = { version = "0.1.0", features = ["defmt", "unstable-traits", "nightly", "unstable-pac"] }
+embassy-executor = { version = "0.1.0", features = ["defmt", "integrated-timers"] }
+embassy-time     = { version = "0.1.0", features = ["defmt", "defmt-timestamp-uptime"] }
+embassy-rp       = { version = "0.1.0", features = ["defmt", "unstable-traits", "nightly", "unstable-pac"] }
 sio_vm = { version = "^0.1.0", path = "../../vm" }
 atomic-polyfill = "0.1.5"
+
 
 defmt = "0.3"
 defmt-rtt = "0.3"
 
-cortex-m = "0.7.3"
+cortex-m = { version = "0.7.6", features = ["critical-section-single-core"] }
 cortex-m-rt = "0.7.0"
 panic-probe = { version = "0.3", features = ["print-defmt"] }
 futures = { version = "0.3.17", default-features = false, features = ["async-await", "cfg-target-has-atomic", "unstable"] }
@@ -27,5 +29,6 @@ embedded-hal-1 = { package = "embedded-hal", version = "1.0.0-alpha.8" }
 embedded-hal-async = { version = "0.1.0-alpha.1" }
 
 [patch.crates-io]
-embassy = { git = "https://github.com/embassy-rs/embassy.git", rev = "0f4c0311feea48323ad60efa7bac3673d412cb60" }
-embassy-rp = { git = "https://github.com/embassy-rs/embassy.git", rev = "0f4c0311feea48323ad60efa7bac3673d412cb60" }
+embassy-executor = { git = "https://github.com/embassy-rs/embassy.git", rev = "1b9599025868d3a5d0d8e773593b05df8b2fecf2" }
+embassy-time     = { git = "https://github.com/embassy-rs/embassy.git", rev = "1b9599025868d3a5d0d8e773593b05df8b2fecf2" }
+embassy-rp       = { git = "https://github.com/embassy-rs/embassy.git", rev = "1b9599025868d3a5d0d8e773593b05df8b2fecf2" }
