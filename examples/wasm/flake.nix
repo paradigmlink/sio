@@ -7,7 +7,7 @@
     in {
       devShell.x86_64-linux =
         pkgs.mkShell {
-            buildInputs = with pkgs; [ gitui ripgrep ];
+            buildInputs = with pkgs; [ simple-http-server gitui pkg-config openssl];
         };
    };
 }

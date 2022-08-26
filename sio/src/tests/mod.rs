@@ -75,11 +75,12 @@ mod block {
     fn empty() {
         harness(include_str!("block/empty.sio"));
     }
-
+/*
     #[test]
     fn scope() {
         harness(include_str!("block/scope.sio"));
     }
+*/
 }
 mod r#if {
     use super::harness;
@@ -107,7 +108,7 @@ mod module {
         harness(include_str!("module/module.sio"));
     }
 }
-
+/*
 mod function {
     use super::harness;
 
@@ -141,3 +142,4 @@ mod function {
         harness(include_str!("function/public_lazy_no_return_no_args.sio"));
     }
 }
+*/

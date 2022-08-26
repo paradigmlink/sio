@@ -1,7 +1,9 @@
 [workspace]
 members = [
-    "vm",
-    "common",
+    "sio-syntax",
+    "sio-portablecode",
+    "sio-compiler",
+    "sio-vm",
     "sio"
 ]
 exclude = ["target", "examples"]

@@ -16,5 +16,5 @@ fn main() {
 
     let path = args.first().unwrap();
     let data = std::fs::read_to_string(path).unwrap();
-
+    let module = sio_compiler::compile();
 }

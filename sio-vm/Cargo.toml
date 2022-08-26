@@ -1,15 +1,10 @@
 [package]
-name = "sio_vm"
+name = "sio-vm"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-name = "sio_vm"
-path = "src/lib.rs"
-
 [dependencies]
-heapless = "0.7"
-log = "0.4.14"
+sio-portablecode = { path = "../sio-portablecode" }
 
 [dev-dependencies]
 proc-macro2 = "1.0"

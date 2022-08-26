@@ -25,10 +25,11 @@ pub_eager_fn  = { }
 pub_lazy_fn   = { }
 prv_eager_fn  = { }
 prv_lazy_fn   = { }
-*/
+
 function      = { procedure_header ~ brace_open ~ procedure_body ~ brace_close ~ procedure_in? ~ procedure_where? }
 procedure_header = { paren_open ~ procedure_parameters? ~ paren_close ~ procedure_return_type? }
 function_with_args = { }
+*/
 
 
 stability = @{ summon | sketch | stable | sunset | seeyou }

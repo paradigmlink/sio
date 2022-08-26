@@ -1,20 +1,20 @@
 [package]
-name = "sio_std"
+name = "sio_vm_std"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "sio_std"
+name = "sio_vm_std"
 path = "src/main.rs"
 
 [dependencies]
 embassy-executor = { version = "0.1.0", features = ["log", "std", "nightly", "integrated-timers"] }
 embassy-time     = { version = "0.1.0", features = ["log", "std", "nightly"] }
 critical-section = { version = "1.1", features = ["std"] }
-sio_vm = { version = "^0.1.0", path = "../../vm" }
+sio-vm = { version = "^0.1.0", path = "../../sio-vm" }
 env_logger = "0.9.0"
 log = "0.4.14"
 
 [patch.crates-io]
-embassy-executor = { git = "https://github.com/embassy-rs/embassy.git", rev = "1b9599025868d3a5d0d8e773593b05df8b2fecf2" }
-embassy-time     = { git = "https://github.com/embassy-rs/embassy.git", rev = "1b9599025868d3a5d0d8e773593b05df8b2fecf2" }
+embassy-executor = { git = "https://github.com/embassy-rs/embassy.git", rev = "529535194d4b5d58b31fd6a7541176105e3c63f7" }
+embassy-time     = { git = "https://github.com/embassy-rs/embassy.git", rev = "529535194d4b5d58b31fd6a7541176105e3c63f7" }
