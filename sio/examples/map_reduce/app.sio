@@ -1,0 +1,29 @@
+
+prod_public_key    : sio79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abc
+producer_name      : "integer_producer"
+prod               : prod_public_key::producer_name
+
+map_public_key     : sio80f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03def
+map_name           : "integer_mapper"
+mapper             : map_public_key::map_name
+
+reducer_public_key : sio81f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03cb1
+reducer_name       : "integer_reducer"
+reducer            : reducer_public_key::reducer_name
+
+display_public_key : sio82f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03d32
+display_name       : "integer_displayer"
+displayer          : displayer_public_key::displayer_name
+
+main_public_key    : sio84f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03d31
+main_name          : "map reduce church rosser non-deterministic"
+main_entry         : main_public_key::main_name
+
+common_types       : main_public_key::"common_types"
+
+app main_entry::app {
+    description: "map reduce church rosser non-deterministic with application module"
+    modules: [main_entry, prod, mapper, reducer, displayer, common_types]
+    start: main_entry::main::start
+    stop : main_entry::main::stop
+}

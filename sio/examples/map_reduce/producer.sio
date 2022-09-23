@@ -1,0 +1,26 @@
+prod_public_key : sio79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abc
+producer_name   : "integer_producer"
+prod            : prod_public_key::producer_name
+
+main_public_key : sio84f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03d31
+common_types    : main_public_key::"common_types"
+
+mod prod::producer {
+    use common_types { Number, Who }
+    inner_produce :: (mapper: who) {
+        portcullis {
+            | produce [mapper] -> [Number] {
+                produce lazy :: (i: u32) -> [Number] {
+                    wait(10)
+                    Number::U32(i) | produce(i + 1)
+                }
+                produce(0u32)
+            }
+        }
+    }
+    summon setup_produce :: (map: Who) {
+        match map {
+            | Single(map) => { inner_produce(map) }
+        }
+    }
+}

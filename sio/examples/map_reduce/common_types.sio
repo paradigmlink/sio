@@ -1,0 +1,7 @@
+main_public_key    : sio84f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03d31
+common_types       : main_public_key::"common_types"
+
+mod common_types::types {
+    summon data Number   | U32(u32)
+    summon data Who      | Single(who) | List([who])
+}

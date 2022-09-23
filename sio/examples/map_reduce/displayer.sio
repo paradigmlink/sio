@@ -1,0 +1,26 @@
+display_public_key : sio82f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03d32
+display_name       : "integer_displayer"
+displayer          : displayer_public_key::displayer_name
+
+main_public_key : sio84f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03d31
+common_types    : main_public_key::"common_types"
+
+mod displayer::display {
+    use common_types { Number, Who }
+    inner_display lazy :: (s: [Number]) {
+        match s {
+            h|t => {
+                println("{}", h)
+                inner_display(t)
+            }
+        }
+
+    }
+    summon display :: ( reducer: Who ) {
+        match reducer {
+            Single(r) => {
+                inner_display(r::reduce<[Number]>)
+            }
+        }
+    }
+}

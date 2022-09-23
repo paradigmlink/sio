@@ -1,0 +1,39 @@
+reducer_public_key : sio81f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03cb1
+reducer_name       : "integer_reducer"
+reducer            : reducer_public_key::reducer_name
+
+main_public_key : sio84f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03d31
+common_types    : main_public_key::"common_types"
+
+mod reducer::reduce {
+    use common_types { Number, Who }
+    inner_reduce :: (displayer: who, map: who) {
+        portcullis {
+            | reduce displayer -> [Number] {
+                let n: [Number] = map::map<>
+                reduce lazy :: (n: [Number], accumulator: u32) -> [Number] {
+                    match n {
+                        h|t => {
+                            match h {
+                                U32(i) => {
+                                    Number::U32(h+accumulator) | reduce(t, h+accumulator)
+                                }
+                                [] => { [] }
+                            }
+                        }
+                    }
+                }
+                reduce(n, 0u32)
+            }
+        }
+    }
+    summon setup_reduce :: (map: Who, displayer: Who) {
+        match map {
+            | Single(map) => {
+                match displayer {
+                    | Single(displayer) => { inner_reduce(displayer, map) }
+                }
+            }
+        }
+    }
+}
