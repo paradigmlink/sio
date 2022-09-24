@@ -18,8 +18,14 @@ main_public_key    : sio84f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1
 main_name          : "map reduce church rosser non-deterministic"
 main_entry         : main_public_key::main_name
 
-mod main_entry::main {
-    use prod::producer
+trait main_entry::application {
+    start :: ()
+    stop :: ()
+}
+
+mod main_entry::main for main_entry::application {
+    use {
+        prod::producer
         mapper::map
         reducer::reduce
         displayer::display
