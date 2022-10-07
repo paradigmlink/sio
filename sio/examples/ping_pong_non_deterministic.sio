@@ -1,0 +1,97 @@
+public_key : sio79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd
+type       : "src"
+name       : "ping_supervisor"
+app        : public_key::type::name
+
+trait app::Supervisor {
+    summon init :: (app::Child)
+    summon add_child :: (who) {
+        //
+    }
+    summon terminate_child :: (who) {
+        //
+    }
+    summon which_child :: (who) {
+        //
+    }
+    summon start_child :: (who) {
+        //
+    }
+    summon restart_child :: (who) {
+        //
+    }
+}
+mod app::PingSupervisor { }
+impl app::Supervisor for app::PingSupervisor {
+    init :: (c: [app::Child]) {
+
+        // start list of children
+        let list_of_ids: [who] = map(start_child, c)
+        map(run(), list_of_ids)
+        //let ping_child_id:      who = spawn(live::ping_child)
+        //let display_child_id:   who = spawn(live::display_child)
+
+        //run(ping_child_id,      PingChild::setup,      [])
+        //run(display_child_id,   DisplayChild::display, [])
+    }
+}
+
+
+trait app::Child {
+    summon start :: ()
+    summon stop :: ()
+    summon restart :: ()
+}
+impl app::Child for app::PingChild {}
+mod app::PingChild {
+    use app::Types { Number, Who }
+    ping:: (displayer: who) {
+        portcullis {
+            | produce [displayer] -> [string] {
+                produce_ping lazy :: () -> [string] {
+                    wait(10)
+                    "ping" | produce_ping()
+                }
+                produce_ping()
+            }
+        }
+    }
+    summon start :: () {
+        // implement start
+    }
+    summon stop :: () {
+        // implement stop
+    }
+    summon restart :: () {
+        // implement restart
+    }
+}
+
+mod app::Main {
+    use app {
+        PingSupervisor
+        PingChild
+        Display
+    }
+    summon start :: () {
+        let ping_supervisor_id: who = spawn(live::ping_supervisor)
+        run(ping_supervisor_id, PingSupervisor::init,  [[PingChild, DisplayChild]])
+    }
+}
+mod app::Display {
+    inner_display lazy :: (s: [string]) {
+        match s {
+            h|t => {
+                println("{}", h)
+                inner_display(t)
+            }
+        }
+    }
+    summon display :: ( pinger: Who ) {
+        match pinger {
+            Single(p) => {
+                inner_display(p::ping<[string]>)
+            }
+        }
+    }
+}
