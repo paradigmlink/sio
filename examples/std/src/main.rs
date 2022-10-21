@@ -3,13 +3,13 @@
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
 use log::*;
-use sio_vm::{tick};
+use sio_vm::{execute};
 
 
 #[embassy_executor::task]
 pub async fn run() {
     loop {
-        info!("{}", tick().await);
+        info!("{}", execute().await);
         Timer::after(Duration::from_secs(1)).await;
     }
 }

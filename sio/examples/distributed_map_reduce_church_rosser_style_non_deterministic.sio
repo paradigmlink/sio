@@ -3,33 +3,33 @@ type       : "src"
 name       : "distributed_map_reduce_church_rosser_style"
 app        : public_key::type::name
 
-mod app::types {
+mod app::Types {
     summon data Number   | U32(u32)
     summon data Who      | Single(who) | List([who])
 }
-mod app::main {
+mod app::Main {
     use app {
-        producer
-        map
-        reduce
-        display
-        types {Who}
+        Producer
+        Map
+        Reduce
+        Display
+        Types {Who}
     }
     summon start :: () {
-        let producer_id1: who = spawn(producer, live::producer)
-        let producer_id2: who = spawn(producer, live::producer)
-        let map_id:       who = spawn(map, live::map)
-        let reduce_id:    who = spawn(reduce, live::reduce)
-        let display_id:   who = spawn(display, live::display)
-        run(producer_id1, setup_produce,  [Who::Single(map_id)])
-        run(producer_id2, setup_produce,  [Who::Single(map_id)])
-        run(map_id,       setup_map,      [Who::List([producer_id1, producer_id2]), Who::Single(reduce_id)])
-        run(reduce_id,    setup_reduce,   [Who::Single(map_id),      Who::Single(display_id)])
-        run(display_id,   display,        [Who::Single(reduce_id)])
+        let producer_id1: who = spawn(live::producer1)
+        let producer_id2: who = spawn(live::producer2)
+        let map_id:       who = spawn(live::map)
+        let reduce_id:    who = spawn(live::reduce)
+        let display_id:   who = spawn(live::display)
+        run(producer_id1, Producer::setup_produce, [Who::Single(map_id)])
+        run(producer_id2, Producer::setup_produce, [Who::Single(map_id)])
+        run(map_id,       Map::setup_map,          [Who::List([producer_id1, producer_id2]), Who::Single(reduce_id)])
+        run(reduce_id,    Reduce::setup_reduce,    [Who::Single(map_id), Who::Single(display_id)])
+        run(display_id,   Display::display,        [Who::Single(reduce_id)])
     }
 }
-mod app::producer {
-    use app::types { Number, Who }
+mod app::Producer {
+    use app::Types { Number, Who }
     inner_produce :: (mapper: who) {
         portcullis {
             | produce [mapper] -> [Number] {
@@ -47,8 +47,8 @@ mod app::producer {
         }
     }
 }
-mod app::map {
-    use app::types { Number, Who }
+mod app::Map {
+    use app::Types { Number, Who }
     square<T> :: (x: T) -> T { x*x }
     inner_map :: (reducer: who, n: [[Number]]) {
         portcullis {
@@ -92,8 +92,8 @@ mod app::map {
         }
     }
 }
-mod app::reduce {
-    use app::types { Number, Who }
+mod app::Reduce {
+    use app::Types { Number, Who }
     inner_reduce :: (displayer: who, map: who) {
         portcullis {
             | reduce displayer -> [Number] {
@@ -124,7 +124,8 @@ mod app::reduce {
         }
     }
 }
-mod app::display {
+mod app::Display {
+    use app::Types { Number, Who }
     inner_display lazy :: (s: [Number]) {
         match s {
             h|t => {

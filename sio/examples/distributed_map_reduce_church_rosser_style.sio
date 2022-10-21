@@ -71,7 +71,7 @@ mod app::map {
     summon setup_map :: (producer: Who, reducer: Who) {
         match producer {
             | List(producer) => {
-                match reducer {
+                match [reducer] {
                     | Single(reducer) => {
                         inner_map(producer, reducer)
                     }

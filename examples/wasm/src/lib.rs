@@ -3,7 +3,7 @@
 
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
-use sio_vm::{tick};
+use sio_vm::{execute};
 
 #[embassy_executor::task]
 async fn ticker() {
@@ -11,7 +11,7 @@ async fn ticker() {
 
     let mut counter = 0;
     loop {
-        let tick = tick().await;
+        let tick = execute().await;
         let document = window.document().expect("should have a document on window");
         let list = document.get_element_by_id("log").expect("should have a log element");
 
