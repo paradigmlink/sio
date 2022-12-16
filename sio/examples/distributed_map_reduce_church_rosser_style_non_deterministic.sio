@@ -4,8 +4,12 @@ name       : "distributed_map_reduce_church_rosser_style"
 app        : public_key::type::name
 
 mod app::Types {
-    summon data Number   | U32(u32)
-    summon data Who      | Single(who) | List([who])
+    summon data Number
+        | U32(u32) where U32.0 > 10 && U32.0 < 20
+        | U64(u64) where U64.0 > 5
+    summon data Who
+        | Single(who)
+        | List([who])
 }
 mod app::Main {
     use app {
