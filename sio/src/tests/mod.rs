@@ -108,6 +108,15 @@ mod module {
         harness(include_str!("module/module.sio"));
     }
 }
+
+mod portcullis {
+    use super::harness;
+
+    #[test]
+    fn module() {
+        harness(include_str!("portcullis/portcullis.sio"));
+    }
+}
 /*
 mod function {
     use super::harness;

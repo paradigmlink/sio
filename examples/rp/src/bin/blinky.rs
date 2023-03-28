@@ -8,7 +8,7 @@ use embassy_rp::gpio;
 use embassy_time::{Duration, Timer};
 use gpio::{Level, Output};
 use {defmt_rtt as _, panic_probe as _};
-use sio_vm::{tick};
+use sio_vm::{execute};
 
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
@@ -16,7 +16,7 @@ async fn main(_spawner: Spawner) {
     let mut led = Output::new(p.PIN_25, Level::Low);
 
     loop {
-        info!("{}", tick().await);
+        info!("{}", execute().await);
         info!("led on!");
         led.set_high();
         Timer::after(Duration::from_secs(1)).await;

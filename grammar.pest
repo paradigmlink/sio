@@ -5,15 +5,16 @@ scope         = { brace_open ~ expr+ ~ brace_close }
 resource      = { ident ~ colon ~ (public_key | module_path | string) }
 module        = { "mod" ~ module_path ~ brace_open ~ expr+ ~ brace_close }
 
-expr          = { skip | conditional | logical | bitwise | relational | arithmetical | spawn_thread | spawn_process | run_process | function_call | literal | resource }
+expr          = { skip | conditional | logical | bitwise | relational | arithmetical | spawn_thread | spawn_process | run_process | function_call | portcullis | literal | resource }
 skip          = { "skip" }
 conditional   = { "if" ~ expr ~ brace_open ~ expr+ ~ brace_close ~ "else" ~ brace_open ~ expr+ ~ brace_close }
 logical       = { paren_open ~ expr ~ ("&&" | "||") ~ expr ~ paren_close | paren_open ~ expr ~ "!" ~ expr ~ paren_close}
 bitwise       = { paren_open ~ expr ~ ("&" | "|" | "<<" | ">>") ~ expr  ~ paren_close | paren_open ~ "~" ~ expr ~ paren_close}
 relational    = { paren_open ~ expr ~ ("==" | "!=" | "<=" | ">=" | "<" | ">" | "=~" | "!~") ~ expr ~ paren_close}
 arithmetical  = { paren_open ~ expr ~ ("+" | "-" | "*" | "/" | "%" | "**") ~ expr ~ paren_close}
-function_call = { ident ~ paren_open ~ expr ~ expr* ~ paren_close }
+function_call = { ident ~ paren_open ~ expr ~ expr+ ~ paren_close }
 spawn_thread  = { "thread" ~ brace_open ~ expr+ ~ brace_close }
+portcullis    = { "portcullis" ~ brace_open ~ expr+ ~ brace_close }
 spawn_process = { "spawn" ~ paren_open ~ ident ~ paren_close }
 run_process   = { "run" ~ paren_open ~ ident ~ paren_close }
 literal       = { ident | string | number | value }
@@ -54,6 +55,7 @@ brace_open    = { "{" }
 brace_close   = { "}" }
 bracket_open  = { "[" }
 bracket_close = { "]" }
+pipe          = { "|" }
 WHITESPACE    = _{ " " | "\t" | NEWLINE }
 COMMENT       = _{ ("/*" ~ (!"*/" ~ ANY)* ~ "*/" | "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE)}
 

@@ -1,0 +1,149 @@
+public_key : sio79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd
+type       : "src"
+name       : "distributed_map_reduce_church_rosser_style"
+app        : public_key::type::name
+
+mod app::Types {
+    summon data Number
+        | U32(u32) where U32.0 > 10 && U32.0 < 20
+        | U64(u64) where U64.0 > 5
+    summon data Who
+        | Single(who)
+        | List([who])
+}
+mod app::Main {
+    use app {
+        Producer
+        Map
+        Reduce
+        Display
+        Types {Who}
+    }
+    summon start :: () {
+        let producer_id1: who = spawn(live::producer1)
+        let producer_id2: who = spawn(live::producer2)
+        let map_id:       who = spawn(live::map)
+        let reduce_id:    who = spawn(live::reduce)
+        let display_id:   who = spawn(live::display)
+        run(producer_id1, Producer::setup_produce, [Who::Single(map_id)])
+        run(producer_id2, Producer::setup_produce, [Who::Single(map_id)])
+        run(map_id,       Map::setup_map,          [Who::List([producer_id1, producer_id2]), Who::Single(reduce_id)])
+        run(reduce_id,    Reduce::setup_reduce,    [Who::Single(map_id), Who::Single(display_id)])
+        run(display_id,   Display::display,        [Who::Single(reduce_id)])
+    }
+}
+mod app::Producer {
+    use app::Types { Number, Who }
+    inner_produce :: (mapper: who) {
+        portcullis {
+            | produce [mapper] -> [Number] {
+                produce lazy :: (i: u32) -> [Number] {
+                    wait(10)
+                    Number::U32(i) | produce(i + 1)
+                }
+                produce(0u32)
+            }
+        }
+    }
+    summon setup_produce :: (map: Who) {
+        match map {
+            | Single(map) => { inner_produce(map) }
+        }
+    }
+}
+mod app::Map {
+    use app::Types { Number, Who }
+    square<T> :: (x: T) -> T { x*x }
+    inner_map :: (reducer: who, n: [[Number]]) {
+        portcullis {
+            | map [reducer] -> [Number] {
+                map lazy :: (n: [[Number]]) -> [Number] {
+                    // as this function is lazy, execution will pause
+                    // at this point and only continue when there
+                    // is a request for the output of this function.
+                    let n: [[Number]] = choose(n)
+                    match n {
+                        chosen|not_chosen => {
+                            match chosen {
+                                chosen_head|chosen_tail => {
+                                    match chosen_head {
+                                        Number::U32(i) => {
+                                            Number::U32(square(i)) | map([chosen_tail not_chosen])
+                                        }
+                                    }
+                                }
+                                [] => { [] }
+                            }
+                        }
+                        [] => { [] }
+                    }
+                }
+                map(n)
+            }
+        }
+    }
+    summon setup_map :: (producer: Who, reducer: Who) {
+        match producer {
+            | List(producer) => {
+                match reducer {
+                    | Single(reducer) => {
+                        let n1 : [Number] = producer.0::produce<>
+                        let n2 : [Number] = producer.1::produce<>
+                        inner_map(reducer, [n1 n2])
+                    }
+                }
+            }
+        }
+    }
+}
+mod app::Reduce {
+    use app::Types { Number, Who }
+    inner_reduce :: (displayer: who, map: who) {
+        portcullis {
+            | reduce displayer -> [Number] {
+                let n: [Number] = map::map<>
+                reduce lazy :: (n: [Number], accumulator: u32) -> [Number] {
+                    match n {
+                        h|t => {
+                            match h {
+                                U32(i) => {
+                                    Number::U32(h+accumulator) | reduce(t, h+accumulator)
+                                }
+                                [] => { [] }
+                            }
+                        }
+                    }
+                }
+                reduce(n, 0u32)
+            }
+        }
+    }
+    summon setup_reduce :: (map: Who, displayer: Who) {
+        match map {
+            | Single(map) => {
+                match displayer {
+                    | Single(displayer) => { inner_reduce(displayer, map) }
+                }
+            }
+        }
+    }
+}
+mod app::Display {
+    use app::Types { Number, Who }
+    inner_display lazy :: (s: [Number]) {
+        match s {
+            h|t => {
+                println("{}", h)
+                inner_display(t)
+            }
+        }
+
+    }
+    summon display :: ( reducer: Who ) {
+        match reducer {
+            Single(r) => {
+                inner_display(r::reduce<[Number]>)
+            }
+        }
+    }
+}

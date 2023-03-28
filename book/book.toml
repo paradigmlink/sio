@@ -1,0 +1,6 @@
+[book]
+authors = ["Stewart Mackenzie"]
+language = "en"
+multilingual = false
+src = "src"
+title = "sio-book"
