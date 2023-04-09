@@ -4,7 +4,7 @@ pub fn main() void {
     systemInit();
 
     // Enable GPIOD port
-    //regs.RCC.AHB1ENR.modify(.{ .GPIODEN = 1 });
+    regs.RCC.AHB1ENR.modify(.{ .GPIODEN = 1 });
 
     // Set pin 12/13/14/15 mode to general purpose output
     regs.GPIOD.MODER.modify(.{ .MODER12 = 0b01, .MODER13 = 0b01, .MODER14 = 0b01, .MODER15 = 0b01 });
