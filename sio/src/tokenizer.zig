@@ -10,19 +10,20 @@ pub const Token = struct {
     };
     pub const keywords = std.ComptimeStringMap(Tag, .{
         .{ "portcullis", .keyword_portcullis},
-        .{ "use",    .keyword_use},
-        .{ "who",    .keyword_who},
-        .{ "let",    .keyword_let },
-        .{ "lazy",   .keyword_lazy},
-        .{ "if",     .keyword_if },
-        .{ "else",   .keyword_else },
-        .{ "enum",   .keyword_enum },
+        .{ "use", .keyword_use},
+        .{ "who", .keyword_who},
+        .{ "let", .keyword_let },
+        .{ "lazy", .keyword_lazy},
+        .{ "if", .keyword_if },
+        .{ "else", .keyword_else },
+        .{ "enum", .keyword_enum },
         .{ "struct", .keyword_struct},
-        .{ "mod",    .keyword_mod},
-        .{ "spawn",  .keyword_spawn},
-        .{ "run",    .keyword_run},
+        .{ "mod", .keyword_mod},
+        .{ "spawn", .keyword_spawn},
+        .{ "run", .keyword_run},
         .{ "thread", .keyword_thread},
-        .{ "match",  .keyword_match},
+        .{ "match", .keyword_match},
+        .{ "comptime", .keyword_comptime},
         .{ "summon", .keyword_summon},
         .{ "sketch", .keyword_sketch},
         .{ "stable", .keyword_stable},
@@ -38,12 +39,23 @@ pub const Token = struct {
         identifier,
         eof,
         pipe,
+        pipe_pipe,
         minus,
-          arrow,
+        arrow,
         equal,
-          equal_angle_bracket_right,
+        equal_angle_bracket_right,
         colon,
-          colon_colon,
+        colon_colon,
+        l_paren,
+        r_paren,
+        l_brace,
+        r_brace,
+        l_bracket,
+        r_bracket,
+        l_angle_bracket,
+        r_angle_bracket,
+
+
         keyword_portcullis,
         keyword_who,
         keyword_use,
@@ -58,6 +70,7 @@ pub const Token = struct {
         keyword_run,
         keyword_thread,
         keyword_match,
+        keyword_comptime,
         keyword_summon,
         keyword_sketch,
         keyword_stable,
@@ -67,12 +80,21 @@ pub const Token = struct {
     pub fn lexeme(tag: Tag) ?[]const u8 {
         return switch (tag) {
             .pipe => "|",
+            .pipe_pipe => "||",
             .minus => "-",
             .arrow => "->",
             .equal => "=",
             .equal_angle_bracket_right => "=>",
             .colon => ":",
             .colon_colon => "::",
+            .l_paren => "(",
+            .r_paren => ")",
+            .l_brace => "{",
+            .r_brace => "}",
+            .l_bracket => "[",
+            .r_bracket => "]",
+            .l_angle_bracket => "<",
+            .r_angle_bracket => ">",
             .keyword_portcullis => "portcullis",
             .keyword_who => "who",
             .keyword_use => "use",
@@ -87,6 +109,7 @@ pub const Token = struct {
             .keyword_run => "run",
             .keyword_thread => "thread",
             .keyword_match => "match",
+            .keyword_comptime => "comptime",
             .keyword_summon => "summon",
             .keyword_sketch => "sketch",
             .keyword_stable => "stable",
@@ -196,6 +219,47 @@ pub const Tokenizer = struct {
                     '|' => {
                         state = .pipe;
                     },
+                    '{' => {
+                        result.tag = .l_brace;
+                        self.index += 1;
+                        break;
+                    },
+                    '}' => {
+                        result.tag = .r_brace;
+                        self.index += 1;
+                        break;
+                    },
+
+                    '(' => {
+                        result.tag = .l_paren;
+                        self.index += 1;
+                        break;
+                    },
+                    ')' => {
+                        result.tag = .r_paren;
+                        self.index += 1;
+                        break;
+                    },
+                    '[' => {
+                        result.tag = .l_bracket;
+                        self.index += 1;
+                        break;
+                    },
+                    ']' => {
+                        result.tag = .r_bracket;
+                        self.index += 1;
+                        break;
+                    },
+                    '<' => {
+                        result.tag = .l_angle_bracket;
+                        self.index += 1;
+                        break;
+                    },
+                    '>' => {
+                        result.tag = .r_angle_bracket;
+                        self.index += 1;
+                        break;
+                    },
                     else => {
                         result.tag = .invalid;
                         result.loc.end = self.index;
@@ -213,10 +277,15 @@ pub const Tokenizer = struct {
                     },
                 },
                 .pipe => switch (c) {
+                    '|' => {
+                        result.tag = .pipe_pipe;
+                        self.index += 1;
+                        break;
+                    },
                     else => {
                         result.tag = .pipe;
                         break;
-                    }
+                    },
                 },
                 .minus => switch (c) {
                     '>' => {
@@ -267,7 +336,7 @@ pub const Tokenizer = struct {
 
 test "keywords" {
     try testTokenize(
-    "portcullis use let lazy if else enum struct mod spawn who run thread summon sketch stable sunset seeyou match",
+    "portcullis use let lazy if else enum struct mod spawn who run thread summon sketch stable sunset seeyou match comptime",
     &.{
     .keyword_portcullis,
     .keyword_use,
@@ -288,13 +357,14 @@ test "keywords" {
     .keyword_sunset,
     .keyword_seeyou,
     .keyword_match,
+    .keyword_comptime,
     });
 }
 
 test "pipe pipe" {
-    try testTokenize("||", &.{
+    try testTokenize("| ||", &.{
         .pipe,
-        .pipe,
+        .pipe_pipe,
     });
 }
 
@@ -321,6 +391,19 @@ test "colon colon colon_colon " {
         .colon,
         .colon,
         .colon_colon,
+    });
+}
+
+test "l_braket r_bracket l_brace r_brace l_paren r_paren" {
+    try testTokenize("[]{}()<>", &.{
+        .l_bracket,
+        .r_bracket,
+        .l_brace,
+        .r_brace,
+        .l_paren,
+        .r_paren,
+        .l_angle_bracket,
+        .r_angle_bracket,
     });
 }
 
