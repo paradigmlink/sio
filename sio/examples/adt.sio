@@ -1,69 +1,117 @@
-data Name = String
-data Date = Date { y: Int, m: Int, d: Int}
-data Anniversary =
-    | Birthday { name: Name, date: Date }
-    | Wedding  { groom: Name, bride: Name, date: Date }
-data AnniversaryBook = [Anniversary]
-let
-    johnSmith: Anniversary,
-    smithWedding: Anniversary,
-    anniversariesOfJohnSmith: AnniversaryBook,
-    weddingDay: Int,
-in {
-    // deterministic dataflow concurrency
-    thread {
-        johnSmith = Anniversary::Birthday {
-            name: "John Smith",
-            date : Date { y: 1968, m: 7, d: 3 },
-        }
-    }
+public_key : sio79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd;
+type       : "src";
+name       : "g_adt_example";
+app        : public_key::type::name;
 
-    // deterministic dataflow concurrency
-    thread {
-        wait(5.0)
-        smithWedding = Anniversary::Wedding {
-            groom: "John Smith",
-            bride: "Jane Smith",
-            date: Date { y: 1987, m: 3 d: 4 },
-        }
-        weddingDay = smithWedding.date.d
-    }
-
-    anniversariesOfJohnSmith: AnniversaryBook = [johnSmith, smithWedding]
+mod app::G_ADTs {
+    pub data Maybe<I> =
+      | None
+      | Some<I>;
+    pub data Name = String;
+    pub data Date = {
+        y: Int,
+        m: Int,
+        d: Int,
+    };
+    pub data Anniversary =
+        | Birthday { name: Name, date: Maybe<Date> }
+        | Wedding  { groom: Name, bride: Name, date: Maybe<Date> };
+    pub data AnniversaryBook = [Anniversary];
 
     // show date function
-    show_date :: (date: Date) -> String {
-        format("{}-{}-{}", date.y, date.m, date.d)
+    show_date :: (date: Maybe<Date>) -> String {
+        match (date) {
+          | None => "not defined"
+          | Some(date) => format("{}-{}-{}", date.y, date.m, date.d)
+        }
     }
 
     // matches on Anniversary data printing accordingly
-    show_anniversary :: (date: Anniversary) -> String {
+    show_anniversary :: (date: Anniversary, weddingDay: Maybe<Int>) -> String {
         match date {
             Anniversary::Birthday(birthday) => {
-                format("{} born {}", birthday.name, birthday.date)
+                format("{} born {}",
+                    birthday.name,
+                    show_date(birthday.date))
             },
             Anniversary::Wedding(wedding) => {
                 // waits on "weddingDay" to be bound in the second thread
-                if weddingDay == 4 {
-                    format("{} married {} on {}", wedding.groom, wedding.bride, wedding.date)
-                } else {
-                    format("{} did not marry {} on this date", wedding.groom, wedding.bride)
+                match wedding {
+                    Some(d) => {
+                        if d == 4 {
+                            format("{} married {} on {}",
+                                wedding.groom,
+                                wedding.bride,
+                                show_date(wedding.date))
+                        } else {
+                            format("{} did not marry {} on this day {}",
+                                wedding.groom,
+                                wedding.bride,
+                                d)
+                        }
+                    },
+                    None => {
+                        format("{} did not marry {} on this date {}",
+                            wedding.groom,
+                            wedding.bride,
+                            show_date(None))
+                    },
                 }
             },
-        }
-    }
-
-    // using recursion we're able to print out the data.
-    show_anniversaries :: (dates: AnniversaryBook) {
-        match dates {
-            [] => {}
-            h|t => {
-                thread { show_anniversary(h) }
-                show_anniversaries(t)
+            else(i) => {
+                log("log the issue {}", i)
             }
         }
     }
 
-    // execute the program
-    show_anniversaries(anniversariesOfJohnSmith)
+    // using recursion we're able to print out the data.
+    pub show_anniversaries :: (dates: AnniversaryBook, weddingDay: Maybe<Int>) {
+        match dates {
+            nil => {}
+            h|t => {
+                thread {
+                    print(show_anniversary(h, weddingDay))
+                }
+                show_anniversaries(t, weddingDay)
+            }
+        }
+    }
+}
+
+mod app::Main {
+    use app::G_ADTs {
+        Maybe, Name, Date, Anniversary::{self, *}, AnniversaryBook,
+        show_anniversaries
+    };
+    data: [Anniversary];
+    johnSmith: Anniversary;
+    smithWedding: Anniversary;
+    anniversariesOfJohnSmith: AnniversaryBook;
+    rest: AnniversaryBook;
+    weddingDay: Maybe<Int>;
+
+    // deterministic dataflow concurrency
+    thread {
+        johnSmith = Birthday {
+            name: "John Smith",
+            date : Some(Date { y: 1968, m: 7, d: 3 }),
+        };
+    }
+    // deterministic dataflow concurrency
+    thread {
+        wait(5.0);
+        smithWedding = Wedding {
+            groom: "John Smith",
+            bride: "Jane Smith",
+            date: Some(Date { y: 1987, m: 3, d: 4 }),
+        };
+        weddingDay = match smithWedding {
+            | Some(aniv) => Some(aniv.date.d)
+            | None => None
+        };
+    }
+    anniversariesOfJohnSmith = [smithWedding | johnSmith | rest];
+    show_anniversaries(anniversariesOfJohnSmith, weddingDay);
+
+    rest = nil; // no more workers, end this insanely contrived program. This works because show_anniversaries spins up a thread with a print.
 }
