@@ -1,0 +1,71 @@
+public_key : spub79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd
+type       : "example"
+name       : "mario_stack_and_state_machine"
+app        : public_key::type::name
+
+mod app::Stack {
+    pub data Stack<I> = {
+        push:     (I)->Stack<I>,
+        pop:      ( )->(I, Stack<I>),
+        is_empty: ( )->bool,
+    };
+    stack<I> :: (inner_stack: [I]) -> Stack<I> {
+        push :: (item: I) -> Stack<I> {
+            stack([item|stack])
+        }
+        pop :: () -> (I, Stack<I>) {
+            match inner_stack {
+                | [head|tail] => {(head, stack(tail))}
+            }
+        }
+        is_empty :: () -> bool {
+            inner_stack == []
+        }
+    } in {
+        Stack{ push, pop, is_empty }
+    }
+    pub new_stack<I> :: (item: I) -> Stack<I> {
+        stack([item])
+    }
+}
+
+mod app::FSM {
+    pub data MarioState =
+        | Mario,
+        | SuperMario,
+        | FireMario,
+        | CapeMario;
+    pub data Transition =
+        | Feather,
+        | Flower,
+        | Mushroom;
+    pub new_mario :: () -> MarioState {
+        MarioState::Mario
+    }
+    pub change_mario :: (state: State, power: Transition) -> MarioState {
+        use MarioState::*;
+        match (state, power) {
+            | (Mario, Mushroom) => SuperMario,
+            | (_,     Flower)   => FireMario,
+            | (_,     Feather)  => CapeMario,
+            | (_,     Mushroom) => SuperMario
+        }
+    }
+}
+
+mod app::Main {
+    use app::{
+        FSM::{MarioState, Transition, new_mario, change_mario},
+        Stack::{Stack, new_stack}
+    };
+    main :: () {
+        let m_stack_0: Stack<MarioState> = new_stack(new_mario());
+        let (mario: State, m_stack_1: Stack<MarioState>) = m_stack.pop();
+        let fire_mario: MarioState = change_mario(mario, Transition::Flower);
+        let m_stack_2 := m_stack_1.push(fire_mario);
+        let m_stack_3 := m_stack_2.push(change_mario(fire_mario, Transition::Feather));
+        let (cape_mario: MarioState, m_stack_4: Stack<MarioState>) = m_stack_3.pop();
+        let Stack { pop: my_pop, ..} = m_stack_4;
+        let (fire_mario_2: MarioState, m_stack_5: Stack<MarioState>) = my_pop();
+    }
+}
