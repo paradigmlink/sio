@@ -1,0 +1,49 @@
+public_key : spub79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd
+type       : "example"
+name       : "mario_functional_agent"
+app        : public_key::type::name
+
+mod app::FSM {
+    pub data State =
+        | Mario,
+        | SuperMario,
+        | FireMario,
+        | CapeMario;
+    pub data Transition =
+        | Feather,
+        | Flower,
+        | Mushroom;
+    change_mario :: (state: State, power: Transition) -> State {
+        use State::*;
+        match (state, power) {
+            | (Mario, Mushroom) => SuperMario,
+            | (_,     Flower)   => FireMario,
+            | (_,     Feather)  => CapeMario,
+        }
+    }
+    pub mario_agent :: (transitions: [Transition], init: State) -> [State] {
+        loop :: (transitions: [Transition], current_state: State) -> [State] {
+            match transitions {
+                | [msg | tail] => {
+                    let new_state: State = change_mario(current_state, msg);
+                    println("transition: {}", msg);
+                    println("state: {}", new_state);
+                    new_state | loop(tail, new_state)
+                }
+                | nil => { nil }
+            }
+        }
+    } in {
+        thread { loop(states, init) }
+    }
+}
+
+mod app::Main {
+    use app::FSM::{State::{self, *}, Transition::{self, *}, mario_agent};
+    main :: () {
+        let transitions: [Transition];
+        let states: [State];
+        states = mario_agent(transitions, Mario);
+        transitions = Mushroom|Mushroom|Flower|Feather|nil;
+    }
+}
