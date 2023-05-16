@@ -3,7 +3,7 @@ type       : "example"
 name       : "mario_functional_agent"
 app        : public_key::type::name
 
-mod app::FSM {
+mod app::Types {
     pub data State =
         | Mario,
         | DeadMario,
@@ -15,8 +15,49 @@ mod app::FSM {
         | Feather,
         | Flower,
         | Mushroom;
+}
+
+mod app::Env {
+    use app::Types::{State::{self, *}, Transition::{self, *}};
+    pub environment_agent :: (mario_agent: who) -> [Transition] {
+        loop :: (mario_agent: who) {
+            portcullis {
+                | feather mario -> transitions: [Transition] {
+                    Feather | transitions;
+                    loop(mario_agent)
+                }
+                | mushroom mario -> transitions: [Transition] {
+                    Feather | transitions;
+                    loop(mario_agent)
+                }
+                | flower mario -> transitions: [Transition] {
+                    Feather | transitions;
+                    loop(mario_agent)
+                }
+                | goomba mario -> transitions: [Transitions] {
+                    Goomba | transitions;
+                    loop(mario_agent)
+                }
+                | random_transition -> transitions: [Transition] {
+                    let transitions: [Transition] = select_first(self::flower<>, self::mushroom<>, self::feather<>, self::goomba<>);
+                    match transitions {
+                        | [h|t] => {
+                            h | transitions;
+                        },
+                        | nil => { nil }
+                    }
+                    loop(mario_agent)
+                }
+            }
+        }
+    } in {
+        thread { loop(mario_agent) }
+    }
+}
+
+mod app::Mario {
+    use app::Types { State::{self, *}, Transition::{self, *}};
     change_mario :: (state: State, power: Transition) -> State {
-        use State::*;
         match (state, power) {
             | (Mario, Goomba) => DeadMario,
             | (DeadMario, _) => DeadMario,
@@ -45,7 +86,10 @@ mod app::FSM {
 }
 
 mod app::Main {
-    use app::FSM::{State::{self, *}, Transition::{self, *}, mario_agent};
+    use app::{
+        Types::{State::{self, *}, Transition::{self, *}},
+        Mario::mario_agent,
+    };
     main :: () {
         let transitions: [Transition];
         let states: [State];

@@ -1,4 +1,9 @@
-mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/src/finance/bitcoin 100 {
+public_key : sio79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd;
+type       : "src";
+name       : "g_adt_example";
+app        : public_key::type::name;
+
+mod app::Bitcoin 100 {
     summon import_public_key :: (pubkey: BtcPublicKey, label: string, rescan: bool) -> bool {
         ffi_import_btc_public_key
             :: 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/rpc/bitcoin/import_public_key

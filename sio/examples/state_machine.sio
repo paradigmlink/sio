@@ -69,3 +69,38 @@ mod app::Main {
         let (fire_mario_2: MarioState, m_stack_5: Stack<MarioState>) = my_pop();
     }
 }
+
+% Mario agent implements mario FSM
+% Accepts stream of transitions
+% Outputs stream of mario states
+% Internally remembers current mario state
+
+declare
+fun {Agent S Init F}
+  fun {Loop S State}
+    case S of Msg|T then NewState in
+      NewState={F State Msg}
+      NewState|{Loop T NewState}
+    end
+  end
+in
+  thread {Loop S Init} end
+end
+
+% Create Mario agent
+declare S1 S2 in
+S2 = {Agent S1 mario
+      fun {$ State Msg}
+        case State#Msg
+        of mario#mushroom then supermario
+        [] _#flower then firemario
+        [] _#feather then capemario
+        [] _#mushroom then supermario
+        end
+      end}
+
+{Browse S1}
+{Browse S2}
+
+% Example execution
+S1=mushroom|mushroom|flower|_

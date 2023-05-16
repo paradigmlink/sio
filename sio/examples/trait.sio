@@ -2,37 +2,37 @@ public_key : sio79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd
 name       : "trait_example"
 ns         : public_key::name
 
-trait ns::Summary {
+trait ns:Summary {
     summon summarize :: () -> string;
 }
 
-mod ns::NewsArticle {
+mod ns:NewsArticle {
     stable headline :: () -> string { "BoE Inflation Continues" }
     sketch location :: () -> string { "U.K." }
     sunset author   :: () -> string { "BoJo" }
     stable content  :: () -> string { "Inflation is transitory..." }
 }
 
-impl ns::Summary for ns::NewsArticle {
+impl ns:Summary for ns::NewsArticle {
     summon summarize :: () -> string {
         format("{}, by {} ({})", headline(), author(), location())
     }
 }
 
-mod ns::Tweet {
+mod ns:Tweet {
     summon username :: () -> string { "Bank of England" }
     summon content  :: () -> string { "Inflation is here to stay..." }
     summon reply    :: () -> bool { false }
     summon retweet  :: () -> bool { false }
 }
 
-impl ns::Summary for ns::Tweet {
+impl ns:Summary for ns::Tweet {
     summon summarize :: () -> string {
         format("{}: {}", username(), content())
     }
 }
 
-mod ns::Main {
+mod ns:Main {
     use ns::{Summary, Tweet}
     let tweet = Tweet {};
     println!("1 new tweet: {}", tweet.summarize());
