@@ -11,7 +11,7 @@ extern fn _stack() void;
 
 // These are the exception handlers, which are weakly linked to the default handlers
 // in the linker script
-extern fn resetHandler() void;
+//extern fn resetHandler() void;
 extern fn nmiHandler() void;
 extern fn hardFaultHandler() void;
 extern fn memoryManagementFaultHandler() void;
@@ -23,9 +23,10 @@ extern fn pendSVHandler() void;
 extern fn sysTickHandler() void;
 
 // The vector table
-export const vector_table linksection(".vectors") = [_]?fn () callconv(.C) void{
+//export const vector_table linksection(".vectors") = [_]? fn () callconv(.C) void{
+export const vector_table linksection(".vectors") = [_]? *const fn () callconv(.C) void{
     _stack,
-    resetHandler, // Reset
+    //resetHandler, // Reset
     nmiHandler, // NMI
     hardFaultHandler, // Hard fault
     memoryManagementFaultHandler, // Memory management fault

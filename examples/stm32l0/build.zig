@@ -49,3 +49,5 @@ pub fn build(b: *std.build.Builder) void {
     b.default_step.dependOn(&elf.step);
     b.installArtifact(elf);
 }
+
+//probe-run  --chip STM32L071KBTx

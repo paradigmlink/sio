@@ -25,7 +25,7 @@
 /* Define memory regions. */
 MEMORY
 {
-  rom (rx) : ORIGIN = 0x08000000, LENGTH = 1024K
+  flash (rx) : ORIGIN = 0x08000000, LENGTH = 1024K
   ram (rwx) : ORIGIN = 0x20000000, LENGTH = 128K
   ccm (rwx) : ORIGIN = 0x10000000, LENGTH = 64K
 }
@@ -34,7 +34,9 @@ MEMORY
 EXTERN (vector_table)
 
 /* Define the entry point of the output file. */
-ENTRY(resetHandler)
+ENTRY(main);
+__reset_stack_pointer = ORIGIN(ram) + LENGTH(ram);
+/*PROVIDE(resetHandler = 0x8001);*/
 
 /* This provide weak linking to empty handlers, which can be overridden */
 PROVIDE(nmiHandler = nullHandler);
@@ -50,13 +52,24 @@ PROVIDE(sysTickHandler = nullHandler);
 /* Define sections. */
 SECTIONS
 {
+/*  .flash : {
+      _start = .;
+      KEEP(*(.vector_table))
+      *(.text.*)
+      *(.rodata)
+      *(.rodata.*)
+      _ram_data_initial_values = .;
+  } > flash*/
   .text : {
-    *(.vectors)  /* Vector table */
+    LONG(__reset_stack_pointer);
+    LONG(main | 1);
+    /**(.vectors)  /* Vector table */
+    . += 332;
     *(.text*)  /* Program code */
     . = ALIGN(4);
     *(.rodata*)  /* Read-only data */
     . = ALIGN(4);
-  } >rom
+  } >flash
 
   /* C++ Static constructors/destructors, also used for __attribute__
    * ((constructor)) and the likes */
@@ -65,21 +78,21 @@ SECTIONS
     __preinit_array_start = .;
     KEEP (*(.preinit_array))
     __preinit_array_end = .;
-  } >rom
+  } >flash
   .init_array : {
     . = ALIGN(4);
     __init_array_start = .;
     KEEP (*(SORT(.init_array.*)))
     KEEP (*(.init_array))
     __init_array_end = .;
-  } >rom
+  } >flash
   .fini_array : {
     . = ALIGN(4);
     __fini_array_start = .;
     KEEP (*(.fini_array))
     KEEP (*(SORT(.fini_array.*)))
     __fini_array_end = .;
-  } >rom
+  } >flash
 
   /*
    * Another section used by C++ stuff, appears when using newlib with
@@ -87,12 +100,12 @@ SECTIONS
    */
   .ARM.extab : {
     *(.ARM.extab*)
-  } >rom
+  } >flash
   .ARM.exidx : {
     __exidx_start = .;
     *(.ARM.exidx*)
     __exidx_end = .;
-  } >rom
+  } >flash
 
   . = ALIGN(4);
   _etext = .;
@@ -109,7 +122,7 @@ SECTIONS
     *(.ramtext*)    /* "text" functions to run in ram */
     . = ALIGN(4);
     _edata = .;
-  } >ram AT >rom
+  } >ram AT >flash
   _data_loadaddr = LOADADDR(.data);
 
   .bss : {
