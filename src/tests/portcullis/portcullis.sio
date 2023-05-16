@@ -4,6 +4,19 @@ name       : "portcullis"
 app        : public_key::type::name
 
 mod app::etc {
+
+    summon data Number
+        stable | U32(u32)
+        sketch | U64(u64)
+    portcullis {
+        | produce [mapper] -> [Number] {
+            produce lazy :: (i: u32) -> [Number] {
+                wait(10)
+                Number::U32(i) | produce(i + 1)
+            }
+            produce(0u32)
+        }
+    }
     portcullis {
         skip
     }

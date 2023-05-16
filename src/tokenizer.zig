@@ -9,38 +9,48 @@ pub const Token = struct {
         end: usize,
     };
     pub const keywords = std.ComptimeStringMap(Tag, .{
-        .{ "portcullis", .keyword_portcullis},
-        .{ "use", .keyword_use},
-        .{ "who", .keyword_who},
-        .{ "let", .keyword_let },
-        .{ "lazy", .keyword_lazy},
-        .{ "if", .keyword_if },
+        .{ "anytype", .keyword_anytype },
+        .{ "comptime", .keyword_comptime },
         .{ "else", .keyword_else },
         .{ "enum", .keyword_enum },
-        .{ "struct", .keyword_struct},
-        .{ "mod", .keyword_mod},
-        .{ "spawn", .keyword_spawn},
-        .{ "run", .keyword_run},
-        .{ "thread", .keyword_thread},
-        .{ "match", .keyword_match},
-        .{ "comptime", .keyword_comptime},
-        .{ "summon", .keyword_summon},
-        .{ "sketch", .keyword_sketch},
-        .{ "stable", .keyword_stable},
-        .{ "sunset", .keyword_sunset},
-        .{ "seeyou", .keyword_seeyou},
+        .{ "fn", .keyword_fn},
+        .{ "if", .keyword_if },
+        .{ "lazy", .keyword_lazy },
+        .{ "let", .keyword_let },
+        .{ "match", .keyword_match },
+        .{ "mod", .keyword_mod },
+        .{ "portcullis", .keyword_portcullis },
+        .{ "pub", .keyword_pub },
+        .{ "run", .keyword_run },
+        .{ "spawn", .keyword_spawn },
+        .{ "summon", .keyword_summon },
+        .{ "sketch", .keyword_sketch },
+        .{ "stable", .keyword_stable },
+        .{ "sunset", .keyword_sunset },
+        .{ "seeyou", .keyword_seeyou },
+        .{ "thread", .keyword_thread },
+        .{ "url", .keyword_url},
+        .{ "use", .keyword_use },
+        .{ "who", .keyword_who },
 
     });
     pub fn getKeyword(bytes: []const u8) ?Tag {
         return keywords.get(bytes);
     }
     pub const Tag = enum {
+        builtin,
+        char_literal,
         invalid,
         identifier,
         eof,
+        period,
+        comma,
+        semicolon,
+        string_literal,
         pipe,
         pipe_pipe,
         minus,
+        number_literal,
         arrow,
         equal,
         equal_angle_bracket_right,
@@ -52,77 +62,102 @@ pub const Token = struct {
         r_brace,
         l_bracket,
         r_bracket,
-        l_angle_bracket,
-        r_angle_bracket,
+        angle_bracket_right,
+        angle_bracket_left,
 
-
-        keyword_portcullis,
-        keyword_who,
-        keyword_use,
-        keyword_lazy,
-        keyword_let,
-        keyword_if,
+        keyword_anytype,
+        keyword_comptime,
         keyword_else,
         keyword_enum,
-        keyword_struct,
-        keyword_mod,
-        keyword_spawn,
-        keyword_run,
-        keyword_thread,
+        keyword_fn,
+        keyword_if,
+        keyword_lazy,
+        keyword_let,
         keyword_match,
-        keyword_comptime,
+        keyword_mod,
+        keyword_portcullis,
+        keyword_pub,
+        keyword_run,
+        keyword_spawn,
         keyword_summon,
         keyword_sketch,
         keyword_stable,
         keyword_sunset,
         keyword_seeyou,
+        keyword_thread,
+        keyword_url,
+        keyword_use,
+        keyword_who,
+        pub fn lexeme(tag: Tag) ?[]const u8 {
+            return switch (tag) {
+                .builtin,
+                .char_literal,
+                .eof,
+                .identifier,
+                .invalid,
+                .number_literal,
+                .string_literal,
+                => null,
+
+                .comma => ",",
+                .period => ".",
+                .semicolon => ";",
+                .pipe => "|",
+                .pipe_pipe => "||",
+                .minus => "-",
+                .arrow => "->",
+                .equal => "=",
+                .equal_angle_bracket_right => "=>",
+                .colon => ":",
+                .colon_colon => "::",
+                .l_paren => "(",
+                .r_paren => ")",
+                .l_brace => "{",
+                .r_brace => "}",
+                .l_bracket => "[",
+                .r_bracket => "]",
+                .angle_bracket_left => "<",
+                .angle_bracket_right => ">",
+
+                .keyword_anytype => "anytype",
+                .keyword_comptime => "comptime",
+                .keyword_else => "else",
+                .keyword_enum => "enum",
+                .keyword_fn => "fn",
+                .keyword_if => "if",
+                .keyword_lazy => "lazy",
+                .keyword_let => "let",
+                .keyword_match => "match",
+                .keyword_mod => "mod",
+                .keyword_portcullis => "portcullis",
+                .keyword_pub => "pub",
+                .keyword_run => "run",
+                .keyword_spawn => "spawn",
+                .keyword_summon => "summon",
+                .keyword_sketch => "sketch",
+                .keyword_stable => "stable",
+                .keyword_sunset => "sunset",
+                .keyword_seeyou => "seeyou",
+                .keyword_thread => "thread",
+                .keyword_url => "url",
+                .keyword_use => "use",
+                .keyword_who => "who",
+            };
+        }
+        pub fn symbol(tag: Tag) []const u8 {
+            return tag.lexeme() orelse switch (tag) {
+                .invalid => "invalid bytes",
+                .identifier => "an identifier",
+                .string_literal => "a string literal",
+                .char_literal => "a character literal",
+                .eof => "EOF",
+                .builtin => "a builtin function",
+                .number_literal => "a number literal",
+                else => unreachable,
+            };
+        }
     };
-    pub fn lexeme(tag: Tag) ?[]const u8 {
-        return switch (tag) {
-            .pipe => "|",
-            .pipe_pipe => "||",
-            .minus => "-",
-            .arrow => "->",
-            .equal => "=",
-            .equal_angle_bracket_right => "=>",
-            .colon => ":",
-            .colon_colon => "::",
-            .l_paren => "(",
-            .r_paren => ")",
-            .l_brace => "{",
-            .r_brace => "}",
-            .l_bracket => "[",
-            .r_bracket => "]",
-            .l_angle_bracket => "<",
-            .r_angle_bracket => ">",
-            .keyword_portcullis => "portcullis",
-            .keyword_who => "who",
-            .keyword_use => "use",
-            .keyword_lazy => "lazy",
-            .keyword_let => "let",
-            .keyword_if => "if",
-            .keyword_else => "else",
-            .keyword_enum => "enum",
-            .keyword_struct => "struct",
-            .keyword_mod => "mod",
-            .keyword_spawn => "spawn",
-            .keyword_run => "run",
-            .keyword_thread => "thread",
-            .keyword_match => "match",
-            .keyword_comptime => "comptime",
-            .keyword_summon => "summon",
-            .keyword_sketch => "sketch",
-            .keyword_stable => "stable",
-            .keyword_sunset => "sunset",
-            .keyword_seeyou => "seeyou",
-        };
-    }
-    pub fn symbol(tag: Tag) []const u8 {
-        return tag.lexeme() orelse switch (tag) {
-            .string_literal => "a string literal",
-            else => unreachable,
-        };
-    }
+
 };
 
 pub const Tokenizer = struct {
@@ -216,6 +251,21 @@ pub const Tokenizer = struct {
                     ':' => {
                         state = .colon;
                     },
+                    ',' => {
+                        result.tag = .comma;
+                        self.index += 1;
+                        break;
+                    },
+                    ';' => {
+                        result.tag = .semicolon;
+                        self.index += 1;
+                        break;
+                    },
+                    '.' => {
+                        result.tag = .period;
+                        self.index += 1;
+                        break;
+                    },
                     '|' => {
                         state = .pipe;
                     },
@@ -251,12 +301,12 @@ pub const Tokenizer = struct {
                         break;
                     },
                     '<' => {
-                        result.tag = .l_angle_bracket;
+                        result.tag = .angle_bracket_left;
                         self.index += 1;
                         break;
                     },
                     '>' => {
-                        result.tag = .r_angle_bracket;
+                        result.tag = .angle_bracket_right;
                         self.index += 1;
                         break;
                     },
@@ -336,28 +386,30 @@ pub const Tokenizer = struct {
 
 test "keywords" {
     try testTokenize(
-    "portcullis use let lazy if else enum struct mod spawn who run thread summon sketch stable sunset seeyou match comptime",
+    "anytype comptime else enum fn if lazy let match mod portcullis pub run spawn  summon sketch stable sunset seeyou thread use who",
     &.{
-    .keyword_portcullis,
-    .keyword_use,
-    .keyword_let,
-    .keyword_lazy,
-    .keyword_if,
-    .keyword_else,
-    .keyword_enum,
-    .keyword_struct,
-    .keyword_mod,
-    .keyword_spawn,
-    .keyword_who,
-    .keyword_run,
-    .keyword_thread,
-    .keyword_summon,
-    .keyword_sketch,
-    .keyword_stable,
-    .keyword_sunset,
-    .keyword_seeyou,
-    .keyword_match,
-    .keyword_comptime,
+        .keyword_anytype,
+        .keyword_comptime,
+        .keyword_else,
+        .keyword_enum,
+        .keyword_fn,
+        .keyword_if,
+        .keyword_lazy,
+        .keyword_let,
+        .keyword_match,
+        .keyword_mod,
+        .keyword_portcullis,
+        .keyword_pub,
+        .keyword_run,
+        .keyword_spawn,
+        .keyword_summon,
+        .keyword_sketch,
+        .keyword_stable,
+        .keyword_sunset,
+        .keyword_seeyou,
+        .keyword_thread,
+        .keyword_use,
+        .keyword_who,
     });
 }
 
@@ -386,15 +438,25 @@ test "equal equal equal_angle_braket_right equal" {
     });
 }
 
-test "colon colon colon_colon " {
-    try testTokenize(": : ::", &.{
+test "colon eof" {
+    try testTokenize(":", &.{
         .colon,
+        .eof
+    });
+}
+
+test "period comma colon colon colon_colon" {
+    try testTokenize(".,:; : ::", &.{
+        .period,
+        .comma,
+        .colon,
+        .semicolon,
         .colon,
         .colon_colon,
     });
 }
 
-test "l_braket r_bracket l_brace r_brace l_paren r_paren" {
+test "l_braket r_bracket l_brace r_brace l_paren r_paren angle_bracket_left angle_bracket_right" {
     try testTokenize("[]{}()<>", &.{
         .l_bracket,
         .r_bracket,
@@ -402,8 +464,8 @@ test "l_braket r_bracket l_brace r_brace l_paren r_paren" {
         .r_brace,
         .l_paren,
         .r_paren,
-        .l_angle_bracket,
-        .r_angle_bracket,
+        .angle_bracket_left,
+        .angle_bracket_right,
     });
 }
 
