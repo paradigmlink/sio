@@ -31,4 +31,17 @@ pub fn build(b: *std.build.Builder) void {
 
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&exe_tests.step);
+
+    const strip = b.option(bool, "strip", "Omit debug information");
+    const mem_leak_frames: u32 = b.option(u32, "mem-leak-frames", "How many stack frames to print when a memory leak occurs. Tests get 2x this amount.") orelse blk: {
+        if (strip == true) break :blk @as(u32, 0);
+        break :blk 4;
+    };
+
+
+    const exe_options = b.addOptions();
+    exe.addOptions("build_options", exe_options);
+
+    exe_options.addOption(u32, "mem_leak_frames", mem_leak_frames);
+
 }

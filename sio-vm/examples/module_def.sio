@@ -1,5 +1,0 @@
-mod 79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::/arb/mod/name 0 {
-    fun :: () {
-        skip
-    }
-}
