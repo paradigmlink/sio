@@ -1,0 +1,19 @@
+[package]
+name = "sio-cli"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+werbolg-core = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-core"}
+werbolg-exec = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-exec" }
+werbolg-compile = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-compile"}
+werbolg-ir-write = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-ir-write"}
+werbolg-lang-common = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-lang-common"}
+werbolg-lang-lispy = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-lang-lispy"}
+hashbrown = "0.14"
+single-assignment-store = { path = "../single-assignment-store" }
+sio-frontends = { path = "../sio-frontends" }
+sio = { path = "../sio" }
+logos = { version = "0.13" }

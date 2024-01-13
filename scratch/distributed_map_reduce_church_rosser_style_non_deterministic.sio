@@ -34,7 +34,7 @@ mod app::Main {
 }
 mod app::Producer {
     use app::Types { Number, Who }
-    inner_produce :: (mapper: who) {
+    fn inner_produce(mapper: who) {
         portcullis {
             | produce [mapper] -> [Number] {
                 produce lazy :: (i: u32) -> [Number] {
@@ -45,7 +45,7 @@ mod app::Producer {
             }
         }
     }
-    summon setup_produce :: (map: Who) {
+    pub fn setup_produce(map: Who) {
         match map {
             | Single(map) => { inner_produce(map) }
         }
@@ -53,11 +53,12 @@ mod app::Producer {
 }
 mod app::Map {
     use app::Types { Number, Who }
-    square<T> :: (x: T) -> T { x*x }
-    inner_map :: (reducer: who, n: [[Number]]) {
+    fn square<T>(x: T) -> T { x*x }
+    let anon_fn: Fn = fn <T>(x: T) -> T { x*x }
+    fn inner_map(reducer: who, n: [[Number]]) {
         portcullis {
             | map [reducer] -> [Number] {
-                map lazy :: (n: [[Number]]) -> [Number] {
+                lazy fn map(n: [[Number]]) -> [Number] {
                     // as this function is lazy, execution will pause
                     // at this point and only continue when there
                     // is a request for the output of this function.
@@ -82,7 +83,7 @@ mod app::Map {
             }
         }
     }
-    summon setup_map :: (producer: Who, reducer: Who) {
+    pub setup_map(producer: Who, reducer: Who) {
         match producer {
             | List(producer) => {
                 match reducer {
@@ -98,7 +99,7 @@ mod app::Map {
 }
 mod app::Reduce {
     use app::Types { Number, Who }
-    inner_reduce :: (displayer: who, map: who) {
+    fn inner_reduce(displayer: who, map: who) {
         portcullis {
             | reduce displayer -> [Number] {
                 let n: [Number] = map::map<>
@@ -118,7 +119,7 @@ mod app::Reduce {
             }
         }
     }
-    summon setup_reduce :: (map: Who, displayer: Who) {
+    pub fn setup_reduce(map: Who, displayer: Who) {
         match map {
             | Single(map) => {
                 match displayer {
@@ -130,7 +131,7 @@ mod app::Reduce {
 }
 mod app::Display {
     use app::Types { Number, Who }
-    inner_display lazy :: (s: [Number]) {
+    lazy fn inner_display(s: [Number]) {
         match s {
             h|t => {
                 println("{}", h)
@@ -139,7 +140,7 @@ mod app::Display {
         }
 
     }
-    summon display :: ( reducer: Who ) {
+    pub fn display(reducer: Who) {
         match reducer {
             Single(r) => {
                 inner_display(r::reduce<[Number]>)

@@ -1,9 +1,10 @@
-public_key : spub79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd
-type       : "example"
-name       : "mario_functional_agent"
-app        : public_key::type::name
+public_key : spub79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd;
+type       : "example";
+name       : "mario_functional_agent";
+app        : public_key::type::name;
 
-mod app::FSM {
+mod app::Fsm {
+/*
     pub data State =
         | Mario,
         | DeadMario,
@@ -15,6 +16,7 @@ mod app::FSM {
         | Feather,
         | Flower,
         | Mushroom;
+        */
     change_mario :: (state: State, power: Transition) -> State {
         use State::*;
         match (state, power) {
@@ -50,6 +52,6 @@ mod app::Main {
         let transitions: [Transition];
         let states: [State];
         states = mario_agent(transitions, Mario);
-        transitions = Mushroom|Mushroom|Flower|Feather|Goomba|Mushroom|Goomba|Goomba|nil;
+        transitions = Mushroom|Mushroom|Flower|Feather|Goomba|Mushroom|Goomba|Goomba|_;
     }
 }

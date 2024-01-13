@@ -1,0 +1,19 @@
+[package]
+name = "sio-tests"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hashbrown = "0.14"
+logos = { version = "0.13", optional = true }
+ariadne = { version = "0.3", optional = true }
+chumsky = { version = "0.9", features = [], optional = true }
+regex = "1.10.2"
+
+sio = { path = "../sio" }
+single-assignment-store = { path = "../single-assignment-store" }
+werbolg-core = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-core"}
+werbolg-exec = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-exec"}
+werbolg-compile = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-compile"}
+werbolg-lang-common= { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-lang-common"}
+werbolg-ir-write = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-ir-write"}

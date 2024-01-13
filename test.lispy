@@ -1,0 +1,27 @@
+
+(define (sum3 a b c)
+	(+ (+ a b) c)
+)
+
+(define (sum4 a b c d)
+	(+ (+ a b) (+ c d))
+)
+
+(define (mul4 a b c d)
+    (* (* a b) (* c d))
+)
+
+(define
+    (fact acc x)
+    (if (== x 0) acc (fact (* acc x) (- x 1)))
+)
+
+(define x
+    (+ x 100)
+)
+
+(define y (unbound))
+
+(define main
+  (fact 1 (+ 2 2))
+)

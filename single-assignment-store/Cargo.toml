@@ -1,0 +1,14 @@
+[package]
+name = "single-assignment-store"
+version = "0.3.0"
+edition = "2021"
+license = "BSD-3-Clause-Clear"
+description = "a hash table that shares one value across multiple keys."
+repository = "https://github.com/pyroMechanical/multi_key_map"
+categories = ["data-structures"]
+keywords = ["hash-table", "associative-array", "hash-map", "multi-key"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hashbrown = "0.14"

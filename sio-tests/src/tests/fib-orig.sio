@@ -1,0 +1,17 @@
+fn mul(x, y) {
+    x * y
+}
+
+// Calculate the factorial of a number
+fn factorial(x) {
+    if x == 0 {
+        1
+    } else {
+        mul(x, factorial(x - 1))
+    }
+}
+
+fn main() {
+    let z = factorial(4);
+    mul(10, z)
+}

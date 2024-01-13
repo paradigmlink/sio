@@ -1,0 +1,42 @@
+// automatically determine the length of the right
+let a: [u8; _] = "Hello, world\n";
+// Outputs "Hello, world\n"
+stdout.print(a);
+// error if rhs is not the length declared on the left
+let b: [u8; 3] = "abc";
+stdout.print("a: ", a);
+stdout.print("b: ", b, "\n");
+
+// u8 is an 8-bit unsigned numeric type (a byte)
+let x: u8 = 32;
+stdout.println("x: ", x);
+
+// invalid because different sizes (addressed in issue #3)
+a = b;
+
+// redeclaration of the same name with a different size is an error:
+//TODO: This restriction may be lifted in the future.
+//let a: [u8; 1] = b"q";
+
+// copies a to a new variable c. c is the same size as a.
+let c: [u8; _] = a;
+stdout.print(c);
+
+a = a;
+
+// Explicitly declaring the size here even though its a copy
+let d: [u8; 3] = b;
+stdout.print("d = ", d, " (should be abc)\n");
+
+stdout.print("b = ", b, " (should be abc)\n");
+b = "dbd";
+stdout.print("b = ", b, " (should be dbd)\n");
+b = d;
+stdout.print("b = ", b, " (should be abc)\n");
+
+// Should accept any [a-zA-z0-9_] as identifier names
+// Cannot start with a number
+let qqq: [u8; 2];
+let _bar: [u8; 2];
+// invalid:
+//let 12abc: [u8; _];

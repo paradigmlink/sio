@@ -1,0 +1,12 @@
+[package]
+name = "sio"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hashbrown = "0.14"
+werbolg-core = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-core"}
+werbolg-exec = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-exec" }
+werbolg-compile = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-compile"}

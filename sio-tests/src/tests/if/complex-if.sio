@@ -1,0 +1,143 @@
+// Change these variables to output different combinations of the letters a, b, c, and d
+
+let a1: bool = false; let b1: bool = false; let c1: bool = true;
+let a2: bool = true; let b2: bool = false; let c2: bool = false;
+let a3: bool = false; let b3: bool = true; let c3: bool = false;
+let a4: bool = true; let b4: bool = false; let c4: bool = false;
+let a5: bool = false; let b5: bool = false; let c5: bool = false;
+let a6: bool = false; let b6: bool = false; let c6: bool = true;
+
+if a1 {
+    stdout.print("a");
+}
+else if b1 {
+    stdout.print("b");
+}
+else if c1 {
+    stdout.print("c");
+    if a2 {
+        stdout.print("a");
+        if a3 {
+            stdout.print("a");
+        }
+        else if b3 {
+            stdout.print("b");
+            if a4 {
+                stdout.print("a");
+                if a5 {
+                    stdout.print("a");
+                }
+                else if b5 {
+                    stdout.print("b");
+                }
+                else if c5 {
+                    stdout.print("c");
+                    if a6 {
+                        stdout.print("a");
+                    }
+                    else if b6 {
+                        stdout.print("b");
+                    }
+                    else if c6 {
+                        stdout.print("c");
+                    }
+                    else {
+                        stdout.print("d");
+                    }
+                }
+                else {
+                    stdout.print("d");
+                    if a6 {
+                        stdout.print("a");
+                    }
+                    else if b6 {
+                        stdout.print("b");
+                    }
+                    else if c6 {
+                        stdout.print("c");
+                    }
+                    else {
+                        stdout.print("d");
+                    }
+                }
+            }
+            else if b4 {
+                stdout.print("b");
+            }
+            else if c4 {
+                stdout.print("c");
+            }
+            else {
+                stdout.print("d");
+            }
+        }
+        else if c3 {
+            stdout.print("c");
+            if a4 {
+                stdout.print("a");
+            }
+            else if b4 {
+                stdout.print("b");
+            }
+            else if c4 {
+                stdout.print("c");
+            }
+            else {
+                stdout.print("d");
+            }
+        }
+        else {
+            stdout.print("d");
+        }
+    }
+    else if b2 {
+        stdout.print("b");
+        if a3 {
+            stdout.print("a");
+            if a4 {
+                stdout.print("a");
+            }
+            else if b4 {
+                stdout.print("b");
+            }
+            else if c4 {
+                stdout.print("c");
+            }
+            else {
+                stdout.print("d");
+            }
+        }
+        else if b3 {
+            stdout.print("b");
+        }
+        else if c3 {
+            stdout.print("c");
+        }
+        else {
+            stdout.print("d");
+        }
+    }
+    else if c2 {
+        stdout.print("c");
+        if a3 {
+            stdout.print("a");
+        }
+        else if b3 {
+            stdout.print("b");
+        }
+        else if c3 {
+            stdout.print("c");
+        }
+        else {
+            stdout.print("d");
+        }
+    }
+    else {
+        stdout.print("d");
+    }
+}
+else {
+    stdout.print("d");
+}
+
+stdout.println();

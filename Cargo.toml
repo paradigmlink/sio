@@ -1,0 +1,11 @@
+
+[workspace]
+resolver = "2"
+
+members = [
+    "sio",
+    "sio-cli",
+    "sio-tests",
+    "sio-frontends",
+    "single-assignment-store",
+]

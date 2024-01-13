@@ -1,3 +1,0 @@
-if (4 - a) { skip } else { skip }
-
-//print("ok") // expect: ok
