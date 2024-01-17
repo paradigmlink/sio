@@ -4,7 +4,7 @@ mod args;
 mod exec;
 mod params;
 
-use sio::environ::general::create_general_env;
+use sio::environ::brigadier::create_brigadier_env;
 use exec::*;
 use params::{Frontend, SioParams};
 
@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             (
                 "frontend",
                 args::FlagDescr::Arg(Box::new(|s| {
-                    if s == "general" {
+                    if s == "brigadier" {
                         Ok(Flag::Frontend(Frontend::General))
                     } else if s == "major" {
                         Ok(Flag::Frontend(Frontend::Major))
@@ -127,7 +127,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let (source, module) = run_frontend(&params, &args)?;
 
-    let mut env = create_general_env();
+    let mut env = create_brigadier_env();
     let compile_unit = run_compile(&params, &mut env, source, module)?;
 
     let ee = werbolg_exec::ExecutionEnviron::from_compile_environment(env.finalize());

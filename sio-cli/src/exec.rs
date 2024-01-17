@@ -1,7 +1,7 @@
-use sio::environ::general::{GeneralLiteral, general_literal_mapper as literal_mapper, general_literal_to_value as literal_to_value};
-use sio::allocator::GeneralAllocator as Alloc;
-use sio::value::general::GeneralValue as Value;
-use sio::GeneralState;
+use sio::environ::brigadier::{BrigadierLiteral, brigadier_literal_mapper as literal_mapper, brigadier_literal_to_value as literal_to_value};
+use sio::allocator::BrigadierAllocator as Alloc;
+use sio::value::brigadier::BrigadierValue as Value;
+use sio::BrigadierState;
 
 use hashbrown::HashSet;
 use werbolg_compile::{code_dump, compile, Environment, InstructionAddress};
@@ -39,7 +39,7 @@ pub fn run_frontend(
     let parsing_res = match params.frontend {
         Frontend::Corporal => sio_frontends::corporal::module(),
         Frontend::Major => sio_frontends::major::module(),
-        Frontend::General => sio_frontends::general::module(),
+        Frontend::Brigadier => sio_frontends::brigadier::module(),
     };
 */
     let parsing_res = werbolg_lang_lispy::module(&source.file_unit);
@@ -72,10 +72,10 @@ pub fn report_print(source: &Source, report: Report) -> Result<(), Box<dyn Error
 
 pub fn run_compile<'m, 'e, A>(
     params: &SioParams,
-    env: &mut Environment<NIF<'m, 'e, A, GeneralLiteral, GeneralState, Value>, Value>,
+    env: &mut Environment<NIF<'m, 'e, A, BrigadierLiteral, BrigadierState, Value>, Value>,
     source: Source,
     module: Module,
-) -> Result<werbolg_compile::CompilationUnit<GeneralLiteral>, Box<dyn Error>> {
+) -> Result<werbolg_compile::CompilationUnit<BrigadierLiteral>, Box<dyn Error>> {
     let module_ns = Namespace::root().append(Ident::from("main"));
     let modules = vec![(module_ns.clone(), module)];
 
@@ -106,8 +106,8 @@ pub fn run_compile<'m, 'e, A>(
 
 pub fn run_exec<'m, 'e>(
     params: &SioParams,
-    ee: &'e ExecutionEnviron<'m, 'e, Alloc, GeneralLiteral, GeneralState, Value>,
-    exec_module: &'m werbolg_compile::CompilationUnit<GeneralLiteral>,
+    ee: &'e ExecutionEnviron<'m, 'e, Alloc, BrigadierLiteral, BrigadierState, Value>,
+    exec_module: &'m werbolg_compile::CompilationUnit<BrigadierLiteral>,
 ) -> Result<(), Box<dyn Error>> {
     let module_ns = Namespace::root().append(Ident::from("main"));
 
@@ -119,7 +119,7 @@ pub fn run_exec<'m, 'e>(
     let execution_params = ExecutionParams {
         literal_to_value: literal_to_value,
     };
-    let mut state = GeneralState {};
+    let mut state = BrigadierState {};
     let mut allocator = Alloc {};
 
     let mut em = ExecutionMachine::new(&exec_module, &ee, execution_params, allocator, state);
