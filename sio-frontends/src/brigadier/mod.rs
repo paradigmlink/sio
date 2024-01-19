@@ -2,7 +2,7 @@ pub mod position;
 pub mod ast;
 
 mod common;
-mod parser;
+//mod parser;
 mod token;
 mod tokenizer;
 //mod stmt_parser;
