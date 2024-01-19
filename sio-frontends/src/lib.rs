@@ -1,7 +1,8 @@
 #![no_std]
+
 extern crate alloc;
 extern crate proc_macro;
 
-pub mod corporal;
+pub mod brigadier;
 pub mod major;
-pub mod general;
+pub mod corporal;

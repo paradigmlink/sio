@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+hashbrown = "0.14"
 werbolg-core = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-core"}
 werbolg-ir-write = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-ir-write"}

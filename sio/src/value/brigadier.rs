@@ -4,7 +4,7 @@ use werbolg_exec::{ExecutionError, Valuable, ValueKind};
 pub type ValueInt = u64;
 
 #[derive(Clone, Debug)]
-pub enum GeneralValue {
+pub enum BrigadierValue {
     Unit,
     Unbound,
     Bool(bool),
@@ -12,14 +12,14 @@ pub enum GeneralValue {
     Fun(ValueFun),
 }
 
-impl GeneralValue {
+impl BrigadierValue {
     fn desc(&self) -> ValueKind {
         match self {
-            GeneralValue::Unit => UNIT_KIND,
-            GeneralValue::Unbound => UNBOUND_KIND,
-            GeneralValue::Bool(_) => BOOL_KIND,
-            GeneralValue::Integral(_) => INT_KIND,
-            GeneralValue::Fun(_) => FUN_KIND,
+            BrigadierValue::Unit => UNIT_KIND,
+            BrigadierValue::Unbound => UNBOUND_KIND,
+            BrigadierValue::Bool(_) => BOOL_KIND,
+            BrigadierValue::Integral(_) => INT_KIND,
+            BrigadierValue::Fun(_) => FUN_KIND,
         }
     }
 }
@@ -30,14 +30,14 @@ pub const BOOL_KIND: ValueKind = "    bool";
 pub const INT_KIND: ValueKind = "     int";
 pub const FUN_KIND: ValueKind = "     fun";
 
-impl Valuable for GeneralValue {
+impl Valuable for BrigadierValue {
     fn descriptor(&self) -> werbolg_exec::ValueKind {
         self.desc()
     }
 
     fn conditional(&self) -> Option<bool> {
         match self {
-            GeneralValue::Bool(b) => Some(*b),
+            BrigadierValue::Bool(b) => Some(*b),
             _ => None,
         }
     }
@@ -58,18 +58,18 @@ impl Valuable for GeneralValue {
     }
 
     fn make_fun(fun: ValueFun) -> Self {
-        GeneralValue::Fun(fun)
+        BrigadierValue::Fun(fun)
     }
 
     fn make_dummy() -> Self {
-        GeneralValue::Unit
+        BrigadierValue::Unit
     }
 }
 
-impl GeneralValue {
+impl BrigadierValue {
     pub fn int(&self) -> Result<ValueInt, ExecutionError> {
         match self {
-            GeneralValue::Integral(o) => Ok(*o),
+            BrigadierValue::Integral(o) => Ok(*o),
             _ => Err(ExecutionError::ValueKindUnexpected {
                 value_expected: INT_KIND,
                 value_got: self.descriptor(),

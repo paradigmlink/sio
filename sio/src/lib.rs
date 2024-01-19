@@ -6,18 +6,18 @@ pub mod value;
 
 use werbolg_core::{Ident, Literal, Module, Namespace};
 pub use self::{
-    allocator::{GeneralAllocator, MajorAllocator, CorporalAllocator},
-    value::{GeneralValue, MajorValue, CorporalValue},
-    environ::{general::GeneralLiteral, major::MajorLiteral, corporal::CorporalLiteral},
+    allocator::{BrigadierAllocator, MajorAllocator, CorporalAllocator},
+    value::{BrigadierValue, MajorValue, CorporalValue},
+    environ::{brigadier::BrigadierLiteral, major::MajorLiteral, corporal::CorporalLiteral},
 };
 
-pub type GeneralNIF<'m, 'e> = werbolg_exec::NIF<'m, 'e, GeneralAllocator, GeneralLiteral, GeneralState, GeneralValue>;
-pub type GeneralEnvironment<'m, 'e> = werbolg_compile::Environment<GeneralNIF<'m, 'e>, GeneralValue>;
-pub type GeneralExecutionMachine<'m, 'e> =
-    werbolg_exec::ExecutionMachine<'m, 'e, GeneralAllocator, GeneralLiteral, GeneralState, GeneralValue>;
+pub type BrigadierNIF<'m, 'e> = werbolg_exec::NIF<'m, 'e, BrigadierAllocator, BrigadierLiteral, BrigadierState, BrigadierValue>;
+pub type BrigadierEnvironment<'m, 'e> = werbolg_compile::Environment<BrigadierNIF<'m, 'e>, BrigadierValue>;
+pub type BrigadierExecutionMachine<'m, 'e> =
+    werbolg_exec::ExecutionMachine<'m, 'e, BrigadierAllocator, BrigadierLiteral, BrigadierState, BrigadierValue>;
 
 #[derive(Clone)]
-pub struct GeneralState {}
+pub struct BrigadierState {}
 
 #[derive(Clone)]
 pub struct MajorState {}
