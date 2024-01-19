@@ -1,4 +1,3 @@
-#![no_std]
 use werbolg_ir_write::module;
 
 #[allow(dead_code)]
