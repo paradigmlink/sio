@@ -1,0 +1,19 @@
+url pk0   : spub79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03aba;
+url top   : "top"::"level";
+url brig  : pk0::top;
+
+url pk1   : spub79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abb;
+url maj1  : "app1";
+url app1  : pk1::maj1;
+
+url pk2   : spub79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abc::"app2";
+url app2  : pk2;
+
+brigadier brig::Brigadier {
+    major {
+        app1::Major1,
+        app2::Major2,
+        spub79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd::"app3"::Major3,
+        //app1::Commented,
+    }
+}

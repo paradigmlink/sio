@@ -101,7 +101,9 @@ impl<'a> Lexer<'a> {
 
     fn match_token(&mut self, ch: char) -> Option<Token> {
         match ch {
+            ':' => Some(self.either(':', Token::ColonColon, Token::Colon)),
             ' ' => None,
+            '\n' => None,
             '/' => {
                 if self.it.consume_if(|ch| ch == '/') {
                     self.it.consume_while(|ch| ch != '\n');
@@ -110,7 +112,6 @@ impl<'a> Lexer<'a> {
                     Some(Token::Slash)
                 }
             }
-            '\n' => None,
             '\t' => None,
             '\r' => None,
             '"' => {
@@ -121,6 +122,7 @@ impl<'a> Lexer<'a> {
                     _ => Some(Token::String(string)),
                 }
             }
+            x if x.is_ascii_alphabetic() || x == '_' => self.identifier(x),
             ',' => Some(Token::Comma),
             '[' => Some(Token::LeftBracket),
             ']' => Some(Token::RightBracket),
@@ -142,13 +144,34 @@ impl<'a> Lexer<'a> {
         use hashbrown::HashMap;
         let mut keywords: HashMap<&str, Token> = HashMap::new();
         keywords.insert("import", Token::Import);
-
+        keywords.insert("url", Token::Url);
         match keywords.get(identifier) {
             None => None,
             Some(token) => Some(token.clone()),
         }
     }
 
+    fn identifier(&mut self, x: char) -> Option<Token> {
+        let mut identifier = String::new();
+        identifier.push(x);
+        let rest: String = self
+            .it
+            .consume_while(|a| a.is_ascii_alphanumeric() || a == '_')
+            .into_iter()
+            .collect();
+        identifier.push_str(rest.as_str());
+        if identifier.starts_with("spub1") {
+            if identifier.len() == 69 {
+                if !identifier.contains('_') {
+                    return Some(Token::PublicKey(identifier));
+                }
+            }
+        }
+        match self.keyword(&identifier) {
+            None => Some(Token::Identifier(identifier)),
+            Some(token) => Some(token),
+        }
+    }
     fn tokenize_with_context(&mut self) -> Vec<WithSpan<Token>> {
         let mut tokens: Vec<WithSpan<Token>> = Vec::new();
         loop {
@@ -193,6 +216,8 @@ mod tests {
     #[test]
     fn test_errors() {
         assert_eq!(tokenize("\"test"), vec![Token::UnterminatedString]);
+        assert_eq!(tokenize("spub1_9f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03aba"),
+            vec![Token::Identifier("spub1_9f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03aba".to_string())]);
     }
 
     #[test]
@@ -214,14 +239,28 @@ mod tests {
         );
         assert_eq!(tokenize("["), vec![Token::LeftBracket]);
         assert_eq!(tokenize("]"), vec![Token::RightBracket]);
+        assert_eq!(tokenize("spub179f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03aba"),
+            vec![Token::PublicKey("spub179f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03aba".to_string())]);
+        assert_eq!(tokenize("url pk0 : spub179f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03aba;"),
+            vec![
+                Token::Url,
+                Token::Identifier("pk0".to_string()),
+                Token::Colon,
+                Token::PublicKey("spub179f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03aba".to_string()),
+                Token::Semicolon
+            ]
+        );
+        assert_eq!(tokenize("url top   : \"top\"::\"level\";"),
+            vec![
+                Token::Url,
+                Token::Identifier("top".to_string()),
+                Token::Colon,
+                Token::String("top".to_string()),
+                Token::ColonColon,
+                Token::String("level".to_string()),
+                Token::Semicolon,
+            ]
+        );
     }
 }
 
-/*
-
-[
-  "sio_major_1",
-  "sio_major_2",
-  "sio_major_3",
-]
-*/
