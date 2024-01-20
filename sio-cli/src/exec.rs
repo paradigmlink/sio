@@ -81,6 +81,7 @@ pub fn run_compile<'m, 'e, A>(
 
     let compilation_params = werbolg_compile::CompilationParams {
         literal_mapper: literal_mapper,
+        sequence_constructor: None,
     };
 
     let exec_module = match compile(&compilation_params, modules, env) {
