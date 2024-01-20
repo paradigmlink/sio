@@ -7,9 +7,16 @@ pub enum Token {
     RightBracket,
     Comma,
     Slash,
-    String(String),
+    Url,
     Semicolon,
+    Colon,
+    ColonColon,
     Import,
+
+    // Literals.
+    Identifier(String),
+    String(String),
+    PublicKey(String),
 
     // Other.
     Eof,
@@ -23,9 +30,16 @@ pub enum TokenKind {
     RightBracket,
     Comma,
     Slash,
-    String,
+    Url,
     Semicolon,
+    Colon,
+    ColonColon,
     Import,
+
+    // Literals.
+    Identifier,
+    String,
+    PublicKey,
 
     // Other.
     Eof,
@@ -54,8 +68,13 @@ impl From<&Token> for TokenKind {
             Token::Comma => TokenKind::Comma,
             Token::Slash => TokenKind::Slash,
             Token::String(_) => TokenKind::String,
+            Token::PublicKey(_) => TokenKind::PublicKey,
+            Token::Url => TokenKind::Url,
             Token::Semicolon => TokenKind::Semicolon,
+            Token::Colon => TokenKind::Colon,
+            Token::ColonColon => TokenKind::ColonColon,
             Token::Import => TokenKind::Import,
+            Token::Identifier(_) => TokenKind::Identifier,
             Token::Eof => TokenKind::Eof,
             Token::UnterminatedString => TokenKind::UnterminatedString,
             Token::Unknown(_) => TokenKind::Unknown,
@@ -71,7 +90,12 @@ impl Display for TokenKind {
             TokenKind::Slash => "'/'",
             TokenKind::Comma => "','",
             TokenKind::Semicolon => "';'",
+            TokenKind::Colon => "':'",
+            TokenKind::ColonColon => "::",
+            TokenKind::Identifier => "identifier",
             TokenKind::String => "string",
+            TokenKind::PublicKey => "public_key",
+            TokenKind::Url => "url",
             TokenKind::Import => "'import'",
             TokenKind::Eof => "<EOF>",
             TokenKind::UnterminatedString => "<Unterminated String>",
