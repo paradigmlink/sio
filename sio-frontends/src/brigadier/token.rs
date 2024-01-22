@@ -5,6 +5,8 @@ use alloc::string::String;
 pub enum Token {
     LeftBracket,
     RightBracket,
+    LeftBrace,
+    RightBrace,
     Comma,
     Slash,
     Url,
@@ -18,6 +20,10 @@ pub enum Token {
     String(String),
     PublicKey(String),
 
+    // Keywords.
+    Brigadier,
+    Major,
+
     // Other.
     Eof,
     UnterminatedString,
@@ -28,6 +34,8 @@ pub enum Token {
 pub enum TokenKind {
     LeftBracket,
     RightBracket,
+    LeftBrace,
+    RightBrace,
     Comma,
     Slash,
     Url,
@@ -40,6 +48,10 @@ pub enum TokenKind {
     Identifier,
     String,
     PublicKey,
+
+    // Keywords.
+    Brigadier,
+    Major,
 
     // Other.
     Eof,
@@ -65,6 +77,8 @@ impl From<&Token> for TokenKind {
         match token {
             Token::LeftBracket => TokenKind::LeftBracket,
             Token::RightBracket => TokenKind::RightBracket,
+            Token::LeftBrace => TokenKind::LeftBrace,
+            Token::RightBrace => TokenKind::RightBrace,
             Token::Comma => TokenKind::Comma,
             Token::Slash => TokenKind::Slash,
             Token::String(_) => TokenKind::String,
@@ -75,6 +89,8 @@ impl From<&Token> for TokenKind {
             Token::ColonColon => TokenKind::ColonColon,
             Token::Import => TokenKind::Import,
             Token::Identifier(_) => TokenKind::Identifier,
+            Token::Brigadier => TokenKind::Brigadier,
+            Token::Major => TokenKind::Major,
             Token::Eof => TokenKind::Eof,
             Token::UnterminatedString => TokenKind::UnterminatedString,
             Token::Unknown(_) => TokenKind::Unknown,
@@ -87,6 +103,8 @@ impl Display for TokenKind {
         write!(f, "{}", match self {
             TokenKind::LeftBracket => "'['",
             TokenKind::RightBracket => "']'",
+            TokenKind::LeftBrace => "'{'",
+            TokenKind::RightBrace => "'}'",
             TokenKind::Slash => "'/'",
             TokenKind::Comma => "','",
             TokenKind::Semicolon => "';'",
@@ -95,8 +113,10 @@ impl Display for TokenKind {
             TokenKind::Identifier => "identifier",
             TokenKind::String => "string",
             TokenKind::PublicKey => "public_key",
-            TokenKind::Url => "url",
+            TokenKind::Url => "'url'",
             TokenKind::Import => "'import'",
+            TokenKind::Brigadier => "'brigadier'",
+            TokenKind::Major => "'major'",
             TokenKind::Eof => "<EOF>",
             TokenKind::UnterminatedString => "<Unterminated String>",
             TokenKind::Unknown => "<Unknown>",

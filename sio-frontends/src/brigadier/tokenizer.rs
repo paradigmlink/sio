@@ -104,14 +104,7 @@ impl<'a> Lexer<'a> {
             ':' => Some(self.either(':', Token::ColonColon, Token::Colon)),
             ' ' => None,
             '\n' => None,
-            '/' => {
-                if self.it.consume_if(|ch| ch == '/') {
-                    self.it.consume_while(|ch| ch != '\n');
-                    None
-                } else {
-                    Some(Token::Slash)
-                }
-            }
+            '/' => self.comment_or_slash(),
             '\t' => None,
             '\r' => None,
             '"' => {
@@ -126,6 +119,8 @@ impl<'a> Lexer<'a> {
             ',' => Some(Token::Comma),
             '[' => Some(Token::LeftBracket),
             ']' => Some(Token::RightBracket),
+            '{' => Some(Token::LeftBrace),
+            '}' => Some(Token::RightBrace),
             ';' => Some(Token::Semicolon),
             c => Some(Token::Unknown(c)),
         }
@@ -139,12 +134,23 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    fn comment_or_slash(&mut self) -> Option<Token> {
+        if self.it.consume_if(|ch| ch == '/') {
+            self.it.consume_while(|ch| ch != '\n');
+            None
+        } else  {
+            Some(Token::Slash)
+        }
+    }
+
     //TODO Static the keywords
     fn keyword(&self, identifier: &str) -> Option<Token> {
         use hashbrown::HashMap;
         let mut keywords: HashMap<&str, Token> = HashMap::new();
         keywords.insert("import", Token::Import);
         keywords.insert("url", Token::Url);
+        keywords.insert("brigadier", Token::Brigadier);
+        keywords.insert("major", Token::Major);
         match keywords.get(identifier) {
             None => None,
             Some(token) => Some(token.clone()),
@@ -259,6 +265,36 @@ mod tests {
                 Token::ColonColon,
                 Token::String("level".to_string()),
                 Token::Semicolon,
+            ]
+        );
+        assert_eq!(tokenize(
+            "brigadier brig::Brigadier {
+                major {
+                    app1::Major1,
+                    spub179f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03aba::\"app3\"::Major3,
+                    //app1::Commented,
+                }
+            }"
+        ), vec![
+                Token::Brigadier,
+                Token::Identifier("brig".to_string()),
+                Token::ColonColon,
+                Token::Identifier("Brigadier".to_string()),
+                Token::LeftBrace,
+                Token::Major,
+                Token::LeftBrace,
+                Token::Identifier("app1".to_string()),
+                Token::ColonColon,
+                Token::Identifier("Major1".to_string()),
+                Token::Comma,
+                Token::PublicKey("spub179f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03aba".to_string()),
+                Token::ColonColon,
+                Token::String("app3".to_string()),
+                Token::ColonColon,
+                Token::Identifier("Major3".to_string()),
+                Token::Comma,
+                Token::RightBrace,
+                Token::RightBrace,
             ]
         );
     }
