@@ -1,7 +1,7 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use crate::brigadier::position::WithSpan;
+use crate::position::WithSpan;
 
 pub type Identifier = String;
 

@@ -66,8 +66,8 @@ impl Display for Token {
     }
 }
 
-impl From<&crate::brigadier::position::WithSpan<Token>> for TokenKind {
-    fn from(token_with_span: &crate::brigadier::position::WithSpan<Token>) -> Self {
+impl From<&crate::position::WithSpan<Token>> for TokenKind {
+    fn from(token_with_span: &crate::position::WithSpan<Token>) -> Self {
         TokenKind::from(&token_with_span.value)
     }
 }

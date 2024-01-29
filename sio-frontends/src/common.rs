@@ -1,6 +1,6 @@
 use alloc::format;
 use alloc::string::String;
-use crate::brigadier::{
+use crate::{
     parser::Parser,
     position::WithSpan,
     token::{Token, TokenKind},

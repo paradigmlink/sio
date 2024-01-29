@@ -7,17 +7,12 @@ use hashbrown::HashSet;
 use werbolg_compile::{code_dump, compile, Environment, InstructionAddress};
 use werbolg_core::{id::IdF, AbsPath, Ident, Module, Namespace};
 use werbolg_exec::{ExecutionEnviron, ExecutionMachine, ExecutionParams, WAllocator, NIF};
-use werbolg_lang_common::{FileUnit, LinesMap, Report, ReportKind};
+use werbolg_lang_common::{Report, ReportKind, Source};
 use werbolg_lang_lispy;
 use sio_frontends;
 use std::error::Error;
 
 use super::{Frontend, SioParams};
-
-pub struct Source {
-    file_unit: FileUnit,
-    file_map: LinesMap,
-}
 
 pub fn run_frontend(
     params: &SioParams,
@@ -29,12 +24,7 @@ pub fn run_frontend(
     }
 
     let path = std::path::PathBuf::from(&args[0]);
-    let file_unit = get_file(&path)?;
-    let file_map = LinesMap::new(&file_unit.content);
-    let source = Source {
-        file_unit,
-        file_map,
-    };
+    let source = get_file(&path)?;
 /*
     let parsing_res = match params.frontend {
         Frontend::Corporal => sio_frontends::corporal::module(),
@@ -65,7 +55,7 @@ pub fn run_frontend(
 
 pub fn report_print(source: &Source, report: Report) -> Result<(), Box<dyn Error>> {
     let mut s = String::new();
-    report.write(&source.file_unit, &source.file_map, &mut s)?;
+    report.write(&source, &mut s)?;
     println!("{}", s);
     Ok(())
 }
@@ -164,9 +154,9 @@ pub fn run_exec<'m, 'e>(
     }
 }
 
-fn get_file(path: &std::path::Path) -> std::io::Result<FileUnit> {
+fn get_file(path: &std::path::Path) -> std::io::Result<Source> {
     let path = std::path::PathBuf::from(&path);
     let content = std::fs::read_to_string(&path).expect("file read");
-    let fileunit = FileUnit::from_string(path.to_string_lossy().to_string(), content);
+    let fileunit = Source::from_string(path.to_string_lossy().to_string(), content);
     Ok(fileunit)
 }

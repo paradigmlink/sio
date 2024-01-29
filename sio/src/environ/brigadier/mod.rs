@@ -1,6 +1,6 @@
 use crate::value::brigadier::{self, BrigadierValue as Value, ValueInt};
 use crate::allocator::BrigadierAllocator as Alloc;
-use werbolg_compile::{CompilationError, Environment};
+use werbolg_compile::{CompilationError, Environment, CallArity};
 use werbolg_core::{AbsPath, Ident, Literal, Namespace, Span};
 use werbolg_exec::{ExecutionError, NIFCall, WAllocator, NIF, ExecutionMachine};
 use crate::{BrigadierExecutionMachine, BrigadierNIF};
@@ -104,34 +104,26 @@ pub fn brigadier_literal_mapper(span: Span, lit: Literal) -> Result<BrigadierLit
 pub fn create_brigadier_env<'m, 'e>(
 ) -> Environment<BrigadierNIF<'m, 'e>, Value> {
     macro_rules! add_raw_nif {
-        ($env:ident, $i:literal, $e:expr) => {
-            let nif = NIF {
-                name: $i,
-                call: NIFCall::Raw($e),
-            };
+        ($env:ident, $i:literal, $arity:literal, $e:expr) => {
+            let nif = NIFCall::Raw($e).info($i, CallArity::try_from($arity as usize).unwrap());
             let path = AbsPath::new(&Namespace::root(), &Ident::from($i));
             $env.add_nif(&path, nif);
         };
     }
     macro_rules! add_pure_nif {
-        ($env:ident, $i:literal, $e:expr) => {
-            let nif = NIF {
-                name: $i,
-                call: NIFCall::Pure($e),
-            };
+        ($env:ident, $i:literal, $arity:literal, $e:expr) => {
+            let nif = NIFCall::Pure($e).info($i, CallArity::try_from($arity as usize).unwrap());
             let path = AbsPath::new(&Namespace::root(), &Ident::from($i));
             $env.add_nif(&path, nif);
         };
     }
-
     let mut env = Environment::new();
-    add_raw_nif!(env, "unbound", nif_unbound);
-    add_pure_nif!(env, "+", nif_plus);
-    add_pure_nif!(env, "-", nif_sub);
-    add_pure_nif!(env, "*", nif_mul);
-    add_pure_nif!(env, "==", nif_eq);
-    add_pure_nif!(env, "<=", nif_le);
-    add_pure_nif!(env, "neg", nif_neg);
-
+    add_raw_nif!(env, "unbound", 0, nif_unbound);
+    add_pure_nif!(env, "+", 2, nif_plus);
+    add_pure_nif!(env, "-", 2, nif_sub);
+    add_pure_nif!(env, "*", 2, nif_mul);
+    add_pure_nif!(env, "==", 2, nif_eq);
+    add_pure_nif!(env, "<=", 2, nif_le);
+    add_pure_nif!(env, "neg", 1, nif_neg);
     env
 }

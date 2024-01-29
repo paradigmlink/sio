@@ -1,5 +1,5 @@
 use super::token::Token;
-use crate::brigadier::position::*;
+use crate::position::*;
 use core::iter::Peekable;
 use alloc::str;
 use alloc::string::String;
