@@ -113,7 +113,7 @@ pub struct LineOffsets {
 ///
 /// # Examples
 /// ```
-/// use sio_frontends::position::{LineOffsets, BytePos};
+/// use sio_frontend::position::{LineOffsets, BytePos};
 /// let offsets = LineOffsets::new("abc\ndef");
 /// assert_eq!(offsets.line(BytePos(0)), 1);
 /// assert_eq!(offsets.line(BytePos(1)), 1);

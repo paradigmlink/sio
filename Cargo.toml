@@ -5,7 +5,7 @@ members = [
     "sio",
     "sio-cli",
     "sio-tests",
-    "sio-frontends",
+    "sio-frontend",
     "single-assignment-store",
     "sio-garrison",
 ]

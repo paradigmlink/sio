@@ -9,7 +9,7 @@ use werbolg_core::{id::IdF, AbsPath, Ident, Module, Namespace};
 use werbolg_exec::{ExecutionEnviron, ExecutionMachine, ExecutionParams, WAllocator, NIF};
 use werbolg_lang_common::{Report, ReportKind, Source};
 use werbolg_lang_lispy;
-use sio_frontends;
+use sio_frontend;
 use std::error::Error;
 
 use super::{Frontend, SioParams};
@@ -27,9 +27,9 @@ pub fn run_frontend(
     let source = get_file(&path)?;
 /*
     let parsing_res = match params.frontend {
-        Frontend::Corporal => sio_frontends::corporal::module(),
-        Frontend::Major => sio_frontends::major::module(),
-        Frontend::Brigadier => sio_frontends::brigadier::module(),
+        Frontend::Corporal => sio_frontend::corporal::module(),
+        Frontend::Major => sio_frontend::major::module(),
+        Frontend::Brigadier => sio_frontend::brigadier::module(),
     };
 */
     let parsing_res = werbolg_lang_lispy::module(&source.file_unit);
