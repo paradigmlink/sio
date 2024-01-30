@@ -102,6 +102,7 @@ impl<'a> Lexer<'a> {
     fn match_token(&mut self, ch: char) -> Option<Token> {
         match ch {
             ':' => Some(self.either(':', Token::ColonColon, Token::Colon)),
+            '=' => Some(self.either('=', Token::EqualEqual, Token::Equal)),
             ' ' => None,
             '\n' => None,
             '/' => self.comment_or_slash(),
@@ -115,12 +116,15 @@ impl<'a> Lexer<'a> {
                     _ => Some(Token::String(string)),
                 }
             }
+            x if x.is_numeric() => self.number(x),
             x if x.is_ascii_alphabetic() || x == '_' => self.identifier(x),
             ',' => Some(Token::Comma),
             '[' => Some(Token::LeftBracket),
             ']' => Some(Token::RightBracket),
             '{' => Some(Token::LeftBrace),
             '}' => Some(Token::RightBrace),
+            '(' => Some(Token::LeftParen),
+            ')' => Some(Token::RightParen),
             ';' => Some(Token::Semicolon),
             c => Some(Token::Unknown(c)),
         }
@@ -143,6 +147,27 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    fn number(&mut self, x: char) -> Option<Token> {
+        let mut number = String::new();
+        number.push(x);
+        let num: String = self
+            .it
+            .consume_while(|a| a.is_numeric())
+            .into_iter()
+            .collect();
+        number.push_str(num.as_str());
+        if self.it.peek() == Some(&'.') && self.it.consume_if_next(|ch| ch.is_numeric()) {
+            let num2: String = self
+                .it
+                .consume_while(|a| a.is_numeric())
+                .into_iter()
+                .collect();
+            number.push('.');
+            number.push_str(num2.as_str());
+        }
+        Some(Token::Number(number.parse::<f64>().unwrap()))
+    }
+
     //TODO Static the keywords
     fn keyword(&self, identifier: &str) -> Option<Token> {
         use hashbrown::HashMap;
@@ -151,6 +176,16 @@ impl<'a> Lexer<'a> {
         keywords.insert("url", Token::Url);
         keywords.insert("brigadier", Token::Brigadier);
         keywords.insert("major", Token::Major);
+        keywords.insert("corporal", Token::Corporal);
+        keywords.insert("majors", Token::Majors);
+        keywords.insert("corporals", Token::Corporals);
+        keywords.insert("pub", Token::PublicFun);
+        keywords.insert("let", Token::Let);
+        keywords.insert("thread", Token::Thread);
+        keywords.insert("if", Token::If);
+        keywords.insert("else", Token::Else);
+        keywords.insert("true", Token::True);
+        keywords.insert("false", Token::False);
         match keywords.get(identifier) {
             None => None,
             Some(token) => Some(token.clone()),
@@ -269,10 +304,11 @@ mod tests {
         );
         assert_eq!(tokenize(
             "brigadier brig::Brigadier {
-                major {
+                majors {
                     app1::Major1,
                     spub179f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03aba::\"app3\"::Major3,
                     //app1::Commented,
+                    app2,
                 }
             }"
         ), vec![
@@ -281,7 +317,7 @@ mod tests {
                 Token::ColonColon,
                 Token::Identifier("Brigadier".to_string()),
                 Token::LeftBrace,
-                Token::Major,
+                Token::Majors,
                 Token::LeftBrace,
                 Token::Identifier("app1".to_string()),
                 Token::ColonColon,
@@ -293,8 +329,96 @@ mod tests {
                 Token::ColonColon,
                 Token::Identifier("Major3".to_string()),
                 Token::Comma,
+                Token::Identifier("app2".to_string()),
+                Token::Comma,
                 Token::RightBrace,
                 Token::RightBrace,
+            ]
+        );
+        assert_eq!(tokenize(
+            "major maj::Major {
+                corporals {
+                    app1::Corporal1,
+                    spub179f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03aba::\"app3\"::Corporal2,
+                    //app1::Commented,
+                    app3,
+                }
+            }"
+        ), vec![
+                Token::Major,
+                Token::Identifier("maj".to_string()),
+                Token::ColonColon,
+                Token::Identifier("Major".to_string()),
+                Token::LeftBrace,
+                Token::Corporals,
+                Token::LeftBrace,
+                Token::Identifier("app1".to_string()),
+                Token::ColonColon,
+                Token::Identifier("Corporal1".to_string()),
+                Token::Comma,
+                Token::PublicKey("spub179f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03aba".to_string()),
+                Token::ColonColon,
+                Token::String("app3".to_string()),
+                Token::ColonColon,
+                Token::Identifier("Corporal2".to_string()),
+                Token::Comma,
+                Token::Identifier("app3".to_string()),
+                Token::Comma,
+                Token::RightBrace,
+                Token::RightBrace,
+            ]
+        );
+
+        assert_eq!(tokenize(
+            "corporal corp::Corporal {
+                pub main :: () {
+                    let x;
+                    thread {
+                      x = 0;
+                    }
+                    if x == 0 {
+                      true
+                    } else {
+                      false
+                    }
+                }
+            }"
+        ), vec![
+                Token::Corporal,
+                Token::Identifier("corp".to_string()),
+                Token::ColonColon,
+                Token::Identifier("Corporal".to_string()),
+                Token::LeftBrace,
+                Token::PublicFun,
+                Token::Identifier("main".to_string()),
+                Token::ColonColon,
+                Token::LeftParen,
+                Token::RightParen,
+                Token::LeftBrace,
+                Token::Let,
+                Token::Identifier("x".to_string()),
+                Token::Semicolon,
+                Token::Thread,
+                Token::LeftBrace,
+                Token::Identifier("x".to_string()),
+                Token::Equal,
+                Token::Number(0.0),
+                Token::Semicolon,
+                Token::RightBrace,
+                Token::If,
+                Token::Identifier("x".to_string()),
+                Token::EqualEqual,
+                Token::Number(0.0),
+                Token::LeftBrace,
+                Token::True,
+                Token::RightBrace,
+                Token::Else,
+                Token::LeftBrace,
+                Token::False,
+                Token::RightBrace,
+                Token::RightBrace,
+                Token::RightBrace,
+
             ]
         );
     }
