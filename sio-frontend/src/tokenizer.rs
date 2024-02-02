@@ -172,20 +172,21 @@ impl<'a> Lexer<'a> {
     fn keyword(&self, identifier: &str) -> Option<Token> {
         use hashbrown::HashMap;
         let mut keywords: HashMap<&str, Token> = HashMap::new();
-        keywords.insert("import", Token::Import);
+        keywords.insert("use", Token::Use);
         keywords.insert("url", Token::Url);
         keywords.insert("brigadier", Token::Brigadier);
         keywords.insert("major", Token::Major);
         keywords.insert("corporal", Token::Corporal);
         keywords.insert("majors", Token::Majors);
         keywords.insert("corporals", Token::Corporals);
-        keywords.insert("pub", Token::PublicFun);
+        keywords.insert("pub", Token::Pub);
         keywords.insert("let", Token::Let);
         keywords.insert("thread", Token::Thread);
         keywords.insert("if", Token::If);
         keywords.insert("else", Token::Else);
         keywords.insert("true", Token::True);
         keywords.insert("false", Token::False);
+        keywords.insert("print", Token::Print);
         match keywords.get(identifier) {
             None => None,
             Some(token) => Some(token.clone()),
@@ -302,6 +303,19 @@ mod tests {
                 Token::Semicolon,
             ]
         );
+        assert_eq!(tokenize("use {top::level::Top};"),
+            vec![
+                Token::Use,
+                Token::LeftBrace,
+                Token::Identifier("top".to_string()),
+                Token::ColonColon,
+                Token::Identifier("level".to_string()),
+                Token::ColonColon,
+                Token::Identifier("Top".to_string()),
+                Token::RightBrace,
+                Token::Semicolon,
+            ]
+        );
         assert_eq!(tokenize(
             "brigadier brig::Brigadier {
                 majors {
@@ -389,7 +403,7 @@ mod tests {
                 Token::ColonColon,
                 Token::Identifier("Corporal".to_string()),
                 Token::LeftBrace,
-                Token::PublicFun,
+                Token::Pub,
                 Token::Identifier("main".to_string()),
                 Token::ColonColon,
                 Token::LeftParen,
