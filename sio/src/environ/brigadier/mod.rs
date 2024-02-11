@@ -6,7 +6,7 @@ use werbolg_exec::{ExecutionError, NIFCall, WAllocator, NIF, ExecutionMachine};
 use crate::{BrigadierExecutionMachine, BrigadierNIF};
 use alloc::string::ToString;
 
-fn nif_unbound(em: &mut BrigadierExecutionMachine<'_, '_>) -> Result<Value, ExecutionError> {
+fn nif_unbound(em: &mut BrigadierExecutionMachine) -> Result<Value, ExecutionError> {
     let (i_dont_know, args) = em.stack.get_call_and_args(em.current_arity);
     if args.is_empty() {
         Ok(Value::Unbound)
@@ -101,8 +101,8 @@ pub fn brigadier_literal_mapper(span: Span, lit: Literal) -> Result<BrigadierLit
     }
 }
 
-pub fn create_brigadier_env<'m, 'e>(
-) -> Environment<BrigadierNIF<'m, 'e>, Value> {
+pub fn create_brigadier_env(
+) -> Environment<BrigadierNIF, Value> {
     macro_rules! add_raw_nif {
         ($env:ident, $i:literal, $arity:literal, $e:expr) => {
             let nif = NIFCall::Raw($e).info($i, CallArity::try_from($arity as usize).unwrap());

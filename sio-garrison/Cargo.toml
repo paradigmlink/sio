@@ -9,6 +9,8 @@ edition = "2021"
 werbolg-core = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-core"}
 werbolg-exec = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-exec"}
 werbolg-compile = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-compile"}
+werbolg-lang-lispy = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-lang-lispy"}
+werbolg-lang-common = { version = "0.1", git = "https://github.com/vincenthz/werbolg", package = "werbolg-lang-common"}
 sio = { path = "../sio" }
 sio-frontend = { path = "../sio-frontend" }
 hashbrown = "0.14"

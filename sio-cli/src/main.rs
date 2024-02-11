@@ -5,6 +5,7 @@ mod exec;
 mod params;
 
 use sio::environ::brigadier::create_brigadier_env;
+use sio_garrison::Garrison;
 use exec::*;
 use params::{Frontend, SioParams};
 
@@ -125,13 +126,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         frontend,
     };
 
+    let garrison = Garrison::new();
+
     let (source, module) = run_frontend(&params, &args)?;
 
     let mut env = create_brigadier_env();
     let compile_unit = run_compile(&params, &mut env, source, module)?;
 
     let ee = werbolg_exec::ExecutionEnviron::from_compile_environment(env.finalize());
-    run_exec(&params, &ee, &compile_unit)?;
+    run_exec(&params, ee, compile_unit)?;
 
     Ok(())
 }

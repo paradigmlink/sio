@@ -8,24 +8,27 @@ use werbolg_core::{Ident, Literal, Module, Namespace};
 pub use self::{
     allocator::{BrigadierAllocator, MajorAllocator, CorporalAllocator},
     value::{BrigadierValue, MajorValue, CorporalValue},
-    environ::{brigadier::BrigadierLiteral, major::MajorLiteral, corporal::CorporalLiteral},
+    environ::{
+        brigadier::{BrigadierLiteral, brigadier_literal_mapper, brigadier_literal_to_value},
+        major::{MajorLiteral, major_literal_mapper, major_literal_to_value},
+        corporal::{CorporalLiteral, corporal_literal_mapper, corporal_literal_to_value},
+    },
 };
 
-pub type BrigadierNIF<'m, 'e> = werbolg_exec::NIF<'m, 'e, BrigadierAllocator, BrigadierLiteral, BrigadierState, BrigadierValue>;
-pub type BrigadierEnvironment<'m, 'e> = werbolg_compile::Environment<BrigadierNIF<'m, 'e>, BrigadierValue>;
-pub type BrigadierExecutionMachine<'m, 'e> =
-    werbolg_exec::ExecutionMachine<'m, 'e, BrigadierAllocator, BrigadierLiteral, BrigadierState, BrigadierValue>;
+pub type BrigadierNIF = werbolg_exec::NIF<BrigadierAllocator, BrigadierLiteral, BrigadierState, BrigadierValue>;
+pub type BrigadierEnvironment = werbolg_compile::Environment<BrigadierNIF, BrigadierValue>;
+pub type BrigadierExecutionMachine =
+    werbolg_exec::ExecutionMachine<BrigadierAllocator, BrigadierLiteral, BrigadierState, BrigadierValue>;
 
+pub type MajorNIF = werbolg_exec::NIF<MajorAllocator, MajorLiteral, MajorState, MajorValue>;
+pub type MajorEnvironment = werbolg_compile::Environment<MajorNIF, MajorValue>;
+pub type MajorExecutionMachine =
+    werbolg_exec::ExecutionMachine<MajorAllocator, MajorLiteral, MajorState, MajorValue>;
 
-pub type MajorNIF<'m, 'e> = werbolg_exec::NIF<'m, 'e, MajorAllocator, MajorLiteral, MajorState, MajorValue>;
-pub type MajorEnvironment<'m, 'e> = werbolg_compile::Environment<MajorNIF<'m, 'e>, MajorValue>;
-pub type MajorExecutionMachine<'m, 'e> =
-    werbolg_exec::ExecutionMachine<'m, 'e, MajorAllocator, MajorLiteral, MajorState, MajorValue>;
-
-pub type CorporalNIF<'m, 'e> = werbolg_exec::NIF<'m, 'e, CorporalAllocator, CorporalLiteral, CorporalState, CorporalValue>;
-pub type CorporalEnvironment<'m, 'e> = werbolg_compile::Environment<CorporalNIF<'m, 'e>, CorporalValue>;
-pub type CorporalExecutionMachine<'m, 'e> =
-    werbolg_exec::ExecutionMachine<'m, 'e, CorporalAllocator, CorporalLiteral, CorporalState, CorporalValue>;
+pub type CorporalNIF = werbolg_exec::NIF<CorporalAllocator, CorporalLiteral, CorporalState, CorporalValue>;
+pub type CorporalEnvironment = werbolg_compile::Environment<CorporalNIF, CorporalValue>;
+pub type CorporalExecutionMachine =
+    werbolg_exec::ExecutionMachine<CorporalAllocator, CorporalLiteral, CorporalState, CorporalValue>;
 
 #[derive(Clone)]
 pub struct BrigadierState {}

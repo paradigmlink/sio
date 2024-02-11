@@ -1,96 +1,70 @@
 #![no_std]
+#![feature(error_in_core)]
 
+use hashbrown::{HashMap, HashSet};
 extern crate alloc;
 use sio::{
-    BrigadierExecutionMachine, BrigadierEnvironment, BrigadierLiteral,
+    BrigadierExecutionMachine, BrigadierEnvironment, BrigadierAllocator, BrigadierLiteral, BrigadierState, BrigadierValue, brigadier_literal_mapper, brigadier_literal_to_value,
     MajorExecutionMachine, MajorEnvironment, MajorLiteral,
     CorporalExecutionMachine, CorporalEnvironment, CorporalLiteral};
+use sio::environ::brigadier::create_brigadier_env;
 use sio_frontend::parse;
-use hashbrown::HashMap;
-use alloc::vec::Vec;
-use alloc::vec;
-use werbolg_core::{ir::Module, Path};
-use werbolg_compile::CompilationUnit;
+use werbolg_core::{id::IdF, AbsPath, Ident, Namespace, ir::Module, Path};
+use werbolg_compile::{CompilationUnit, Environment, compile, code_dump, InstructionAddress};
+use werbolg_exec::{NIF, ExecutionMachine, ExecutionEnviron, ExecutionParams, WerRefCount};
+use werbolg_lang_common::{Report, ReportKind, Source};
+use werbolg_lang_lispy::module;
+use alloc::{string::ToString, format, vec, vec::Vec, boxed::Box, string::String};
+use core::error::Error;
 
-pub struct Brigadier<'m, 'a> {
-    cu: Option<CompilationUnit<BrigadierLiteral>>,
-    env: Option<BrigadierEnvironment<'m, 'a>>,
-    brigadier: Option<BrigadierExecutionMachine<'m, 'a>>,
+mod brigadier;
+mod major;
+mod corporal;
+use brigadier::Brigadier;
+use major::Major;
+use corporal::Corporal;
+
+pub struct SioParams {
+    pub dump_ir: bool,
+    pub dump_instr: bool,
+    pub exec_step_trace: bool,
+    pub step_address: Vec<u64>,
 }
 
-impl <'m, 'a> Brigadier<'m, 'a> {
-    pub fn new(src: &str) -> Self {
-        Self {
-            cu: None,
-            env: None,
-            brigadier: None,
+pub fn report_print(source: &Source, report: Report) -> Result<(), Box<dyn Error>> {
+    let mut s = String::new();
+    report.write(&source, &mut s)?;
+    //println!("{}", s);
+    Ok(())
+}
+
+fn run_frontend(src: String, path: String) -> Result<(Source, Module), Box<dyn Error>> {
+    let source = Source::from_string(path, src);
+    let parsing_res = werbolg_lang_lispy::module(&source.file_unit);
+    let module = match parsing_res {
+        Err(es) => {
+            for e in es.into_iter() {
+                let report = Report::new(ReportKind::Error, format!("Parse Error: {:?}", e))
+                    .lines_before(1)
+                    .lines_after(1)
+                    .highlight(e.location, format!("parse error here"));
+
+                report_print(&source, report)?;
+            }
+            return Err(format!("parse error").into());
         }
-    }
-    pub fn env(&mut self, env: BrigadierEnvironment<'m, 'a>) {
-        self.env = Some(env);
-    }
-    pub fn march(&mut self) {
-        if let Some(brigadier) = &mut self.brigadier {
-            werbolg_exec::step(brigadier);
-        }
-    }
+        Ok(module) => module,
+    };
+    Ok((source, module))
 }
 
-pub struct Major<'m, 'a> {
-    cu: Option<CompilationUnit<MajorLiteral>>,
-    env: Option<MajorEnvironment<'m, 'a>>,
-    major: Option<MajorExecutionMachine<'m, 'a>>,
+pub struct Garrison {
+    brigadier: Option<Brigadier>,
+    majors: Vec<Major>,
+    corporals: Vec<Corporal>,
 }
 
-impl <'m, 'a> Major<'m, 'a> {
-    pub fn new() -> Self {
-        Self {
-            cu: None,
-            env: None,
-            major: None,
-        }
-    }
-    pub fn env(&mut self, env: MajorEnvironment<'m, 'a>) {
-        self.env = Some(env);
-    }
-    pub fn march(&mut self) {
-        if let Some(major) = &mut self.major {
-            werbolg_exec::step(major);
-        }
-    }
-}
-
-pub struct Corporal<'m, 'a> {
-    cu: Option<CompilationUnit<CorporalLiteral>>,
-    env: Option<CorporalEnvironment<'m, 'a>>,
-    threads: Vec<CorporalExecutionMachine<'m, 'a>>,
-}
-
-impl <'m, 'a> Corporal<'m, 'a> {
-    pub fn new() -> Self {
-        Self {
-            cu: None,
-            env: None,
-            threads: vec![],
-        }
-    }
-    pub fn env(&mut self, env: CorporalEnvironment<'m, 'a>) {
-        self.env = Some(env);
-    }
-    pub fn march(&mut self) {
-        for thread in &mut self.threads {
-            werbolg_exec::step(thread);
-        }
-    }
-}
-
-pub struct Garrison<'m, 'a> {
-    brigadier: Option<Brigadier<'m, 'a>>,
-    majors: Vec<Major<'m, 'a>>,
-    corporals: Vec<Corporal<'m, 'a>>,
-}
-
-impl <'m, 'a> Garrison<'m, 'a> {
+impl Garrison {
     pub fn new() -> Self {
         Self {
             brigadier: None,
@@ -98,13 +72,13 @@ impl <'m, 'a> Garrison<'m, 'a> {
             corporals: vec![],
         }
     }
-    pub fn brigadier(&mut self, brigadier: Brigadier<'m, 'a>) {
+    pub fn brigadier(&mut self, brigadier: Brigadier) {
         self.brigadier = Some(brigadier);
     }
-    pub fn add_major(&mut self, major: Major<'m, 'a>) {
+    pub fn add_major(&mut self, major: Major) {
         self.majors.push(major);
     }
-    pub fn add_corporal(&mut self, corporal: Corporal<'m, 'a>) {
+    pub fn add_corporal(&mut self, corporal: Corporal) {
         self.corporals.push(corporal);
     }
     pub fn march(&mut self) {

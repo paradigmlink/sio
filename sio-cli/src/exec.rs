@@ -6,7 +6,7 @@ use sio::BrigadierState;
 use hashbrown::HashSet;
 use werbolg_compile::{code_dump, compile, Environment, InstructionAddress};
 use werbolg_core::{id::IdF, AbsPath, Ident, Module, Namespace};
-use werbolg_exec::{ExecutionEnviron, ExecutionMachine, ExecutionParams, WAllocator, NIF};
+use werbolg_exec::{ExecutionEnviron, ExecutionMachine, ExecutionParams, WAllocator, NIF, WerRefCount};
 use werbolg_lang_common::{Report, ReportKind, Source};
 use werbolg_lang_lispy;
 use sio_frontend;
@@ -25,28 +25,22 @@ pub fn run_frontend(
 
     let path = std::path::PathBuf::from(&args[0]);
     let source = get_file(&path)?;
-/*
-    let parsing_res = match params.frontend {
-        Frontend::Corporal => sio_frontend::corporal::module(),
-        Frontend::Major => sio_frontend::major::module(),
-        Frontend::Brigadier => sio_frontend::brigadier::module(),
-    };
-*/
+
     let parsing_res = werbolg_lang_lispy::module(&source.file_unit);
     let module = match parsing_res {
-        Err(e) => {
-            let report = Report::new(ReportKind::Error, format!("Parse Error: {:?}", e))
-                .lines_before(1)
-                .lines_after(1)
-                .highlight(e.location, format!("parse error here"));
+        Err(es) => {
+            for e in es.into_iter() {
+                let report = Report::new(ReportKind::Error, format!("Parse Error: {:?}", e))
+                    .lines_before(1)
+                    .lines_after(1)
+                    .highlight(e.location, format!("parse error here"));
 
-            report_print(&source, report)?;
+                report_print(&source, report)?;
+            }
             return Err(format!("parse error").into());
-            //return Err(format!("parse error \"{}\" : {:?}", path.to_string_lossy(), e).into());
         }
         Ok(module) => module,
     };
-
     if params.dump_ir {
         std::println!("{:#?}", module);
     }
@@ -60,9 +54,9 @@ pub fn report_print(source: &Source, report: Report) -> Result<(), Box<dyn Error
     Ok(())
 }
 
-pub fn run_compile<'m, 'e, A>(
+pub fn run_compile<A>(
     params: &SioParams,
-    env: &mut Environment<NIF<'m, 'e, A, BrigadierLiteral, BrigadierState, Value>, Value>,
+    env: &mut Environment<NIF<A, BrigadierLiteral, BrigadierState, Value>, Value>,
     source: Source,
     module: Module,
 ) -> Result<werbolg_compile::CompilationUnit<BrigadierLiteral>, Box<dyn Error>> {
@@ -95,10 +89,10 @@ pub fn run_compile<'m, 'e, A>(
     Ok(exec_module)
 }
 
-pub fn run_exec<'m, 'e>(
+pub fn run_exec(
     params: &SioParams,
-    ee: &'e ExecutionEnviron<'m, 'e, Alloc, BrigadierLiteral, BrigadierState, Value>,
-    exec_module: &'m werbolg_compile::CompilationUnit<BrigadierLiteral>,
+    ee: ExecutionEnviron<Alloc, BrigadierLiteral, BrigadierState, Value>,
+    exec_module: werbolg_compile::CompilationUnit<BrigadierLiteral>,
 ) -> Result<(), Box<dyn Error>> {
     let module_ns = Namespace::root().append(Ident::from("main"));
 
@@ -113,7 +107,9 @@ pub fn run_exec<'m, 'e>(
     let mut state = BrigadierState {};
     let mut allocator = Alloc {};
 
-    let mut em = ExecutionMachine::new(&exec_module, &ee, execution_params, allocator, state);
+    let mut em = ExecutionMachine::new(
+        WerRefCount::new(exec_module),
+        WerRefCount::new(ee), execution_params, allocator, state);
 
     let mut stepper = HashSet::<InstructionAddress>::new();
     for a in params.step_address.iter() {
