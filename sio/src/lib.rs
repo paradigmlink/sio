@@ -9,9 +9,9 @@ pub use self::{
     allocator::{BrigadierAllocator, MajorAllocator, CorporalAllocator},
     value::{BrigadierValue, MajorValue, CorporalValue},
     environ::{
-        brigadier::{BrigadierLiteral, brigadier_literal_mapper, brigadier_literal_to_value},
-        major::{MajorLiteral, major_literal_mapper, major_literal_to_value},
-        corporal::{CorporalLiteral, corporal_literal_mapper, corporal_literal_to_value},
+        brigadier::{BrigadierLiteral, brigadier_literal_mapper, brigadier_literal_to_value, create_brigadier_env},
+        major::{MajorLiteral, major_literal_mapper, major_literal_to_value, create_major_env},
+        corporal::{CorporalLiteral, corporal_literal_mapper, corporal_literal_to_value, create_corporal_env},
     },
 };
 

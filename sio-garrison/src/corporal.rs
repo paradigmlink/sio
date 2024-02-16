@@ -13,7 +13,7 @@ use crate::{SioParams, report_print, run_frontend};
 
 
 fn compile_corporal(
-    params: SioParams,
+    //params: SioParams,
     env: &mut CorporalEnvironment,
     source: Source,
     module: Module,
@@ -36,11 +36,11 @@ fn compile_corporal(
         }
         Ok(m) => m,
     };
-    if params.dump_instr {
-        let mut out = String::new();
-        code_dump(&mut out, &cu.code, &cu.funs).expect("writing to string work");
+    //if params.dump_instr {
+    //    let mut out = String::new();
+    //    code_dump(&mut out, &cu.code, &cu.funs).expect("writing to string work");
         //println!("{}", out);
-    }
+    //}
     Ok(cu)
 }
 
@@ -74,19 +74,25 @@ impl Corporal {
     pub fn new(
         src: String,
         path: String,
-        params: SioParams,
-        user_env: &mut CorporalEnvironment,
+        //params: SioParams,
+        mut env: CorporalEnvironment,
     ) -> Result<Self, Box<dyn Error>> {
         let (source, module) = run_frontend(src, path)?;
-        let mut env = create_corporal_env();
-        let cu = compile_corporal(params, &mut env, source, module)?;
+        let cu = compile_corporal(/*params, */&mut env, source, module)?;
         let ee = werbolg_exec::ExecutionEnviron::from_compile_environment(env.finalize());
         let em = build_corporal_machine(ee, cu)?;
         Ok(Self { threads: vec![em] })
     }
-    pub fn march(&mut self) {
+    pub fn march(&mut self) -> Result<Option<CorporalValue>, Box<dyn Error>> {
         for thread in &mut self.threads {
-            werbolg_exec::step(thread);
+            match werbolg_exec::step(thread).unwrap() {
+                None => {},
+                Some(v) => {
+                    println!("thread: {:?}", v);
+                    break;
+                },
+            }
         }
+        Ok(None)
     }
 }

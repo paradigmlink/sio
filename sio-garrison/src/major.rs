@@ -13,7 +13,7 @@ use crate::{SioParams, report_print, run_frontend};
 
 
 fn compile_major(
-    params: SioParams,
+    //params: SioParams,
     env: &mut MajorEnvironment,
     source: Source,
     module: Module,
@@ -36,11 +36,11 @@ fn compile_major(
         }
         Ok(m) => m,
     };
-    if params.dump_instr {
-        let mut out = String::new();
-        code_dump(&mut out, &cu.code, &cu.funs).expect("writing to string work");
+    //if params.dump_instr {
+    //    let mut out = String::new();
+    //    code_dump(&mut out, &cu.code, &cu.funs).expect("writing to string work");
         //println!("{}", out);
-    }
+    //}
     Ok(cu)
 }
 
@@ -70,22 +70,27 @@ pub struct Major {
     em: MajorExecutionMachine,
 }
 
-impl  Major {
+impl Major {
     pub fn new(
         src: String,
         path: String,
-        params: SioParams,
-        user_env: &mut MajorEnvironment,
+        //params: SioParams,
+        mut env: MajorEnvironment,
     ) -> Result<Self, Box<dyn Error>> {
         let (source, module) = run_frontend(src, path)?;
-        let mut env = create_major_env();
-        let cu = compile_major(params, &mut env, source, module)?;
+        let cu = compile_major(/*params, */ &mut env, source, module)?;
         let ee = werbolg_exec::ExecutionEnviron::from_compile_environment(env.finalize());
         let em = build_major_machine(ee, cu)?;
         Ok(Self { em: em })
     }
-    pub fn march(&mut self) {
-        werbolg_exec::step(&mut self.em);
+    pub fn march(&mut self) -> Result<Option<MajorValue>, Box<dyn Error>> {
+        match werbolg_exec::step(&mut self.em).unwrap() {
+            None => Ok(None),
+            Some(v) => {
+                println!("major: {:?}", v);
+                return Ok(Some(v));
+            },
+        }
     }
 }
 

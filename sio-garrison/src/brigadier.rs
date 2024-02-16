@@ -14,12 +14,11 @@ use crate::{SioParams, report_print, run_frontend};
 
 
 fn compile_brigadier(
-    params: SioParams,
+    //params: SioParams,
     env: &mut BrigadierEnvironment,
     source: Source,
     module: Module,
 ) -> Result<werbolg_compile::CompilationUnit<BrigadierLiteral>, Box<dyn Error>> {
-    //let (source, module) = run_frontend(src, path).unwrap();
     let module_ns = Namespace::root().append(Ident::from("main"));
     let modules = vec![(module_ns.clone(), module)];
     let compilation_params = werbolg_compile::CompilationParams {
@@ -37,11 +36,11 @@ fn compile_brigadier(
         }
         Ok(m) => m,
     };
-    if params.dump_instr {
-        let mut out = String::new();
-        code_dump(&mut out, &cu.code, &cu.funs).expect("writing to string work");
+    //if params.dump_instr {
+    //    let mut out = String::new();
+    //    code_dump(&mut out, &cu.code, &cu.funs).expect("writing to string work");
         //println!("{}", out);
-    }
+    //}
     Ok(cu)
 }
 
@@ -75,18 +74,23 @@ impl  Brigadier {
     pub fn new(
         src: String,
         path: String,
-        params: SioParams,
-        user_env: &mut BrigadierEnvironment,
+        //params: SioParams,
+        mut env: BrigadierEnvironment,
     ) -> Result<Self, Box<dyn Error>> {
         let (source, module) = run_frontend(src, path)?;
-        let mut env = create_brigadier_env();
-        let cu = compile_brigadier(params, &mut env, source, module)?;
+        let cu = compile_brigadier(&mut env, source, module)?;
         let ee = werbolg_exec::ExecutionEnviron::from_compile_environment(env.finalize());
         let em = build_brigadier_machine(ee, cu)?;
-        Ok(Self { em: em })
+        Ok(Self{em})
     }
-    pub fn march(&mut self) {
-        werbolg_exec::step(&mut self.em);
+    pub fn march(&mut self) -> Result<Option<BrigadierValue>, Box<dyn Error>> {
+        match werbolg_exec::step(&mut self.em).unwrap() {
+            None => Ok(None),
+            Some(v) => {
+                println!("brigadier: {:?}", v);
+                return Ok(Some(v));
+            },
+        }
     }
 }
 

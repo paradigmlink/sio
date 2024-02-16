@@ -1,13 +1,14 @@
-#![no_std]
+//#![no_std]
 #![feature(error_in_core)]
 
 use hashbrown::{HashMap, HashSet};
 extern crate alloc;
 use sio::{
-    BrigadierExecutionMachine, BrigadierEnvironment, BrigadierAllocator, BrigadierLiteral, BrigadierState, BrigadierValue, brigadier_literal_mapper, brigadier_literal_to_value,
-    MajorExecutionMachine, MajorEnvironment, MajorLiteral,
-    CorporalExecutionMachine, CorporalEnvironment, CorporalLiteral};
-use sio::environ::brigadier::create_brigadier_env;
+    BrigadierEnvironment,
+    create_brigadier_env,
+    create_major_env,
+    create_corporal_env,
+};
 use sio_frontend::parse;
 use werbolg_core::{id::IdF, AbsPath, Ident, Namespace, ir::Module, Path};
 use werbolg_compile::{CompilationUnit, Environment, compile, code_dump, InstructionAddress};
@@ -20,9 +21,9 @@ use core::error::Error;
 mod brigadier;
 mod major;
 mod corporal;
-use brigadier::Brigadier;
-use major::Major;
-use corporal::Corporal;
+pub use brigadier::Brigadier;
+pub use major::Major;
+pub use corporal::Corporal;
 
 pub struct SioParams {
     pub dump_ir: bool,
@@ -59,21 +60,23 @@ fn run_frontend(src: String, path: String) -> Result<(Source, Module), Box<dyn E
 }
 
 pub struct Garrison {
-    brigadier: Option<Brigadier>,
+    brigadier: Brigadier,
     majors: Vec<Major>,
     corporals: Vec<Corporal>,
 }
 
 impl Garrison {
-    pub fn new() -> Self {
+    pub fn new(
+        src: String,
+        path: String,
+        //params: SioParams,
+        mut env: BrigadierEnvironment,
+    ) -> Self {
         Self {
-            brigadier: None,
+            brigadier: Brigadier::new(src, path, env).expect("Reason"),
             majors: vec![],
             corporals: vec![],
         }
-    }
-    pub fn brigadier(&mut self, brigadier: Brigadier) {
-        self.brigadier = Some(brigadier);
     }
     pub fn add_major(&mut self, major: Major) {
         self.majors.push(major);
@@ -82,14 +85,12 @@ impl Garrison {
         self.corporals.push(corporal);
     }
     pub fn march(&mut self) {
-        if let Some(brigadier) = &mut self.brigadier {
-            brigadier.march();
-            for major in &mut self.majors {
-                major.march();
-            }
-            for corporal in &mut self.corporals {
-                corporal.march();
-            }
+        self.brigadier.march();
+        for major in &mut self.majors {
+            major.march();
+        }
+        for corporal in &mut self.corporals {
+            corporal.march();
         }
     }
 }
@@ -98,9 +99,22 @@ impl Garrison {
 mod tests {
     use super::*;
 
+
     #[test]
-    fn it_works() {
-        let mut garrison = Garrison::new();
+    fn garrison_works() {
+        //let params = SioParams::new();
+
+        let mut brigadier_env = create_brigadier_env();
+        let mut garrison = Garrison::new("/".to_string(), "brigadier".to_string(), brigadier_env);
+
+        let mut major_env = create_major_env();
+        let major = Major::new("/".to_string(),"/".to_string(), major_env).expect("reason");
+        garrison.add_major(major);
+
+        let mut corporal_env = create_corporal_env();
+        let corporal= Corporal::new("/".to_string(),"/".to_string(), corporal_env).expect("reason");
+        garrison.add_corporal(corporal);
+
         garrison.march();
         assert_eq!(4, 4);
     }
