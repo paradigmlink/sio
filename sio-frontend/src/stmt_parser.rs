@@ -34,8 +34,24 @@ fn parse_module_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
 }
 
 fn parse_url_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
-    todo!();
+    let begin_span = it.expect(TokenKind::Url)?;
+    let name = expect_identifier(it)?;
+    let hierarchical_names = parse_hierarchical_names(it)?;
+    let end_span = it.expect(TokenKind::Semicolon)?;
+    Ok(WithSpan::new(Stmt::Url(Box::new(name), hierarchical_names), Span::union(begin_span, end_span)))
 }
+
+fn parse_hierarchical_names(it: &mut Parser) -> Result<Vec<WithSpan<Identifier>>, ()> {
+    let mut names: Vec<WithSpan<Identifier>> = Vec::new();
+    names.push(expect_identifier(it)?);
+    while it.check(TokenKind::ColonColon) {
+        it.expect(TokenKind::ColonColon)?;
+        names.push(expect_identifier(it)?);
+    }
+    Ok(names)
+}
+
+
 
 fn parse_corporal_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
     todo!();
@@ -183,6 +199,7 @@ mod tests {
     use core::ops::Range;
     use alloc::string::String;
     use crate::position::Diagnostic;
+    use crate::alloc::string::ToString;
 
     use super::super::tokenizer::*;
     use super::*;
@@ -206,6 +223,32 @@ mod tests {
         for diag in diagnostics {
             assert!(errs.contains(&&diag.message.as_str()), "{}", diag.message);
         }
+    }
+
+    #[test]
+    fn test_url_stmt_one() {
+        assert_eq!(
+            parse_str("url this : \"that\";"),
+            Ok(vec![
+                ws(Stmt::Url(
+                    Box::new(ws("this".into(), 0..4)),
+                    vec![ws("that".into(), 4..8)],
+                ), 0..23),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_url_stmt_two() {
+        assert_eq!(
+            parse_str("url this : that::that2;"),
+            Ok(vec![
+                ws(Stmt::Url(
+                    Box::new(ws("this".into(), 0..4)),
+                    vec![ws("that".into(), 4..8), ws("that2".into(), 8..12)],
+                ), 0..23),
+            ])
+        );
     }
 
     #[test]

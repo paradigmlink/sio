@@ -137,7 +137,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         (define x
             (+ x 100))
         (define main
-        	(fact 1 5))
+          	(fact 1 5))
     	";
     let mut brigadier_env = create_brigadier_env();
     let mut garrison = Garrison::new(src.to_string(), "brigadier".to_string(), brigadier_env);

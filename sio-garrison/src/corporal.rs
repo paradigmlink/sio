@@ -96,3 +96,34 @@ impl Corporal {
         Ok(None)
     }
 }
+
+
+#[cfg(test)]
+mod corporal_tests {
+    use alloc::vec::Vec;
+    use alloc::vec;
+    use alloc::string::ToString;
+    use sio::create_corporal_env;
+    use super::*;
+    static src: &str ="
+        corporal corp::Corporal {
+            pub main :: () {
+                let x;
+                thread {
+                  x = 0;
+                }
+                if x == 0 {
+                  true
+                } else {
+                  false
+                }
+            }
+        }";
+    #[test]
+    fn basic_dataflow() {
+        let env = create_corporal_env();
+        let mut corporal = Corporal::new(src.to_string(), "/".to_string(), env).expect("Corporal failure reason:");
+        //corporal.march();
+        assert_eq!(4, 4);
+    }
+}

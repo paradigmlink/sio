@@ -53,6 +53,7 @@ pub enum Expr {
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum Stmt {
+    Url(Box<WithSpan<Identifier>>, Vec<WithSpan<Identifier>>),
     Expression(Box<WithSpan<Expr>>),
     Print(Box<WithSpan<Expr>>),
     If(Box<WithSpan<Expr>>, Box<WithSpan<Stmt>>, Option<Box<WithSpan<Stmt>>>),
