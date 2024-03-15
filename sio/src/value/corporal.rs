@@ -6,6 +6,7 @@ pub type ValueInt = u64;
 #[derive(Clone, Debug)]
 pub enum CorporalValue {
     Unit,
+    Unbound,
     Bool(bool),
     Integral(ValueInt),
     Fun(ValueFun),
@@ -15,6 +16,7 @@ impl CorporalValue {
     fn desc(&self) -> ValueKind {
         match self {
             CorporalValue::Unit => UNIT_KIND,
+            CorporalValue::Unbound => UNBOUND_KIND,
             CorporalValue::Bool(_) => BOOL_KIND,
             CorporalValue::Integral(_) => INT_KIND,
             CorporalValue::Fun(_) => FUN_KIND,
@@ -23,6 +25,7 @@ impl CorporalValue {
 }
 
 pub const UNIT_KIND: ValueKind = "    unit";
+pub const UNBOUND_KIND: ValueKind = " unbound";
 pub const BOOL_KIND: ValueKind = "    bool";
 pub const INT_KIND: ValueKind = "     int";
 pub const FUN_KIND: ValueKind = "     fun";

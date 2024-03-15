@@ -1,7 +1,7 @@
 use alloc::format;
 use alloc::vec::Vec;
 use crate::alloc::string::ToString;
-use crate::brigadier::{
+use crate::{
     position::{WithSpan, Diagnostic, Span},
     token::{Token, TokenKind},
 };

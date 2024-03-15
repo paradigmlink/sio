@@ -6,6 +6,7 @@ pub type ValueInt = u64;
 #[derive(Clone, Debug)]
 pub enum MajorValue {
     Unit,
+    Unbound,
     Bool(bool),
     Integral(ValueInt),
     Fun(ValueFun),
@@ -15,6 +16,7 @@ impl MajorValue {
     fn desc(&self) -> ValueKind {
         match self {
             MajorValue::Unit => UNIT_KIND,
+            MajorValue::Unbound => UNBOUND_KIND,
             MajorValue::Bool(_) => BOOL_KIND,
             MajorValue::Integral(_) => INT_KIND,
             MajorValue::Fun(_) => FUN_KIND,
@@ -23,6 +25,7 @@ impl MajorValue {
 }
 
 pub const UNIT_KIND: ValueKind = "    unit";
+pub const UNBOUND_KIND: ValueKind = " unbound";
 pub const BOOL_KIND: ValueKind = "    bool";
 pub const INT_KIND: ValueKind = "     int";
 pub const FUN_KIND: ValueKind = "     fun";

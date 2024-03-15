@@ -1,9 +1,21 @@
 use crate::value::corporal::{self, CorporalValue as Value, ValueInt};
 use crate::allocator::CorporalAllocator as Alloc;
-use werbolg_compile::{CompilationError, Environment};
+use werbolg_compile::{CompilationError, Environment, CallArity};
 use werbolg_core::{AbsPath, Ident, Literal, Namespace, Span};
-use werbolg_exec::{ExecutionError, NIFCall, WAllocator, NIF};
+use werbolg_exec::{ExecutionError, NIFCall, WAllocator, NIF, ExecutionMachine};
+use crate::{CorporalExecutionMachine, CorporalNIF};
+use alloc::string::ToString;
 
+fn nif_unbound(em: &mut CorporalExecutionMachine) -> Result<Value, ExecutionError> {
+    let (i_dont_know, args) = em.stack.get_call_and_args(em.current_arity);
+    if args.is_empty() {
+        Ok(Value::Unbound)
+    } else {
+        Err(ExecutionError::UserPanic {
+            message: "`nil' function does not need any arguments".to_string(),
+        })
+    }
+}
 fn nif_plus<A: WAllocator>(_: &A, args: &[Value]) -> Result<Value, ExecutionError> {
     let n1 = args[0].int()?;
     let n2 = args[1].int()?;
@@ -63,7 +75,7 @@ pub enum CorporalLiteral {
     Int(ValueInt),
 }
 
-pub fn literal_to_value(lit: &CorporalLiteral) -> Value {
+pub fn corporal_literal_to_value(lit: &CorporalLiteral) -> Value {
     match lit {
         CorporalLiteral::Bool(b) => Value::Bool(*b),
         CorporalLiteral::Int(n) => Value::Integral(*n),
@@ -71,7 +83,7 @@ pub fn literal_to_value(lit: &CorporalLiteral) -> Value {
 }
 
 // only support bool and number from the werbolg core literal
-pub fn literal_mapper(span: Span, lit: Literal) -> Result<CorporalLiteral, CompilationError> {
+pub fn corporal_literal_mapper(span: Span, lit: Literal) -> Result<CorporalLiteral, CompilationError> {
     match lit {
         Literal::Bool(b) => {
             let b = b.as_ref() == "true";
@@ -89,26 +101,29 @@ pub fn literal_mapper(span: Span, lit: Literal) -> Result<CorporalLiteral, Compi
     }
 }
 
-pub fn create_env<'m, 'e>(
-) -> Environment<NIF<'m, 'e, Alloc, CorporalLiteral, (), Value>, Value> {
-    macro_rules! add_pure_nif {
-        ($env:ident, $i:literal, $e:expr) => {
-            let nif = NIF {
-                name: $i,
-                call: NIFCall::Pure($e),
-            };
+pub fn create_corporal_env(
+) -> Environment<CorporalNIF, Value> {
+    macro_rules! add_raw_nif {
+        ($env:ident, $i:literal, $arity:literal, $e:expr) => {
+            let nif = NIFCall::Raw($e).info($i, CallArity::try_from($arity as usize).unwrap());
             let path = AbsPath::new(&Namespace::root(), &Ident::from($i));
             $env.add_nif(&path, nif);
         };
     }
-
+    macro_rules! add_pure_nif {
+        ($env:ident, $i:literal, $arity:literal, $e:expr) => {
+            let nif = NIFCall::Pure($e).info($i, CallArity::try_from($arity as usize).unwrap());
+            let path = AbsPath::new(&Namespace::root(), &Ident::from($i));
+            $env.add_nif(&path, nif);
+        };
+    }
     let mut env = Environment::new();
-    add_pure_nif!(env, "+", nif_plus);
-    add_pure_nif!(env, "-", nif_sub);
-    add_pure_nif!(env, "*", nif_mul);
-    add_pure_nif!(env, "==", nif_eq);
-    add_pure_nif!(env, "<=", nif_le);
-    add_pure_nif!(env, "neg", nif_neg);
-
+    add_raw_nif!(env, "unbound", 0, nif_unbound);
+    add_pure_nif!(env, "+", 2, nif_plus);
+    add_pure_nif!(env, "-", 2, nif_sub);
+    add_pure_nif!(env, "*", 2, nif_mul);
+    add_pure_nif!(env, "==", 2, nif_eq);
+    add_pure_nif!(env, "<=", 2, nif_le);
+    add_pure_nif!(env, "neg", 1, nif_neg);
     env
 }

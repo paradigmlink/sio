@@ -4,7 +4,12 @@ mod args;
 mod exec;
 mod params;
 
-use sio::environ::brigadier::create_brigadier_env;
+use sio::{
+    create_brigadier_env,
+    create_major_env,
+    create_corporal_env,
+};
+use sio_garrison::{Garrison, Brigadier, Major, Corporal};
 use exec::*;
 use params::{Frontend, SioParams};
 
@@ -124,14 +129,30 @@ fn main() -> Result<(), Box<dyn Error>> {
         step_address,
         frontend,
     };
+    let src = "
+        (define (fact acc x)
+            (if (<= x 0)
+                acc
+                (fact (* acc x) (- x 1))))
+        (define x
+            (+ x 100))
+        (define main
+          	(fact 1 5))
+    	";
+    let mut brigadier_env = create_brigadier_env();
+    let mut garrison = Garrison::new(src.to_string(), "brigadier".to_string(), brigadier_env);
 
-    let (source, module) = run_frontend(&params, &args)?;
+    let mut major_env = create_major_env();
+    let major = Major::new(src.to_string(),"major".to_string(), major_env).expect("reason");
+    garrison.add_major(major);
 
-    let mut env = create_brigadier_env();
-    let compile_unit = run_compile(&params, &mut env, source, module)?;
+    let mut corporal_env = create_corporal_env();
+    let corporal= Corporal::new(src.to_string(),"corporal".to_string(), corporal_env).expect("reason");
+    garrison.add_corporal(corporal);
 
-    let ee = werbolg_exec::ExecutionEnviron::from_compile_environment(env.finalize());
-    run_exec(&params, &ee, &compile_unit)?;
+    loop {
+        garrison.march();
+    }
 
     Ok(())
 }
