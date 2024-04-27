@@ -2,7 +2,7 @@
 use crate::SingleAssignmentStore;
 
 #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
+//use alloc::vec::Vec;
 
 #[cfg(not(feature = "std"))]
 use alloc::string::String;

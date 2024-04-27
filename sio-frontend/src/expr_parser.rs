@@ -1,12 +1,10 @@
 use super::ast::*;
 use super::token::*;
-use crate::common::*;
 use crate::parser::Parser;
 use crate::position::{WithSpan, Span};
-use crate::alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use alloc::vec;
+
 use alloc::format;
 
 #[allow(dead_code)]
@@ -286,6 +284,7 @@ pub fn parse(it: &mut Parser) -> Result<WithSpan<Expr>, ()> {
 #[cfg(test)]
 mod tests {
     use crate::position::Diagnostic;
+    use alloc::vec;
 
     use super::*;
     fn parse_str(data: &str) -> Result<WithSpan<Expr>, Vec<Diagnostic>> {
@@ -311,6 +310,7 @@ mod tests {
     mod make {
         use super::*;
         use core::ops::Range;
+        use crate::alloc::borrow::ToOwned;
 
         /// Make WithSpan
         pub fn ws<T>(value: T, range: Range<u32>) -> WithSpan<T> {

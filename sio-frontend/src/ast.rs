@@ -61,6 +61,7 @@ pub enum Stmt {
     Let(WithSpan<Identifier>, Option<Box<WithSpan<Expr>>>),
     Function(WithSpan<Identifier>, Vec<WithSpan<Identifier>>, Vec<WithSpan<Stmt>>),
     Use(WithSpan<String>, Option<Vec<WithSpan<String>>>),
+    Module(Box<WithSpan<Stmt>>, Vec<WithSpan<Stmt>>),
 }
 
 pub type Ast = Vec<WithSpan<Stmt>>;

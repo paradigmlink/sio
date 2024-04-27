@@ -1,21 +1,13 @@
 //#![no_std]
 #![feature(error_in_core)]
 
-use hashbrown::{HashMap, HashSet};
 extern crate alloc;
 use sio::{
-    BrigadierEnvironment,
-    create_brigadier_env,
-    create_major_env,
-    create_corporal_env,
+    BrigadierEnvironment
 };
-use sio_frontend::parse;
-use werbolg_core::{id::IdF, AbsPath, Ident, Namespace, ir::Module, Path};
-use werbolg_compile::{CompilationUnit, Environment, compile, code_dump, InstructionAddress};
-use werbolg_exec::{NIF, ExecutionMachine, ExecutionEnviron, ExecutionParams, WerRefCount};
+use werbolg_core::{ir::Module, Span};
 use werbolg_lang_common::{Report, ReportKind, Source};
-use werbolg_lang_lispy::module;
-use alloc::{string::ToString, format, vec, vec::Vec, boxed::Box, string::String};
+use alloc::{format, vec, vec::Vec, boxed::Box, string::String};
 use core::error::Error;
 
 mod brigadier;
@@ -35,20 +27,20 @@ pub struct SioParams {
 pub fn report_print(source: &Source, report: Report) -> Result<(), Box<dyn Error>> {
     let mut s = String::new();
     report.write(&source, &mut s)?;
-    //println!("{}", s);
+    println!("{}", s);
     Ok(())
 }
 
 fn run_frontend(src: String, path: String) -> Result<(Source, Module), Box<dyn Error>> {
     let source = Source::from_string(path, src);
-    let parsing_res = werbolg_lang_lispy::module(&source.file_unit);
+    let parsing_res = sio_frontend::module(&source.file_unit);
     let module = match parsing_res {
         Err(es) => {
             for e in es.into_iter() {
-                let report = Report::new(ReportKind::Error, format!("Parse Error: {:?}", e))
+                let report = Report::new(ReportKind::Error, format!("Parse Error: {:?}", e.message))
                     .lines_before(1)
                     .lines_after(1)
-                    .highlight(e.location, format!("parse error here"));
+                    .highlight(e.span.start.0 as usize .. e.span.end.0 as usize, e.message);
 
                 report_print(&source, report)?;
             }
@@ -70,7 +62,7 @@ impl Garrison {
         src: String,
         path: String,
         //params: SioParams,
-        mut env: BrigadierEnvironment,
+        env: BrigadierEnvironment,
     ) -> Self {
         Self {
             brigadier: Brigadier::new(src, path, env).expect("Reason"),
@@ -104,15 +96,15 @@ mod tests {
     fn garrison_works() {
         //let params = SioParams::new();
 
-        let mut brigadier_env = create_brigadier_env();
+        let brigadier_env = sio::create_brigadier_env();
         let mut garrison = Garrison::new("/".to_string(), "brigadier".to_string(), brigadier_env);
 
-        let mut major_env = create_major_env();
+        let major_env = sio::create_major_env();
         let major = Major::new("/".to_string(),"/".to_string(), major_env).expect("reason");
         garrison.add_major(major);
 
-        let mut corporal_env = create_corporal_env();
-        let corporal= Corporal::new("/".to_string(),"/".to_string(), corporal_env).expect("reason");
+        let corporal_env = sio::create_corporal_env();
+        let corporal = Corporal::new("/".to_string(),"/".to_string(), corporal_env).expect("reason");
         garrison.add_corporal(corporal);
 
         garrison.march();

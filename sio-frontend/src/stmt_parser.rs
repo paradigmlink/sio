@@ -1,4 +1,4 @@
-use alloc::vec;
+
 use alloc::vec::Vec;
 use alloc::boxed::Box;
 use alloc::format;
@@ -51,10 +51,34 @@ fn parse_hierarchical_names(it: &mut Parser) -> Result<Vec<WithSpan<Identifier>>
     Ok(names)
 }
 
-
-
 fn parse_corporal_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
-    todo!();
+    let begin_span = it.expect(TokenKind::Corporal)?;
+    let corporal = parse_corporal(it)?;
+    let span = Span::union(begin_span, &corporal);
+    Ok(WithSpan::new(corporal.value, span))
+}
+
+fn parse_corporal(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
+    let names = parse_url_declaration(it)?;
+    it.expect(TokenKind::LeftBrace)?;
+    let mut body: Vec<WithSpan<Stmt>> = Vec::new();
+    while !it.check(TokenKind::RightBrace) {
+        body.push(parse_corporal_declarations(it)?);
+    }
+    let end_span = it.expect(TokenKind::RightBrace)?;
+    Ok(WithSpan::new(Stmt::Module(Box::new(names.clone()), body), Span::union(&names, end_span)))
+}
+
+fn parse_corporal_declarations(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
+    match it.peek() {
+        //TokenKind::Var => parse_var_declaration(it),
+        TokenKind::Url => parse_url_declaration(it),
+        TokenKind::Fun => parse_function_declaration(it),
+        _ => {
+            it.error(&format!("Unexpected {}", it.peek_token().value), it.peek_token().span);
+            Err(())
+        },
+    }
 }
 
 fn parse_major_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
@@ -68,6 +92,7 @@ fn parse_brigadier_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
 fn parse_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
     match it.peek() {
         //TokenKind::Var => parse_var_declaration(it),
+        TokenKind::Url => parse_url_declaration(it),
         TokenKind::Fun => parse_function_declaration(it),
         _ => parse_statement(it),
     }
@@ -84,16 +109,20 @@ fn parse_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
 }
 
 fn parse_function_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
-    let begin_span = it.expect(TokenKind::Fun)?;
-    let fun = parse_function(it)?;
-
-    let span = Span::union(begin_span, &fun);
+    let (start, fun) = if it.check(TokenKind::LeftParen) {
+        let start = expect_left_paren(it)?;
+        (start.clone(), parse_function(it, start)?)
+    } else {
+        let name = expect_identifier(it)?;
+        it.expect(TokenKind::ColonColon)?;
+        it.expect(TokenKind::LeftParen)?;
+        (name.clone(), parse_function(it, name)?)
+    };
+    let span = Span::union(&start, &fun);
     Ok(WithSpan::new(fun.value, span))
 }
 
-fn parse_function(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
-    let name = expect_identifier(it)?;
-    it.expect(TokenKind::LeftParen)?;
+fn parse_function(it: &mut Parser, name: WithSpan<Identifier>) -> Result<WithSpan<Stmt>, ()> {
     let params = if !it.check(TokenKind::RightParen) {
         parse_params(it)?
     } else {
@@ -197,9 +226,10 @@ pub fn parse(it: &mut Parser) -> Result<Vec<WithSpan<Stmt>>, ()> {
 #[cfg(test)]
 mod tests {
     use core::ops::Range;
+    use alloc::vec;
     use alloc::string::String;
     use crate::position::Diagnostic;
-    use crate::alloc::string::ToString;
+    //use crate::alloc::string::ToString;
 
     use super::super::tokenizer::*;
     use super::*;

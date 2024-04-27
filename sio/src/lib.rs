@@ -4,7 +4,6 @@ pub mod allocator;
 pub mod environ;
 pub mod value;
 
-use werbolg_core::{Ident, Literal, Module, Namespace};
 pub use self::{
     allocator::{BrigadierAllocator, MajorAllocator, CorporalAllocator},
     value::{BrigadierValue, MajorValue, CorporalValue},

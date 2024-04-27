@@ -1,13 +1,12 @@
-use crate::value::brigadier::{self, BrigadierValue as Value, ValueInt};
-use crate::allocator::BrigadierAllocator as Alloc;
+use crate::value::brigadier::{BrigadierValue as Value, ValueInt};
 use werbolg_compile::{CompilationError, Environment, CallArity};
 use werbolg_core::{AbsPath, Ident, Literal, Namespace, Span};
-use werbolg_exec::{ExecutionError, NIFCall, WAllocator, NIF, ExecutionMachine};
+use werbolg_exec::{ExecutionError, NIFCall, WAllocator};
 use crate::{BrigadierExecutionMachine, BrigadierNIF};
 use alloc::string::ToString;
 
 fn nif_unbound(em: &mut BrigadierExecutionMachine) -> Result<Value, ExecutionError> {
-    let (i_dont_know, args) = em.stack.get_call_and_args(em.current_arity);
+    let (_, args) = em.stack.get_call_and_args(em.current_arity);
     if args.is_empty() {
         Ok(Value::Unbound)
     } else {
@@ -107,14 +106,14 @@ pub fn create_brigadier_env(
         ($env:ident, $i:literal, $arity:literal, $e:expr) => {
             let nif = NIFCall::Raw($e).info($i, CallArity::try_from($arity as usize).unwrap());
             let path = AbsPath::new(&Namespace::root(), &Ident::from($i));
-            $env.add_nif(&path, nif);
+            let _ = $env.add_nif(&path, nif);
         };
     }
     macro_rules! add_pure_nif {
         ($env:ident, $i:literal, $arity:literal, $e:expr) => {
             let nif = NIFCall::Pure($e).info($i, CallArity::try_from($arity as usize).unwrap());
             let path = AbsPath::new(&Namespace::root(), &Ident::from($i));
-            $env.add_nif(&path, nif);
+            let _ = $env.add_nif(&path, nif);
         };
     }
     let mut env = Environment::new();
