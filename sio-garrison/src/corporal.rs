@@ -107,17 +107,23 @@ mod corporal_tests {
     use sio::create_corporal_env;
     use super::*;
     static src: &str =
-        "corporal corp::Corporal {
+        "
+        url corp: this::is::a::corp;
+        corporal corp::Corporal {
             pub main :: () {
                 let x;
+                let y;
                 thread {
                   x = 0;
                 }
                 if x == 0 {
-                  true
+                    assign_the_value(y, true);
                 } else {
-                  false
+                    assign_the_value(y, false);
                 }
+            }
+            assign_the_value :: (y , value) {
+                y = value;
             }
         }";
     #[test]
