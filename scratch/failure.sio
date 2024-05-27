@@ -1,0 +1,97 @@
+url public_key: siopub00179f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abdabcd;
+url app_name: reliability_engineering_app;
+url app: public_key::app_name;
+
+corporal app::Corporal {
+    pub main :: () {
+        let time_to_failure = random_time_to_failure();
+        main();
+    }
+
+    random_time_to_failure :: () -> f64 {
+        return -log(1.0 - random()) / 0.01;
+    }
+}
+
+major app::Major {
+    use app::Corporal;
+
+    pub execute :: () {
+        let spawn_and_monitor_corporal = (corporal_name: str) -> pid {
+            let pid = spawn(app::Corporal::main());
+            return pid;
+        };
+
+        // Corporals for different supervision strategies
+        let corporals_parallel = [
+            spawn_and_monitor_corporal("corporal1"),
+            spawn_and_monitor_corporal("corporal2")
+        ];
+
+        let corporals_series = [
+            spawn_and_monitor_corporal("corporal3"),
+            spawn_and_monitor_corporal("corporal4")
+        ];
+
+        let corporals_k_of_n = [
+            spawn_and_monitor_corporal("corporal5"),
+            spawn_and_monitor_corporal("corporal6"),
+            spawn_and_monitor_corporal("corporal7"),
+            spawn_and_monitor_corporal("corporal8")
+        ];
+
+        // Supervision strategies indicating different RBD configurations
+        supervise parallel corporals_parallel;
+        supervise series corporals_series;
+        supervise k_of_n(3) corporals_k_of_n;  // At least 3 out of 4 must be running
+    }
+}
+
+brigadier app::Brigadier {
+    use app::Major;
+
+    pub main :: () {
+        let spawn_and_monitor_major = (major_name: str) -> pid {
+            let pid = spawn(app::Major::execute());
+            return pid;
+        };
+
+        // Majors for different supervision strategies
+        let majors_parallel = [
+            spawn_and_monitor_major("major1"),
+            spawn_and_monitor_major("major2")
+        ];
+
+        let majors_series = [
+            spawn_and_monitor_major("major3"),
+            spawn_and_monitor_major("major4")
+        ];
+
+        let majors_k_of_n = [
+            spawn_and_monitor_major("major5"),
+            spawn_and_monitor_major("major6"),
+            spawn_and_monitor_major("major7"),
+            spawn_and_monitor_major("major8")
+        ];  
+
+        let majors_complex_parallel_group = [
+            spawn_and_monitor_major("major9"),
+            majors_series[0],
+            majors_parallel[1],
+        ];
+
+        let majors_standby = [
+            spawn_and_monitor_major("primary_major"),
+            spawn_and_monitor_major("secondary_major")
+        ];
+
+        // Supervision strategies indicating different RBD configurations
+        supervise parallel majors_parallel;
+        supervise series majors_series;
+        supervise k_of_n(3) majors_k_of_n;  // At least 3 out of 4 must be running
+        supervise parallel majors_complex_parallel_group;
+        supervise standby majors_standby;
+    }
+}
+
+
