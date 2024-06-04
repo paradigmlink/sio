@@ -130,14 +130,24 @@ fn main() -> Result<(), Box<dyn Error>> {
         frontend,
     };
     let src = "
-        (define (fact acc x)
-            (if (<= x 0)
-                acc
-                (fact (* acc x) (- x 1))))
-        (define x
-            (+ x 100))
-        (define main
-          	(fact 1 5))
+    url corp: this::is::a::corp;
+    corporal corp::Corporal {
+        pub main :: () {
+            let x;
+            let y;
+            thread {
+              x = 0;
+            }
+            if x == 0 {
+                assign_the_value(y, true);
+            } else {
+                assign_the_value(y, false);
+            }
+        }
+        assign_the_value :: (y , value) {
+            y = value;
+        }
+    }
     	";
     let mut brigadier_env = create_brigadier_env();
     let mut garrison = Garrison::new(src.to_string(), "brigadier".to_string(), brigadier_env);

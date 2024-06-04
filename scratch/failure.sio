@@ -5,9 +5,9 @@ url app: public_key::app_name;
 corporal app::Corporal {
     pub main :: () {
         let time_to_failure = random_time_to_failure();
+        die_after(time_to_failure);
         main();
     }
-
     random_time_to_failure :: () -> f64 {
         return -log(1.0 - random()) / 0.01;
     }
@@ -15,83 +15,110 @@ corporal app::Corporal {
 
 major app::Major {
     use app::Corporal;
-
-    pub execute :: () {
+    pub main :: (corporal_garrison: pid) {
         let spawn_and_monitor_corporal = (corporal_name: str) -> pid {
-            let pid = spawn(app::Corporal::main());
+            let pid = spawn(app::Corporal::main(), corporal_garrison);
             return pid;
         };
-
-        // Corporals for different supervision strategies
-        let corporals_parallel = [
-            spawn_and_monitor_corporal("corporal1"),
-            spawn_and_monitor_corporal("corporal2")
-        ];
-
         let corporals_series = [
-            spawn_and_monitor_corporal("corporal3"),
-            spawn_and_monitor_corporal("corporal4")
+            spawn_and_monitor_corporal("corporal1"),
+            spawn_and_monitor_corporal("corporal2"),
         ];
-
-        let corporals_k_of_n = [
-            spawn_and_monitor_corporal("corporal5"),
-            spawn_and_monitor_corporal("corporal6"),
-            spawn_and_monitor_corporal("corporal7"),
-            spawn_and_monitor_corporal("corporal8")
-        ];
-
-        // Supervision strategies indicating different RBD configurations
-        supervise parallel corporals_parallel;
         supervise series corporals_series;
-        supervise k_of_n(3) corporals_k_of_n;  // At least 3 out of 4 must be running
     }
 }
 
 brigadier app::Brigadier {
     use app::Major;
-
-    pub main :: () {
+    pub main :: ([major_garrison, corporal_garrison]: [pid]) {
         let spawn_and_monitor_major = (major_name: str) -> pid {
-            let pid = spawn(app::Major::execute());
+            let pid = spawn(app::Major::main(corporal_garrison), major_garrison);
             return pid;
-        };
-
-        // Majors for different supervision strategies
+        }
         let majors_parallel = [
             spawn_and_monitor_major("major1"),
-            spawn_and_monitor_major("major2")
+            spawn_and_monitor_major("major2"),
         ];
-
         let majors_series = [
             spawn_and_monitor_major("major3"),
-            spawn_and_monitor_major("major4")
+            spawn_and_monitor_major("major4"),
         ];
-
         let majors_k_of_n = [
             spawn_and_monitor_major("major5"),
             spawn_and_monitor_major("major6"),
             spawn_and_monitor_major("major7"),
-            spawn_and_monitor_major("major8")
+            spawn_and_monitor_major("major8"),
         ];  
-
         let majors_complex_parallel_group = [
             spawn_and_monitor_major("major9"),
-            majors_series[0],
-            majors_parallel[1],
+            spawn_and_monitor_major("major10"),
         ];
-
         let majors_standby = [
             spawn_and_monitor_major("primary_major"),
-            spawn_and_monitor_major("secondary_major")
+            spawn_and_monitor_major("secondary_major"),
         ];
-
-        // Supervision strategies indicating different RBD configurations
-        supervise parallel majors_parallel;
+        supervise parallel majors_parallel required_formula;
         supervise series majors_series;
-        supervise k_of_n(3) majors_k_of_n;  // At least 3 out of 4 must be running
+        supervise k_of_n(3) majors_k_of_n;
         supervise parallel majors_complex_parallel_group;
         supervise standby majors_standby;
+        supervise backup majors_backup;
     }
 }
 
+general app::General {
+    url g0: siopub00119a708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abdabca;
+    url g1: siopub00129a708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abdabcb;
+    url g2: siopub00139a708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abdabcc;
+    url g3: siopub00149a708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abdabcd;
+    url g4: siopub00159a708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abdabce;
+    url g5: siopub00169a708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abdabcf;
+    install_brigadier :: (garrison: pid, subordinate: pid) -> pid {
+        let pid = spawn(app::Brigadier::main(subordinate), garrison);
+        return pid;
+    }
+    let b0, b1, b2, b3, b4, b5;
+    subordinate(b0, b1);
+    subordinate(b1, b2);
+    subordinate(b3, b4);
+    subordinate(b4, b5);
+    b0 = install_brigadier(g0, b1);
+    b1 = install_brigadier(g1, b2);
+    b2 = install_brigadier(g2, nil);
+    b3 = install_brigadier(g3, b4);
+    b4 = install_brigadier(g4, b5);
+    b5 = install_brigadier(b5, nil); 
 
+    let brigadier_standby = [
+        b0, b1
+    ];
+    supervise standby brigadier_standby;
+}
+
+
+/*
+1. **Series:**
+   \[
+   R_{\text{series}} = R_1 \times R_2 \times \cdots \times R_n
+   \]
+   Where \( R_i \) is the reliability of each component.
+
+2. **Parallel:**
+   \[
+   R_{\text{parallel}} = 1 - \prod_{i=1}^{n} (1 - R_i)
+   \]
+   Where \( R_i \) is the reliability of each component.
+
+3. **k-out-of-n (k-of-n):**
+   \[
+   R_{\text{k-out-of-n}} = \sum_{i=k}^{n} \binom{n}{i} R^i (1 - R)^{n-i}
+   \]
+   Where \( \binom{n}{i} \) is the binomial coefficient, \( R \) is the reliability of each component, and \( k \) is the minimum number of components required to be operational.
+
+4. **Standby (with perfect switching):**
+   \[
+   R_{\text{standby}} = 1 - (1 - R_1)(1 - R_2) \cdots (1 - R_n)
+   \]
+   Where \( R_i \) is the reliability of each component, assuming perfect switching to the standby component.
+
+*/

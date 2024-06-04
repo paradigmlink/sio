@@ -1,11 +1,11 @@
-url public_key : spub79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd
+url public_key : siopub00179f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd
 url type       : "example"
 url name       : "mario_functional_agent"
 url app        : public_key::type::name
 
 url live : self
 
-mod app::Types {
+module app::Types {
     pub data State =
         | Mario,
         | DeadMario,
@@ -19,9 +19,9 @@ mod app::Types {
         | Mushroom;
 }
 
-mod app::Env {
+module app::Env {
     use app::Types::{State::{self, *}, Transition::{self, *}};
-    pub fn environment_agent(mario: who, transitions: [Transition]) {
+    pub environment_agent :: (mario: who, transitions: [Transition]) {
         port caller live::mario_port(t: Transition) -> o: [Transition] {
             if caller == mario {
                 match transitions {
@@ -38,9 +38,9 @@ mod app::Env {
     }
 }
 
-mod app::Mario {
+corporal app::Mario {
     use app::Types { State::{self, *}, Transition::{self, *}};
-    fn change_mario(state: State, power: Transition) -> o: State {
+    change_mario :: (state: State, power: Transition) -> o: State {
         o = match (state, power) {
             | (Mario, Goomba) => DeadMario,
             | (DeadMario, _) => DeadMario,
@@ -51,7 +51,7 @@ mod app::Mario {
             | (_, Feather) => CapeMario,
         }
     }
-    pub fn mario_agent(env_id: who, current_state: State) {
+    pub mario_agent :: (env_id: who, current_state: State) {
         match env_id::mario_port<> {
             | [msg | tail] => {
                 let new_state: State = change_mario(current_state, msg);
@@ -64,12 +64,12 @@ mod app::Mario {
     }
 }
 
-mod app::MarioSupervisor {
+major app::MarioSupervisor {
     use app::{
         Mario::mario_agent,
         Types::State::Mario,
     };
-    pub fn supervisor_start(env_id: who) {
+    pub supervisor_start :: (env_id: who) {
         let mario_id: who = spawn(self::mario);
         let mario_feed = run(vm_id, mario_id, mario_agent, [env_id, Mario]);
         match mario_feed {
@@ -91,7 +91,7 @@ mod app::Main {
         Mario::mario_agent,
         MarioSupervisor::supervisor_start,
     };
-    summon start :: () {
+    start :: () {
         let in_transitions: [Transition] = [Mushroom, Feather, Goomba, Mushroom, Goomba, Goomba];
         //let out_transitions: [Transition];
         let states: [State];
@@ -99,7 +99,5 @@ mod app::Main {
         let mario_supervisor_id: who = spawn(self::mario_supervisor);
         let env_feed = run(env_id, environment_agent, [mario_id, in_transitions, out_transitions]);
         let mario_supervisor_feed = run(mario_supervisor_id, supervisor_start , [env_id]);
-
-
     }
 }

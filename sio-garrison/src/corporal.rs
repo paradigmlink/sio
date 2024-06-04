@@ -108,8 +108,11 @@ mod corporal_tests {
     use super::*;
     static src: &str =
         "
-        url corp: this::is::a::corp;
-        corporal corp::Corporal {
+        url public_key : sio79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd;
+        url type : src;
+        url name : app_name;
+        url app : public_key::type::name;
+        corporal app::Corporal {
             pub main :: () {
                 let x;
                 let y;
@@ -122,7 +125,24 @@ mod corporal_tests {
                     assign_the_value(y, false);
                 }
             }
-            assign_the_value :: (y , value) {
+            assign_the_value :: (y: int , value: int) {
+                y = value;
+            }
+        }
+        major app::Major {
+            pub main :: () {
+                let x;
+                let y;
+                thread {
+                  x = 0;
+                }
+                if x == 0 {
+                    assign_the_value(y, true);
+                } else {
+                    assign_the_value(y, false);
+                }
+            }
+            assign_the_value :: (y: int , value: int) {
                 y = value;
             }
         }";

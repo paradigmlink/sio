@@ -10,9 +10,11 @@ use werbolg_lang_common::{Report, ReportKind, Source};
 use alloc::{format, vec, vec::Vec, boxed::Box, string::String};
 use core::error::Error;
 
+mod general;
 mod brigadier;
 mod major;
 mod corporal;
+pub use general::General;
 pub use brigadier::Brigadier;
 pub use major::Major;
 pub use corporal::Corporal;
@@ -90,7 +92,6 @@ impl Garrison {
 #[cfg(test)]
 mod tests {
     use super::*;
-
 
     #[test]
     fn garrison_works() {

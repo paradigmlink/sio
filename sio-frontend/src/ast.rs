@@ -42,6 +42,7 @@ pub enum Expr {
     Nil,
     String(String),
     Call(Box<WithSpan<Expr>>, Vec<WithSpan<Expr>>),
+    UrlCall(Vec<WithSpan<String>>, Vec<WithSpan<Expr>>),
     Unary(WithSpan<UnaryOperator>, Box<WithSpan<Expr>>),
     Variable(WithSpan<Identifier>),
     Logical(Box<WithSpan<Expr>>, WithSpan<LogicalOperator>, Box<WithSpan<Expr>>),
@@ -59,42 +60,25 @@ pub enum Stmt {
     Print(Box<WithSpan<Expr>>),
     If(Box<WithSpan<Expr>>, Box<WithSpan<Stmt>>, Option<Box<WithSpan<Stmt>>>),
     Block(Vec<WithSpan<Stmt>>),
+    //Let(WithSpan<Identifier>, WithSpan<Identifier>, Option<WithSpan<Expr>>),
+    //LetMultiple(Vec<WithSpan<Identifier>>, WithSpan<Identifier>),
     Let(WithSpan<Identifier>, Option<WithSpan<Expr>>),
+    LetMultiple(Vec<WithSpan<Identifier>>),
     Thread(Vec<WithSpan<Stmt>>),
     Function(Function),
     Use(WithSpan<String>, Option<Vec<WithSpan<String>>>),
-    CorporalModule(CorporalModule),
-    MajorModule(MajorModule),
-    BrigadierModule(BrigadierModule),
+    Module(Module),
+    Return(Box<WithSpan<Expr>>),
 }
 
 pub type Ast = Vec<WithSpan<Stmt>>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Module {
-    Corporal(CorporalModule),
-    Major(MajorModule),
-    Brigadier(BrigadierModule),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct CorporalModule {
-    pub name: HierarchicalName,
-    pub stmts: Vec<WithSpan<Stmt>>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct MajorModule {
-    pub name: HierarchicalName,
-    pub stmts: Vec<WithSpan<Stmt>>,
-    pub subordinates: Vec<CorporalModule>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct BrigadierModule {
-    pub name: HierarchicalName,
-    pub stmts: Vec<WithSpan<Stmt>>,
-    pub majors: Vec<MajorModule>,
+    Corporal { name: HierarchicalName, stmts: Vec<WithSpan<Stmt>> },
+    Major { name: HierarchicalName, stmts: Vec<WithSpan<Stmt>> },
+    Brigadier { name: HierarchicalName, stmts: Vec<WithSpan<Stmt>>},
+    General { name: HierarchicalName, stmts: Vec<WithSpan<Stmt>>},
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -104,12 +88,20 @@ pub enum Visibility {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct Param {
+    pub name: WithSpan<Identifier>,
+    pub param_type: WithSpan<Identifier>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct Function {
     pub visibility: Visibility,
     pub name: Option<WithSpan<Identifier>>,
-    pub params: Vec<WithSpan<Identifier>>,
+    pub params: Vec<Param>,
+    pub return_type: Option<WithSpan<Identifier>>,
     pub body: Vec<WithSpan<Stmt>>,
 }
+
      
 #[derive(Debug, Clone, PartialEq)]
 pub struct HierarchicalName {

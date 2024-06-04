@@ -116,6 +116,7 @@ impl<'a> Lexer<'a> {
                     _ => Some(Token::String(string)),
                 }
             }
+            '-' => Some(self.either('>', Token::Arrow, Token::Minus)),
             x if x.is_numeric() => self.number(x),
             x if x.is_ascii_alphabetic() || x == '_' => self.identifier(x),
             ',' => Some(Token::Comma),
@@ -174,6 +175,7 @@ impl<'a> Lexer<'a> {
         let mut keywords: HashMap<&str, Token> = HashMap::new();
         keywords.insert("use", Token::Use);
         keywords.insert("url", Token::Url);
+        keywords.insert("general", Token::General);
         keywords.insert("brigadier", Token::Brigadier);
         keywords.insert("major", Token::Major);
         keywords.insert("corporal", Token::Corporal);
