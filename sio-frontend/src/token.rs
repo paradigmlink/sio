@@ -29,6 +29,7 @@ pub enum Token {
     GreaterEqual,
     Less,
     LessEqual,
+    Arrow,
 
     // Literals.
     Identifier(String),
@@ -42,6 +43,7 @@ pub enum Token {
     And,
     Nil,
     Or,
+    General,
     Brigadier,
     Major,
     Corporal,
@@ -91,6 +93,7 @@ pub enum TokenKind {
     GreaterEqual,
     Less,
     LessEqual,
+    Arrow,
 
     // Literals.
     Identifier,
@@ -104,6 +107,7 @@ pub enum TokenKind {
     And,
     Or,
     Nil,
+    General,
     Brigadier,
     Major,
     Corporal,
@@ -161,6 +165,7 @@ impl From<&Token> for TokenKind {
             Token::GreaterEqual => TokenKind::GreaterEqual,
             Token::Less => TokenKind::Less,
             Token::LessEqual => TokenKind::LessEqual,
+            Token::Arrow => TokenKind::Arrow,
             Token::Slash => TokenKind::Slash,
             Token::Identifier(_) => TokenKind::Identifier,
             Token::String(_) => TokenKind::String,
@@ -174,6 +179,7 @@ impl From<&Token> for TokenKind {
             Token::ColonColon => TokenKind::ColonColon,
             Token::Equal => TokenKind::Equal,
             Token::EqualEqual => TokenKind::EqualEqual,
+            Token::General => TokenKind::General,
             Token::Brigadier => TokenKind::Brigadier,
             Token::Major => TokenKind::Major,
             Token::Corporal=> TokenKind::Corporal,
@@ -219,6 +225,7 @@ impl Display for TokenKind {
             TokenKind::GreaterEqual => "'>='",
             TokenKind::Less => "'<'",
             TokenKind::LessEqual => "'<='",
+            TokenKind::Arrow => "'->'",
             TokenKind::Semicolon => "';'",
             TokenKind::Colon => "':'",
             TokenKind::ColonColon => "'::'",
@@ -232,6 +239,7 @@ impl Display for TokenKind {
             TokenKind::False => "false",
             TokenKind::Url => "'url'",
             TokenKind::Use => "'use'",
+            TokenKind::General => "'general'",
             TokenKind::Brigadier => "'brigadier'",
             TokenKind::Major => "'major'",
             TokenKind::Corporal=> "'corporal'",

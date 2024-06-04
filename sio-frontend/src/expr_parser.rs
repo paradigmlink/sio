@@ -1,12 +1,11 @@
 use super::ast::*;
 use super::token::*;
-use crate::common::*;
+use crate::common::expect_identifier;
 use crate::parser::Parser;
 use crate::position::{WithSpan, Span};
-use crate::alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use alloc::vec;
+
 use alloc::format;
 
 #[allow(dead_code)]
@@ -83,6 +82,45 @@ fn parse_infix(it: &mut Parser, left: WithSpan<Expr>) -> Result<WithSpan<Expr>, 
         },
     }
 }
+
+fn parse_url_call(it: &mut Parser, left: WithSpan<Expr>) -> Result<WithSpan<Expr>, ()> {
+    let mut parts = vec![];
+    if let Expr::Variable(ref id) = left.value {
+        parts.push(id.clone());
+    } else {
+        it.error("Expected identifier for URL call", left.span);
+        return Err(());
+    }
+    while it.peek() == TokenKind::ColonColon {
+        it.expect(TokenKind::ColonColon)?;
+        if it.peek() == TokenKind::Identifier {
+            let part = expect_identifier(it)?;
+            parts.push(part);
+        } else if it.peek() == TokenKind::LeftParen {
+            it.expect(TokenKind::LeftParen)?;
+            let args = parse_arguments(it)?;
+            let most_right = it.expect(TokenKind::RightParen)?;
+
+            let span = Span::union(&parts[0], &most_right);
+            return Ok(WithSpan::new(Expr::UrlCall(parts, args), span));
+        } else {
+            it.error("Expected identifier or '(' for URL call", it.peek_token().span);
+            return Err(());
+        }
+    }
+    if it.peek() == TokenKind::LeftParen {
+        it.expect(TokenKind::LeftParen)?;
+        let args = parse_arguments(it)?;
+        let most_right = it.expect(TokenKind::RightParen)?;
+
+        let span = Span::union(&parts[0], &most_right);
+        return Ok(WithSpan::new(Expr::UrlCall(parts, args), span));
+    } else {
+        it.error("Expected '(' for URL call", it.peek_token().span);
+        return Err(());
+    }
+}
+
 
 fn parse_prefix(it: &mut Parser) -> Result<WithSpan<Expr>, ()> {
     match it.peek() {
@@ -270,14 +308,19 @@ fn parse_primary(it: &mut Parser) -> Result<WithSpan<Expr>, ()> {
         &Token::True => Ok(WithSpan::new(Expr::Boolean(true), tc.span)),
         &Token::False => Ok(WithSpan::new(Expr::Boolean(false), tc.span)),
         &Token::String(ref s) => Ok(WithSpan::new(Expr::String(s.clone()), tc.span)),
-        &Token::Identifier(ref s) => Ok(WithSpan::new(Expr::Variable(WithSpan::new(s.clone(), tc.span)), tc.span)),
+        &Token::Identifier(ref s) => {
+            let identifier_expr = WithSpan::new(Expr::Variable(WithSpan::new(s.clone(), tc.span)), tc.span);
+            if it.peek() == TokenKind::ColonColon {
+                return parse_url_call(it, identifier_expr);
+            }
+            Ok(identifier_expr)
+        },
         _ => {
             it.error(&format!("Expected primary got {}", tc.value), tc.span);
             Err(())
         },
     }
 }
-
 
 pub fn parse(it: &mut Parser) -> Result<WithSpan<Expr>, ()> {
     parse_expr(it, Precedence::None)
@@ -286,6 +329,7 @@ pub fn parse(it: &mut Parser) -> Result<WithSpan<Expr>, ()> {
 #[cfg(test)]
 mod tests {
     use crate::position::Diagnostic;
+    use alloc::vec;
 
     use super::*;
     fn parse_str(data: &str) -> Result<WithSpan<Expr>, Vec<Diagnostic>> {
@@ -311,6 +355,7 @@ mod tests {
     mod make {
         use super::*;
         use core::ops::Range;
+        use crate::alloc::borrow::ToOwned;
 
         /// Make WithSpan
         pub fn ws<T>(value: T, range: Range<u32>) -> WithSpan<T> {

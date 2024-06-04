@@ -1,11 +1,11 @@
-use crate::value::brigadier::{BrigadierValue as Value, ValueInt};
+use crate::value::general::{GeneralValue as Value, ValueInt};
 use werbolg_compile::{CompilationError, Environment, CallArity};
 use werbolg_core::{AbsPath, Ident, Literal, Namespace, Span};
 use werbolg_exec::{ExecutionError, NIFCall, WAllocator};
-use crate::{BrigadierExecutionMachine, BrigadierNIF};
+use crate::{GeneralExecutionMachine, GeneralNIF};
 use alloc::string::ToString;
 
-fn nif_unbound(em: &mut BrigadierExecutionMachine) -> Result<Value, ExecutionError> {
+fn nif_unbound(em: &mut GeneralExecutionMachine) -> Result<Value, ExecutionError> {
     let (_, args) = em.stack.get_call_and_args(em.current_arity);
     if args.is_empty() {
         Ok(Value::Unbound)
@@ -69,30 +69,30 @@ fn nif_le<A: WAllocator>(_: &A, args: &[Value]) -> Result<Value, ExecutionError>
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-pub enum BrigadierLiteral {
+pub enum GeneralLiteral {
     Bool(bool),
     Int(ValueInt),
 }
 
-pub fn brigadier_literal_to_value(lit: &BrigadierLiteral) -> Value {
+pub fn general_literal_to_value(lit: &GeneralLiteral) -> Value {
     match lit {
-        BrigadierLiteral::Bool(b) => Value::Bool(*b),
-        BrigadierLiteral::Int(n) => Value::Integral(*n),
+        GeneralLiteral::Bool(b) => Value::Bool(*b),
+        GeneralLiteral::Int(n) => Value::Integral(*n),
     }
 }
 
 // only support bool and number from the werbolg core literal
-pub fn brigadier_literal_mapper(span: Span, lit: Literal) -> Result<BrigadierLiteral, CompilationError> {
+pub fn general_literal_mapper(span: Span, lit: Literal) -> Result<GeneralLiteral, CompilationError> {
     match lit {
         Literal::Bool(b) => {
             let b = b.as_ref() == "true";
-            Ok(BrigadierLiteral::Bool(b))
+            Ok(GeneralLiteral::Bool(b))
         }
         Literal::Number(s) => {
             let Ok(v) = ValueInt::from_str_radix(s.as_ref(), 10) else {
                 todo!()
             };
-            Ok(BrigadierLiteral::Int(v))
+            Ok(GeneralLiteral::Int(v))
         }
         Literal::String(_) => Err(CompilationError::LiteralNotSupported(span, lit)),
         Literal::Decimal(_) => Err(CompilationError::LiteralNotSupported(span, lit)),
@@ -100,8 +100,8 @@ pub fn brigadier_literal_mapper(span: Span, lit: Literal) -> Result<BrigadierLit
     }
 }
 
-pub fn create_brigadier_env(
-) -> Environment<BrigadierNIF, Value> {
+pub fn create_general_env(
+) -> Environment<GeneralNIF, Value> {
     macro_rules! add_raw_nif {
         ($env:ident, $i:literal, $arity:literal, $e:expr) => {
             let nif = NIFCall::Raw($e).info($i, CallArity::try_from($arity as usize).unwrap());

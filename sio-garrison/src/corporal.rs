@@ -1,15 +1,16 @@
 use sio::{
     CorporalExecutionMachine, CorporalEnvironment, CorporalAllocator, CorporalLiteral, CorporalState, CorporalValue, corporal_literal_mapper, corporal_literal_to_value
 };
-use sio::environ::corporal::create_corporal_env;
-use werbolg_core::{id::IdF, AbsPath, Ident, Namespace, ir::Module, Path};
-use werbolg_exec::{NIF, ExecutionMachine, ExecutionEnviron, ExecutionParams, WerRefCount};
-use werbolg_compile::{CompilationUnit, Environment, compile, code_dump, InstructionAddress};
+use werbolg_core::{AbsPath, Ident, Namespace, ir::Module};
+use werbolg_exec::{ ExecutionMachine, ExecutionEnviron, ExecutionParams, WerRefCount};
+use werbolg_compile::{compile};
 use werbolg_lang_common::{Report, ReportKind, Source};
-use werbolg_lang_lispy::module;
-use alloc::{string::ToString, format, vec, vec::Vec, boxed::Box, string::String};
+use alloc::{ 
+    format, vec, vec::Vec, boxed::Box, string::String};
 use core::error::Error;
-use crate::{SioParams, report_print, run_frontend};
+use crate::{
+    //SioParams, 
+    report_print, run_frontend};
 
 
 fn compile_corporal(
@@ -25,12 +26,12 @@ fn compile_corporal(
         literal_mapper: corporal_literal_mapper,
         sequence_constructor: None,
     };
-    let mut cu = match compile(&compilation_params, modules, env) {
+    let cu = match compile(&compilation_params, modules, env) {
         Err(e) => {
             let report = Report::new(ReportKind::Error, format!("Compilation Error: {:?}", e))
                 .lines_before(1)
                 .lines_after(1)
-                .highlight(e.span(), format!("compilation error here"));
+                .highlight(e.span().unwrap(), format!("compilation error here"));
             report_print(&source, report)?;
             return Err(format!("compilation error {:?}", e).into());
         }
@@ -56,8 +57,8 @@ pub fn build_corporal_machine (
     let execution_params = ExecutionParams {
         literal_to_value: corporal_literal_to_value,
     };
-    let mut state = CorporalState {};
-    let mut allocator = CorporalAllocator {};
+    let state = CorporalState {};
+    let allocator = CorporalAllocator {};
     let mut em = ExecutionMachine::new(
         WerRefCount::new(cu),
         WerRefCount::new(ee),
@@ -100,30 +101,56 @@ impl Corporal {
 
 #[cfg(test)]
 mod corporal_tests {
-    use alloc::vec::Vec;
-    use alloc::vec;
+    //use alloc::vec::Vec;
+    //use alloc::vec;
     use alloc::string::ToString;
     use sio::create_corporal_env;
     use super::*;
-    static src: &str ="
-        corporal corp::Corporal {
+    static src: &str =
+        "
+        url public_key : sio79f708c25a23ed367610facc14035adc7ba4b1bfa9252ef55c6c24f1b9b03abd;
+        url type : src;
+        url name : app_name;
+        url app : public_key::type::name;
+        corporal app::Corporal {
             pub main :: () {
                 let x;
+                let y;
                 thread {
                   x = 0;
                 }
                 if x == 0 {
-                  true
+                    assign_the_value(y, true);
                 } else {
-                  false
+                    assign_the_value(y, false);
                 }
+            }
+            assign_the_value :: (y: int , value: int) {
+                y = value;
+            }
+        }
+        major app::Major {
+            pub main :: () {
+                let x;
+                let y;
+                thread {
+                  x = 0;
+                }
+                if x == 0 {
+                    assign_the_value(y, true);
+                } else {
+                    assign_the_value(y, false);
+                }
+            }
+            assign_the_value :: (y: int , value: int) {
+                y = value;
             }
         }";
     #[test]
     fn basic_dataflow() {
         let env = create_corporal_env();
         let mut corporal = Corporal::new(src.to_string(), "/".to_string(), env).expect("Corporal failure reason:");
-        //corporal.march();
+        corporal.march();
         assert_eq!(4, 4);
     }
 }

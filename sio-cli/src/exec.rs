@@ -73,7 +73,7 @@ pub fn run_compile<A>(
             let report = Report::new(ReportKind::Error, format!("Compilation Error: {:?}", e))
                 .lines_before(1)
                 .lines_after(1)
-                .highlight(e.span(), format!("compilation error here"));
+                .highlight(e.span().unwrap(), format!("compilation error here"));
             report_print(&source, report)?;
             return Err(format!("compilation error {:?}", e).into());
         }

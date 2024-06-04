@@ -17,10 +17,11 @@ mod stmt_parser;
 mod expr_parser;
 
 use werbolg_ir_write::module;
+use werbolg_lang_common::{FileUnit, ParseError};
 use ast::Ast;
 use position::Diagnostic;
 
-pub fn parse(code: &str) -> Result<Ast, Vec<Diagnostic>> {
+fn parse(code: &str) -> Result<Ast, Vec<Diagnostic>> {
     use stmt_parser::parse;
     use tokenizer::tokenize_with_context;
     let tokens = tokenize_with_context(code);
@@ -33,12 +34,13 @@ pub fn parse(code: &str) -> Result<Ast, Vec<Diagnostic>> {
 }
 
 #[allow(dead_code)]
-pub fn module() -> werbolg_core::Module {
-    module! {
+pub fn module(file_unit: &FileUnit) -> Result<werbolg_core::Module, Vec<Diagnostic>> {
+    let ast = parse(&file_unit.content)?;
+    Ok(module! {
         fn main() {
             1
         }
-    }
+    })
 }
 
 
@@ -56,8 +58,8 @@ mod tests {
             .map(|tc| tc.value.clone())
             .collect()
     }
-    static src: &str ="
-        corporal corp::Corporal {
+    static SRC: &str =
+        "corporal corp::Corporal {
             pub main :: () {
                 let x;
                 thread {
@@ -72,7 +74,7 @@ mod tests {
         }";
     #[test]
     fn test() {
-        assert_eq!(tokenize(&src ), vec![
+        assert_eq!(tokenize(&SRC ), vec![
                 Token::Corporal,
                 Token::Identifier("corp".to_string()),
                 Token::ColonColon,
